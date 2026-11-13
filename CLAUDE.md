@@ -79,11 +79,12 @@ Out of scope:
   - `npm run build`: checks the TypeScript types, then makes the final website files in `dist/`. Cloudflare Pages runs this on every push.
   - `npm run preview`: serves the built `dist/` folder at http://localhost:4173, to check what will go online.
   - `npm run lint`: runs oxlint, which warns about common code mistakes.
-  - Tests: none yet.
+  - Tests: no website tests yet. Database: `supabase/tests/rls_check.sql`, run by Ivan in Supabase's SQL Editor (see `supabase/README.md`).
 - Cloudflare Pages settings: build command `npm run build`, output folder `dist`.
 - Where things are:
   - `src/main.tsx` starts the app and lists the pages.
   - `src/pages/`: one `.tsx` file per page, plus its own `.module.css`.
   - `src/estados/`: map shapes, city search data and map animations.
   - `src/lib/savedStates.ts`: the chosen states, in the browser for now.
+  - `supabase/`: database migrations (SQL files Ivan pastes into the SQL Editor), the RLS test and a guide. Never edit a migration that's already applied; add a new one.
 - Check every visual change at phone width (375px), iPad landscape and desktop.
