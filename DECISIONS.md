@@ -32,6 +32,10 @@ Last updated: 13 Nov 2026. This is the source of truth for the project. When a d
   - A user can follow news from several states.
   - The checklist is for one main state, where they'll apply for the Approbation.
   - Data impact: `profiles` keeps one main Bundesland (and route), plus a new table `followed_states` (user_id, Bundesland) for news.
+- **Website code is written in TypeScript** (confirmed 13 Nov 2026), JavaScript with type labels that catch mistakes before the site is built.
+- **Fonts are self-hosted** (confirmed 13 Nov 2026). The font files are served from our own site, never from Google's servers (a GDPR risk in Germany).
+  - **Figtree** for all text, except **Anton** for the big uppercase page titles. The mock-up's home page used Archivo for body text; that is dropped.
+- **State names are shown in German** (confirmed 13 Nov 2026): Bayern, Nordrhein-Westfalen, Thüringen… All other text users see is in Spanish.
 - **Domain and email stay at IONOS for the first version.**
   - Add only one CNAME record, a pointer such as `app.` or `www.`, aimed at Cloudflare Pages.
   - Never touch the MX, SPF, DKIM, DMARC or autodiscover records.
@@ -101,7 +105,6 @@ Last updated: 13 Nov 2026. This is the source of truth for the project. When a d
 
 ## Open decisions (suggested default in brackets)
 
-- **Fonts:** the design loads its fonts from Google's servers, which is a GDPR risk in Germany. (Self-host the font files.)
 - **Repository:**
   - The current repository is public and in Ivan's personal GitHub account.
   - The latest design is on the branch `claude/exciting-lovelace-bo35kj`, not merged into `main`.
