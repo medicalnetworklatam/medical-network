@@ -335,19 +335,52 @@
     flex-direction: column;
     gap: 14px;
   }
-  .card-1 { min-height: 220px; }
-  .card-2 { min-height: 300px; }
-  .card-3 { min-height: 260px; }
+
+  /* Photo at the top of some cards */
+  .card-img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border-radius: 12px;
+    background: #CAE8E6;
+  }
+  .card-img.wide {
+    aspect-ratio: 3 / 1;
+    object-position: center 88%;
+  }
+
+  /* Type label + date */
+  .card-meta {
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 12px;
+  }
+  .card-tag {
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #CAE8E6;
+    color: #2F7A64;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  /* events use the calendar's orange */
+  .card-tag.event { background: #F2994A; color: #121413; }
+  .card-date {
+    font-size: 14px;
+    color: #3D4A46;
+  }
 
   .card h3 {
     margin: 0;
     font-size: 22px;
     font-weight: 700;
-  }
-  .card-subtitle {
-    margin: 0;
-    font-size: 17px;
-    font-weight: 600;
+    line-height: 1.25;
   }
   .card-text {
     margin: 0;
@@ -597,11 +630,7 @@
       padding: 18px 20px;
       gap: 10px;
     }
-    .card-1 { min-height: 150px; }
-    .card-2 { min-height: 170px; }
-    .card-3 { min-height: 300px; }
     .card h3 { font-size: 20px; }
-    .card-subtitle { font-size: 16px; }
     .card-text { font-size: 15px; }
 
     /* Floating "Chat Berlin" button */
@@ -765,21 +794,54 @@
       <main class="main">
         <h1 class="page-title" id="page-title">BERLIN</h1>
 
-        <article class="card card-1">
-          <h3>Noticia</h3>
-          <p class="card-subtitle">[Titular de la noticia]</p>
-          <p class="card-text">[Resumen de la noticia para los médicos en Berlin]</p>
+        <!-- Example news and updates (made up for the mock-up) -->
+        <article class="card">
+          <img class="card-img" src="img/edificio.jpg" width="1200" height="805"
+               alt="Edificio blanco de formas curvas bajo un cielo azul">
+          <p class="card-meta">
+            <span class="card-tag">Noticia</span>
+            <time class="card-date" datetime="2026-11-12">12 nov 2026</time>
+          </p>
+          <h3>Berlin amplía las fechas para la Kenntnisprüfung</h3>
+          <p class="card-text">La autoridad sanitaria de Berlin (LAGeSo) abrirá más fechas de examen a partir de enero para reducir la espera. Si ya enviaste tu solicitud, recibirás la nueva fecha por correo: no hace falta volver a presentar los documentos.</p>
         </article>
 
-        <article class="card card-2">
-          <h3>Documento actualizado</h3>
-          <p class="card-subtitle">[Nombre del documento]</p>
-          <p class="card-text">[Qué cambió y desde cuándo aplica]</p>
+        <article class="card">
+          <p class="card-meta">
+            <span class="card-tag">Documento actualizado</span>
+            <time class="card-date" datetime="2026-11-09">9 nov 2026</time>
+          </p>
+          <h3>Nuevo formulario de solicitud de la Approbation</h3>
+          <p class="card-text">Desde el 1 de diciembre solo se acepta la versión 2026 del formulario. Cambian la sección de experiencia profesional y la lista de documentos que necesitan traducción jurada.</p>
         </article>
 
-        <article class="card card-3">
-          <h3>Documento A</h3>
-          <p class="card-text">[Descripción del documento]</p>
+        <article class="card">
+          <p class="card-meta">
+            <span class="card-tag">Plazo</span>
+            <time class="card-date" datetime="2026-11-05">5 nov 2026</time>
+          </p>
+          <h3>Seguro de responsabilidad profesional: renuévalo antes del 31 de diciembre</h3>
+          <p class="card-text">La Ärztekammer pide el certificado actualizado de tu Berufshaftpflicht para mantener activo tu registro. Puedes subirlo en el portal de miembros en pocos minutos.</p>
+        </article>
+
+        <article class="card">
+          <img class="card-img wide" src="img/edificio.jpg" width="1200" height="805" loading="lazy"
+               alt="Fachada blanca con una fila de ventanas cuadradas">
+          <p class="card-meta">
+            <span class="card-tag event">Evento</span>
+            <time class="card-date" datetime="2026-11-15T18:00">Domingo 15 nov · 18:00</time>
+          </p>
+          <h3>Sesión online: tu primer año como médico en Alemania</h3>
+          <p class="card-text">Contrato, guardias, impuestos y seguro social, explicados en español por médicos que ya pasaron por ello. Gratis y con tiempo para preguntas al final.</p>
+        </article>
+
+        <article class="card">
+          <p class="card-meta">
+            <span class="card-tag">Guía</span>
+            <time class="card-date" datetime="2026-10-28">28 oct 2026</time>
+          </p>
+          <h3>Fachsprachprüfung: qué esperar el día del examen</h3>
+          <p class="card-text">Paso a paso: la conversación con el paciente, el informe escrito y la presentación del caso a un colega. Incluye frases útiles en alemán para cada parte.</p>
         </article>
       </main>
 
