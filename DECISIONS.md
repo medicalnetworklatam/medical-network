@@ -107,8 +107,7 @@ Last updated: 13 Nov 2026. This is the source of truth for the project. When a d
 
 - **Repository:**
   - The current repository is public and in Ivan's personal GitHub account.
-  - The latest design is on the branch `claude/exciting-lovelace-bo35kj`, not merged into `main`.
-  - Plan: make the repository private before adding backend code or this file, and transfer it to the company account once a company email exists.
+  - Ivan's decision (13 Nov 2026): it stays public for now. Plan: transfer it to the company account once a company email exists.
 
 - **Profile fields** (name, email, Bundesland, route, plan)
 - **How each user's checklist is created and how items are ticked** (the client ticks their own items; admins can only view)
