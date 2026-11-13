@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Berlin · Medical Network</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Figtree:wght@300..900&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+
+  /* Hide scrollbars everywhere; scrolling itself still works */
+  * { scrollbar-width: none; -ms-overflow-style: none; }
+  *::-webkit-scrollbar { display: none; }
+
+  body {
+    background: #EEF9F5;
+    color: #121413;
+    font-family: 'Figtree', sans-serif;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* ---------- Layout ---------- */
+  .layout {
+    display: flex;
+    flex-wrap: wrap;
+    height: 100vh;
+  }
+
+  /* ---------- Left: sidebar ---------- */
+  .sidebar {
+    flex: 0 0 auto;
+    width: 300px;
+    height: 100%;
+    background: #489E85;
+    border-radius: 0 36px 36px 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    transition: width 340ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .sidebar.is-collapsed {
+    width: 76px;
+    overflow-y: hidden;
+  }
+
+  .sidebar-header {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    background: #489E85;
+    border-bottom: 1px solid #3E8A73;
+  }
+
+  .profile {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    overflow: hidden;
+    white-space: nowrap;
+    transition: opacity 220ms ease, visibility 220ms;
+  }
+
+  .profile-btn {
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: #EEF9F5;
+    color: #121413;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  .profile-name {
+    font-family: soleil, 'Figtree', sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .sidebar-toggle {
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+    margin-left: auto;
+    padding: 0;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    color: #121413;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .sidebar-toggle:hover { background: #3E8A73; }
+
+  .profile-btn:focus-visible,
+  .sidebar-toggle:focus-visible {
+    outline: 3px solid #EEF9F5;
+    outline-offset: 2px;
+  }
+
+  .sidebar-body {
+    width: 300px;
+    padding: 20px 24px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    transition: opacity 220ms ease, visibility 220ms;
+  }
+
+  .is-collapsed .profile,
+  .is-collapsed .sidebar-body {
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  /* Section titles: small spaced capitals, no box */
+  .section-head {
+    padding: 4px 2px 0;
+  }
+  .sidebar-body > .section-head { margin-bottom: -16px; } /* sit close to their list */
+  .section-head h2 {
+    margin: 0;
+    font-family: 'Figtree', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    line-height: 1.2;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .states {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .state-link {
+    display: block;
+    background: #FFFFFF;
+    border-radius: 12px;
+    padding: 16px 18px;
+    font-size: 18px;
+    color: #121413;
+    text-decoration: none;
+  }
+  .state-link:hover { color: #2F7A64; }
+  .state-link[aria-current="page"] {
+    font-weight: 700;
+    box-shadow: 0 0 0 2px #121413;
+  }
+  .state-link:focus-visible {
+    outline: 3px solid #EEF9F5;
+    outline-offset: 3px;
+  }
+
+  /* Shown when "No lo sé" was picked on estados.html */
+  .states-empty {
+    background: #FFFFFF;
+    border-radius: 12px;
+    padding: 16px 18px;
+    font-size: 16px;
+    line-height: 1.4;
+  }
+  .states-empty p { margin: 0 0 6px; }
+  .states-empty a {
+    font-weight: 700;
+    color: #2F7A64;
+  }
+  .states-empty a:focus-visible {
+    outline: 3px solid #489E85;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Calendar */
+  .calendar {
+    margin-top: 34px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .cal-card {
+    background: #FFFFFF;
+    border-radius: 12px;
+    padding: 14px;
+  }
+
+  .cal-title {
+    margin: 0 0 10px;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .cal-weekdays,
+  .cal-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+  }
+
+  .cal-weekdays {
+    font-size: 12px;
+    font-weight: 600;
+    color: #3D4A46;
+    line-height: 24px;
+    margin-bottom: 2px;
+  }
+
+  .cal-days { grid-auto-rows: 30px; }
+
+  .cal-days span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+  }
+
+  .cal-days .today,
+  .cal-days .event {
+    width: 26px;
+    height: 26px;
+    justify-self: center;
+    align-self: center;
+    border-radius: 50%;
+    font-weight: 700;
+  }
+  .cal-days .today { background: #121413; color: #FFFFFF; }
+  .cal-days .event { background: #F2994A; color: #121413; }
+
+  /* ---------- Middle + right wrapper ---------- */
+  .workspace {
+    flex: 1 1 0;
+    min-width: 0;
+    height: 100%;
+    display: flex;
+    flex-wrap: nowrap;
+  }
+
+  /* ---------- Middle: main ---------- */
+  .main {
+    flex: 999 1 560px;
+    min-width: 0;
+    height: 100%;
+    overflow-y: auto;
+    padding: 0 40px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  .page-title {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    margin: 0 -40px;
+    padding: 28px 40px 20px;
+    background: #EEF9F5;
+    font-family: 'Anton', sans-serif;
+    font-weight: 400;
+    font-size: 88px;
+    line-height: 1;
+    text-align: center;
+  }
+
+  .card {
+    flex-shrink: 0;
+    background: #FFFFFF;
+    border: 1px solid #CAE8E6;
+    border-radius: 16px;
+    padding: 24px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .card-1 { min-height: 220px; }
+  .card-2 { min-height: 300px; }
+  .card-3 { min-height: 260px; }
+
+  .card h3 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+  }
+  .card-subtitle {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 600;
+  }
+  .card-text {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  /* ---------- Right: chat ---------- */
+  .chat {
+    flex: 0 1 340px;
+    min-width: 280px;
+    height: 100%;
+    min-height: 0;
+    padding: 16px 16px 20px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .chat-head {
+    flex: 0 0 auto;
+    background: #CAE8E6;
+    border-radius: 16px;
+    padding: 18px 20px;
+  }
+  /* Small "CHAT" label with the state's name underneath */
+  .chat-head h2 {
+    margin: 0;
+    font-family: 'Figtree', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    line-height: 1.2;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-align: center;
+    color: #2F7A64;
+  }
+  .chat-name {
+    display: block;
+    margin-top: 2px;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+    text-transform: none;
+    color: #121413;
+    overflow-wrap: anywhere;
+  }
+
+  .messages {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    background: #CAE8E6;
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  /* Pushes the stack to the bottom while still allowing scroll-up */
+  .messages > :first-child { margin-top: auto; }
+
+  .msg {
+    margin: 0;
+    align-self: flex-start;
+    max-width: 80%;
+    background: #FFFFFF;
+    border-radius: 14px;
+    padding: 12px 14px;
+    font-size: 15px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+  .msg.sent { align-self: flex-end; }
+
+  .chat-form { flex: 0 0 auto; margin: 0; }
+
+  .chat-input {
+    width: 100%;
+    height: 48px;
+    padding: 0 16px;
+    background: #FFFFFF;
+    border: 0;
+    border-radius: 12px;
+    font-family: 'Figtree', sans-serif;
+    font-size: 15px;
+    color: #121413;
+  }
+  .chat-input::placeholder { color: #3D4A46; }
+  .chat-input:focus-visible { outline: 2px solid #489E85; outline-offset: 2px; }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 1100px) {
+    .workspace {
+      flex-wrap: wrap;
+      align-content: flex-start;
+      overflow-y: auto;
+    }
+    .main {
+      flex: 1 1 100%;
+      height: auto;
+      overflow: visible;
+    }
+    .chat {
+      flex: 1 1 100%;
+      min-width: 0;
+      height: auto;
+      padding: 0 40px 40px;
+    }
+    .messages {
+      flex: 0 0 auto;
+      min-height: 360px;
+    }
+  }
+
+  /* Phone-only controls (hidden on larger screens) */
+  .chat-fab,
+  .chat-close { display: none; }
+
+  @media (max-width: 700px) {
+    .layout {
+      flex-direction: column;
+      flex-wrap: nowrap;
+      height: auto;
+      min-height: 100vh;
+    }
+
+    /* Sticky green header: profile, name, menu */
+    .sidebar,
+    .sidebar.is-collapsed {
+      position: sticky;
+      top: 0;
+      z-index: 3;
+      width: 100%;
+      height: auto;
+      max-height: 100vh;
+      overflow-x: hidden;
+      overflow-y: auto;
+      border-radius: 0 0 28px 28px;
+      /* Same motion as the desktop column, but it grows downward */
+      transition: max-height 340ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    .sidebar.is-collapsed {
+      overflow-y: hidden;
+      max-height: 73px; /* header only: 14 + 44 + 14 + 1px border */
+    }
+    .sidebar-header {
+      position: static;
+      padding: 14px 16px;
+      gap: 10px;
+      background: transparent;
+    }
+    .profile { gap: 10px; }
+    .is-collapsed .profile { opacity: 1; visibility: visible; }
+    .sidebar-toggle svg { stroke-width: 2.4; }
+    .sidebar-header { transition: border-color 220ms ease; }
+    .is-collapsed .sidebar-header { border-bottom-color: transparent; }
+    .sidebar-body { width: 100%; }
+
+    .workspace {
+      flex: 0 0 auto;
+      height: auto;
+      overflow: visible;
+    }
+
+    /* Content: title + cards, room at the bottom for the chat button */
+    .main {
+      padding: 20px 20px 110px;
+      gap: 16px;
+    }
+    .page-title {
+      position: static;
+      margin: 0;
+      padding: 8px 0 4px;
+      background: transparent;
+      font-size: 64px;
+    }
+    .card {
+      padding: 18px 20px;
+      gap: 10px;
+    }
+    .card-1 { min-height: 150px; }
+    .card-2 { min-height: 170px; }
+    .card-3 { min-height: 300px; }
+    .card h3 { font-size: 20px; }
+    .card-subtitle { font-size: 16px; }
+    .card-text { font-size: 15px; }
+
+    /* Floating "Chat Berlin" button */
+    .chat-fab {
+      position: fixed;
+      right: 20px;
+      bottom: 28px;
+      z-index: 4;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      height: 56px;
+      padding: 0 22px 0 18px;
+      border: 0;
+      border-radius: 999px;
+      max-width: calc(100vw - 40px);
+      background: #121413;
+      color: #CAE8E6;
+      font-family: 'Figtree', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    /* very long state names end in "…" instead of leaving the screen */
+    #chat-fab-label {
+      min-width: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+    .chat-fab svg { flex: 0 0 auto; }
+    .chat-fab:focus-visible { outline: 3px solid #489E85; outline-offset: 3px; }
+
+    /* Chat: full screen, parked below the screen until the button is
+       tapped, then slides up (same motion as the menu) */
+    .chat {
+      position: fixed;
+      inset: 0;
+      z-index: 5;
+      height: auto;
+      min-width: 0;
+      padding: 16px 20px 20px;
+      background: #EEF9F5;
+      transform: translateY(100%);
+      visibility: hidden;
+      transition: transform 340ms cubic-bezier(0.2, 0.8, 0.2, 1),
+                  visibility 340ms;
+    }
+    .chat.is-open {
+      transform: none;
+      visibility: visible;
+      /* visible at once when opening, so the ✕ can take focus */
+      transition: transform 340ms cubic-bezier(0.2, 0.8, 0.2, 1),
+                  visibility 0s;
+    }
+    .chat .messages {
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+    /* same room on both sides of the ✕, so the title stays centred */
+    .chat-head { position: relative; padding-left: 60px; padding-right: 60px; }
+    .chat-close {
+      position: absolute;
+      top: 50%;
+      right: 10px;
+      transform: translateY(-50%);
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      border: 0;
+      border-radius: 12px;
+      background: transparent;
+      color: #121413;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .chat-close:focus-visible { outline: 3px solid #489E85; outline-offset: 2px; }
+    body.chat-open { overflow: hidden; }
+    body.chat-open .chat-fab { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sidebar,
+    .sidebar-header,
+    .profile,
+    .sidebar-body,
+    .chat { transition: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="layout">
+
+    <!-- Left: sidebar -->
+    <nav class="sidebar" id="sidebar" aria-label="Estados">
+      <div class="sidebar-header">
+        <div class="profile">
+          <button type="button" class="profile-btn" aria-label="Perfil">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="8" r="4"/>
+              <path d="M4 20c0-3.9 3.6-6 8-6s8 2.1 8 6"/>
+            </svg>
+          </button>
+          <span class="profile-name">Pepe</span>
+        </div>
+        <button type="button" class="sidebar-toggle" id="sidebar-toggle"
+                aria-expanded="true" aria-controls="sidebar-body" aria-label="Ocultar columna">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <line x1="4" y1="7" x2="20" y2="7"/>
+            <line x1="4" y1="12" x2="20" y2="12"/>
+            <line x1="4" y1="17" x2="20" y2="17"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="sidebar-body" id="sidebar-body">
+        <div class="section-head">
+          <h2>Tus estados</h2>
+        </div>
+
+        <!-- Sample list; replaced by the states chosen on estados.html when there is a saved choice -->
+        <ul class="states" id="states">
+          <li><a class="state-link" href="#berlin" data-name="Berlin" aria-current="page">Berlin</a></li>
+          <li><a class="state-link" href="#baviera" data-name="Baviera">Baviera</a></li>
+          <li><a class="state-link" href="#nrw" data-name="NRW">NRW</a></li>
+          <li><a class="state-link" href="#hamburgo" data-name="Hamburgo">Hamburgo</a></li>
+        </ul>
+
+        <section class="calendar" aria-labelledby="cal-heading">
+          <div class="section-head">
+            <h2 id="cal-heading">Calendario</h2>
+          </div>
+          <div class="cal-card">
+            <p class="cal-title">Noviembre 2026</p>
+            <div class="cal-weekdays">
+              <span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span>
+            </div>
+            <div class="cal-days">
+              <span></span><span></span><span></span><span></span><span></span><span></span>
+              <span>1</span>
+              <span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span>
+              <span>9</span><span>10</span><span>11</span><span class="today" aria-current="date">12</span><span>13</span><span>14</span><span class="event">15</span>
+              <span>16</span><span>17</span><span>18</span><span>19</span><span>20</span><span>21</span><span>22</span>
+              <span>23</span><span>24</span><span>25</span><span>26</span><span>27</span><span>28</span><span>29</span>
+              <span>30</span>
+            </div>
+          </div>
+        </section>
+      </div>
+    </nav>
+
+    <div class="workspace">
+
+      <!-- Middle: main content -->
+      <main class="main">
+        <h1 class="page-title" id="page-title">BERLIN</h1>
+
+        <article class="card card-1">
+          <h3>Noticia</h3>
+          <p class="card-subtitle">[Titular de la noticia]</p>
+          <p class="card-text">[Resumen de la noticia para los médicos en Berlin]</p>
+        </article>
+
+        <article class="card card-2">
+          <h3>Documento actualizado</h3>
+          <p class="card-subtitle">[Nombre del documento]</p>
+          <p class="card-text">[Qué cambió y desde cuándo aplica]</p>
+        </article>
+
+        <article class="card card-3">
+          <h3>Documento A</h3>
+          <p class="card-text">[Descripción del documento]</p>
+        </article>
+      </main>
+
+      <!-- Right: chat -->
+      <aside class="chat" id="chat" aria-label="Chat Berlin">
+        <div class="chat-head">
+          <h2>Chat <span class="chat-name" id="chat-title">Berlin</span></h2>
+          <button type="button" class="chat-close" id="chat-close" aria-label="Cerrar chat">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+              <path d="M6 6l12 12M18 6L6 18"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="messages" id="messages" role="log">
+          <p class="msg sent">[Mensaje enviado]</p>
+          <p class="msg">[Mensaje recibido]</p>
+          <p class="msg">[Mensaje recibido más largo, en varias líneas]</p>
+          <p class="msg">[Mensaje recibido]</p>
+          <p class="msg sent">[Mensaje enviado]</p>
+        </div>
+
+        <form class="chat-form" id="chat-form" autocomplete="off">
+          <label class="sr-only" for="chat-input">Escribe un mensaje</label>
+          <input class="chat-input" id="chat-input" type="text" placeholder="Escribe un mensaje">
+        </form>
+      </aside>
+
+    </div>
+  </div>
+
+  <!-- Phone only: opens the chat full screen -->
+  <button type="button" class="chat-fab" id="chat-fab" aria-controls="chat" aria-expanded="false">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.4A8 8 0 1 1 21 12z"/>
+    </svg>
+    <span id="chat-fab-label">Chat Berlin</span>
+  </button>
+
+<script>
+(function () {
+  /* Sidebar collapse / expand */
+  var sidebar = document.getElementById('sidebar');
+  var toggle = document.getElementById('sidebar-toggle');
+
+  function setCollapsed(collapsed) {
+    sidebar.classList.toggle('is-collapsed', collapsed);
+    toggle.setAttribute('aria-expanded', String(!collapsed));
+    toggle.setAttribute('aria-label', collapsed ? 'Mostrar columna' : 'Ocultar columna');
+  }
+
+  toggle.addEventListener('click', function () {
+    setCollapsed(!sidebar.classList.contains('is-collapsed'));
+  });
+
+  if (window.matchMedia('(max-width: 700px)').matches) {
+    setCollapsed(true);
+  }
+
+  /* Tus estados: the states chosen on estados.html, saved in this browser
+     (localStorage "mn_estados", [{id, name}] in the order picked; an empty
+     list = "No lo sé"). With no saved choice the sample list stays. */
+  var statesList = document.getElementById('states');
+  var saved = null;
+  try { saved = JSON.parse(localStorage.getItem('mn_estados')); } catch (err) {}
+  if (Array.isArray(saved)) {
+    saved = saved.filter(function (st) {
+      return st && typeof st.id === 'string' && typeof st.name === 'string';
+    });
+    statesList.textContent = '';
+    if (!saved.length) {
+      var emptyItem = document.createElement('li');
+      emptyItem.className = 'states-empty';
+      emptyItem.innerHTML = '<p>Todavía no has elegido estados.</p><a href="estados.html">Elegir estados</a>';
+      statesList.appendChild(emptyItem);
+    }
+    saved.forEach(function (st) {
+      var item = document.createElement('li');
+      var a = document.createElement('a');
+      a.className = 'state-link';
+      a.href = '#' + st.id;
+      a.lang = 'de';
+      a.setAttribute('data-name', st.name);
+      a.textContent = st.name;
+      item.appendChild(a);
+      statesList.appendChild(item);
+    });
+  }
+
+  /* State switching (preview only, no reload) */
+  var links = document.querySelectorAll('.state-link');
+  var pageTitle = document.getElementById('page-title');
+  var chatTitle = document.getElementById('chat-title');
+  var chat = document.getElementById('chat');
+  var fab = document.getElementById('chat-fab');
+  var fabLabel = document.getElementById('chat-fab-label');
+  var chatClose = document.getElementById('chat-close');
+
+  /* Phone: floating button opens the chat full screen, ✕ / Escape closes it */
+  function setChatOpen(open) {
+    chat.classList.toggle('is-open', open);
+    document.body.classList.toggle('chat-open', open);
+    fab.setAttribute('aria-expanded', String(open));
+    if (open) chatClose.focus(); else fab.focus();
+  }
+  fab.addEventListener('click', function () { setChatOpen(true); });
+  chatClose.addEventListener('click', function () { setChatOpen(false); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && chat.classList.contains('is-open')) setChatOpen(false);
+  });
+
+  function selectState(link) {
+    var name = link.getAttribute('data-name');
+    links.forEach(function (l) { l.removeAttribute('aria-current'); });
+    link.setAttribute('aria-current', 'page');
+    pageTitle.textContent = name.toUpperCase();
+    chatTitle.textContent = name;
+    fabLabel.textContent = 'Chat ' + name;
+    chat.setAttribute('aria-label', 'Chat ' + name);
+    document.title = name + ' · Medical Network';
+  }
+
+  links.forEach(function (link) {
+    link.addEventListener('click', function (e) {
+      e.preventDefault();
+      selectState(link);
+    });
+  });
+
+  /* Coming from estados.html: open on the first state that was picked */
+  if (Array.isArray(saved) && links.length) selectState(links[0]);
+
+  /* Chat: Enter adds a sent bubble */
+  var form = document.getElementById('chat-form');
+  var input = document.getElementById('chat-input');
+  var messages = document.getElementById('messages');
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var text = input.value.trim();
+    if (!text) return;
+    var bubble = document.createElement('p');
+    bubble.className = 'msg sent';
+    bubble.textContent = text;
+    messages.appendChild(bubble);
+    input.value = '';
+    messages.scrollTop = messages.scrollHeight;
+  });
+})();
+</script>
+</body>
+</html>
