@@ -59,24 +59,27 @@ Last updated: 13 Nov 2026. This is the source of truth for the project. When a d
 - The cousin, who isn't technical, writes all the news. He publishes through a small admin form that we build ourselves (no separate CMS).
 - Clients see only the posts for the Bundesländer they follow.
 
-## Recommended by the research, not yet explicitly confirmed
+### Data and security (confirmed 13 Nov 2026)
 
-- Send login emails through Brevo's free plan, connected to Supabase as custom SMTP (the standard way of sending email). Supabase's built-in sender is for testing only.
-  - Alternative: the IONOS mailbox, untested.
-  - Brevo needs its DKIM record added at IONOS, and Brevo merged into the existing SPF record. A domain must have only one SPF record.
+- **Login emails go through Brevo's free plan** ("for now"), connected to Supabase as custom SMTP (the standard way of sending email). Supabase's built-in sender is for testing only.
+  - Easy to switch later: it's one setting in Supabase.
+  - Fallback: the IONOS mailbox, untested.
+  - Setup: Brevo's DKIM record is added at IONOS, and Brevo is merged into the existing SPF record. A domain must have only one SPF record.
 - **Data design:**
-  - `profiles`: name, Bundesland, route, plan (free/paid), is_admin
+  - `profiles`: name, main Bundesland, route, plan (free/paid), is_admin
+  - `followed_states`: user_id, Bundesland, for news
   - `checklist_items`: permanent ID, Bundesland, route, title, text, sort order, archived
   - `progress`: user_id, item_id, done_at
   - `news_posts`: title, body, Bundesland, publish date, published, paid_only
-- **Saving progress:**
-  - Progress is saved by each item's permanent ID, never by its position in the list.
+  - Adding tables or columns later is normal. Restructuring is cheap until real clients have data.
+- **Progress is saved by each item's permanent ID,** never by its position in the list.
   - Never reuse or rename an ID once it's live.
   - To retire an item, set `archived = true` instead of deleting it.
-  - The earlier answer on this was "maybe, we have to see the best option". The research recommends ID-based saving.
-- Row Level Security (RLS) is on for every table. RLS is the set of database rules that decide who can read or change each row.
-- The secret (service-role) key never goes into the website code.
-- Admins use two-factor login.
+  - This is the hardest decision to reverse once clients have saved progress.
+- **Row Level Security (RLS) is on for every table.** RLS is the set of database rules that decide who can read or change each row. It's required by the stack, because the website talks to the database directly with a public key.
+- **The secret (service-role) key never goes into the website code.**
+- **Database changes are written as SQL files** in `supabase/migrations/` in the repository. Ivan applies them by pasting them into Supabase's SQL Editor, so no Supabase keys are ever given to Claude Code.
+- **Two-factor login for admins:** not needed for now (Ivan's decision, 13 Nov 2026). Suggested to revisit before the first real client's data goes in.
 - **Admin client overview:**
   - one row per client: name, Bundesland, plan, progress %, last activity
   - opening a client shows their checklist read-only
@@ -106,8 +109,10 @@ Last updated: 13 Nov 2026. This is the source of truth for the project. When a d
 ## Open decisions (suggested default in brackets)
 
 - **Repository:**
-  - The current repository is public and in Ivan's personal GitHub account.
-  - Ivan's decision (13 Nov 2026): it stays public for now. Plan: transfer it to the company account once a company email exists.
+  - The repository is public and owned by the company's GitHub organization.
+  - Ivan's decision (13 Nov 2026): it stays public for now.
+  - The plain-HTML mock-up now lives in `design-mockup/`.
+  - The React + Vite + TypeScript version is merged into `main` (pull request #3) and live on Cloudflare Pages. GitHub Pages is turned off.
 
 - **Profile fields** (name, email, Bundesland, route, plan)
 - **How each user's checklist is created and how items are ticked** (the client ticks their own items; admins can only view)
@@ -121,4 +126,9 @@ Last updated: 13 Nov 2026. This is the source of truth for the project. When a d
   - Datenschutzerklärung in Spanish and German, from a paid generator
   - data processing agreements (AVVs) filed with Supabase, Cloudflare, Brevo and IONOS
   - terms of sale (AGB) for the lifetime package, from a lawyer or a paid generator
-- **Accounts** for GitHub, Supabase, Cloudflare and Brevo, all under a company email, not a personal one.
+- **Accounts** for GitHub, Supabase, Cloudflare and Brevo, all under the company email.
+  - The company email now exists (13 Nov 2026).
+  - Done (13 Nov 2026):
+    - a company GitHub account owns a GitHub organization, with Ivan's personal account as a second owner, and the repository has been transferred into it
+    - Cloudflare Pages has been recreated in a company Cloudflare account, and the old project in Ivan's personal account is deleted
+  - Still to do: create Supabase and Brevo directly with the company email.
