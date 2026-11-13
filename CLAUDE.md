@@ -73,5 +73,17 @@ Out of scope:
 - **Saving the choice:** in the mock-up, chosen states were saved only in the browser (`localStorage`). In the app they will be saved to the user's account: several followed states for news, plus one main state for the checklist.
 
 ## Commands and checks
-- Commands: to be filled in once the React + Vite project is set up (install, dev server, build, tests).
+- Commands (run them in the project folder; they need Node.js 22, see `.node-version`):
+  - `npm install`: downloads the tools listed in `package.json` into `node_modules/`. Run it after cloning, and after a `git pull` that changed `package.json`.
+  - `npm run dev`: starts the live preview at http://localhost:5173. Pages reload as you save.
+  - `npm run build`: checks the TypeScript types, then makes the final website files in `dist/`. Cloudflare Pages runs this on every push.
+  - `npm run preview`: serves the built `dist/` folder at http://localhost:4173, to check what will go online.
+  - `npm run lint`: runs oxlint, which warns about common code mistakes.
+  - Tests: none yet.
+- Cloudflare Pages settings: build command `npm run build`, output folder `dist`.
+- Where things are:
+  - `src/main.tsx` starts the app and lists the pages.
+  - `src/pages/`: one `.tsx` file per page, plus its own `.module.css`.
+  - `src/estados/`: map shapes, city search data and map animations.
+  - `src/lib/savedStates.ts`: the chosen states, in the browser for now.
 - Check every visual change at phone width (375px), iPad landscape and desktop.

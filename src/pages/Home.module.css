@@ -1,0 +1,135 @@
+/* Home page styles, from design-mockup/index.html.
+   Fonts: Figtree everywhere (the mock-up used Archivo for the body text),
+   Anton for the big title. */
+
+.page { padding: 28px 64px 56px; }
+
+.container {
+  max-width: 1312px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 56px;
+}
+
+/* 1. Header */
+.site-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.brand {
+  margin: 0;
+  font-family: 'Figtree Variable', sans-serif;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+}
+
+.menu-btn {
+  width: 48px;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #FFFFFF;
+  border: 1px solid #CAE8E6;
+  border-radius: 12px;
+  color: #121413;
+  text-decoration: none;
+}
+.menu-btn:hover { border-color: #489E85; }
+.menu-btn:focus-visible { outline: 3px solid #489E85; outline-offset: 2px; }
+
+/* 2. Hero */
+.hero {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 64px;
+  align-items: flex-end;
+}
+
+.hero-text {
+  flex: 3 1 560px;
+  min-width: 0;
+}
+
+.hero-title {
+  container-type: inline-size;
+  margin: 0;
+  font-family: 'Anton', sans-serif;
+  font-weight: 400;
+  text-transform: uppercase;
+  line-height: 1.05;
+  text-align: justify;
+  text-align-last: justify;
+  hyphens: none;
+}
+
+.hero-title .line { display: block; }
+.hero-title .line-1 { font-size: calc(100cqw / 9.85); }
+.hero-title .line-2,
+.hero-title .line-3 { font-size: calc(100cqw / 7.5); }
+
+.chart {
+  flex: 2 1 360px;
+  min-width: 0;
+  height: 310px;
+  display: flex;
+  gap: 28px;
+  align-items: flex-end;
+}
+
+.bar { flex: 1 1 0; border-radius: 8px; }
+.bar-1 { height: 16%;  background: #CAE8E6; }
+.bar-2 { height: 39%;  background: #7CDC92; }
+.bar-3 { height: 69%;  background: #489E85; }
+.bar-4 { height: 100%; background: #121413; }
+
+/* 3. Cards */
+.cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+
+.card {
+  height: 280px;
+  border-radius: 20px;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.card p { margin: 0; }
+
+.card-main {
+  flex: 2 1 480px;
+  background: #489E85;
+  color: #121413;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.card-box-1 {
+  flex: 1 1 220px;
+  background: #FFFFFF;
+  border: 1px solid #CAE8E6;
+  font-size: 16px;
+}
+
+.card-box-2 {
+  flex: 1 1 220px;
+  background: #121413;
+  color: #B2F2E2;
+  font-size: 16px;
+}
+
+/* Small screens: tighter outer padding so the content keeps its width */
+@media (max-width: 700px) {
+  .page { padding: 20px 20px 40px; }
+  .container { gap: 40px; }
+  .hero { gap: 40px; }
+}

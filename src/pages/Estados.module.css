@@ -1,0 +1,400 @@
+/* State picker page styles, from design-mockup/estados.html.
+   The map's drawing code (estados/mapAnimations.ts) adds some of these
+   classes itself: flood-circle, is-flooding, label, leader, dot, ... */
+
+.page { padding: 28px 64px 28px; }
+
+.container {
+  max-width: 1312px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  /* Map height: as tall as the screen allows (minus the room the rest of
+     the page needs), but never taller than the drawing needs at this
+     width. --map-ratio = height / width of the drawing. */
+  --map-reserve: 390px;
+  --map-ratio: 0.755;
+  --map-room: min(100vw - 128px, 1312px);
+  --map-h: min(max(420px, calc(100vh - var(--map-reserve))), calc(var(--map-room) * var(--map-ratio)));
+}
+.content { --map-reserve: 468px; }
+
+/* 1. Header (same as the home page) */
+.site-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.brand {
+  margin: 0;
+  font-family: 'Figtree Variable', sans-serif;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  color: #121413;
+  text-decoration: none;
+}
+.brand:focus-visible { outline: 3px solid #489E85; outline-offset: 4px; border-radius: 4px; }
+
+.menu-btn {
+  width: 48px;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #FFFFFF;
+  border: 1px solid #CAE8E6;
+  border-radius: 12px;
+  color: #121413;
+  text-decoration: none;
+}
+.menu-btn:hover { border-color: #489E85; }
+.menu-btn:focus-visible { outline: 3px solid #489E85; outline-offset: 2px; }
+
+/* 2. Question */
+.intro { text-align: center; }
+
+.page-title {
+  margin: 0 auto;
+  max-width: 24ch;
+  font-family: 'Anton', sans-serif;
+  font-weight: 400;
+  font-size: clamp(36px, 4vw, 58px);
+  line-height: 1.05;
+  text-transform: uppercase;
+  color: #2F7A64;
+  text-wrap: balance;
+}
+
+.hint {
+  margin: 12px 0 0;
+  font-size: 17px;
+  color: #3D4A46;
+}
+
+/* 3. Map */
+.map {
+  display: block;
+  width: 100%;
+  height: var(--map-h);
+  overflow: visible;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.state {
+  fill: #FFFFFF;
+  fill-rule: evenodd;
+  stroke: #489E85;
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  cursor: pointer;
+  transition: fill 160ms ease;
+}
+.state:focus { outline: none; }
+.state[aria-checked="true"] { fill: #7CDC92; }
+
+@media (hover: hover) {
+  .state.is-hover { fill: #CAE8E6; }
+  .state[aria-checked="true"].is-hover { fill: #6CCB83; }
+}
+
+/* Bigger invisible tap areas for Berlin, Bremen and Hamburg */
+.hit { fill: transparent; cursor: pointer; }
+
+/* Selecting: the green grows as a circle from the black dot, cut to the
+   state's outline, until it fills the whole state. Meanwhile the state
+   itself keeps its unselected colour (is-flooding). */
+.floods { pointer-events: none; }
+.flood-circle {
+  fill: #7CDC92;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: flood 550ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+@keyframes flood { from { transform: scale(0); } to { transform: scale(1); } }
+/* Unselecting: the same thing backwards (mirrored easing curve), the
+   green shrinks back into the dot */
+.flood-circle.is-shrinking {
+  animation-name: unflood;
+  animation-timing-function: cubic-bezier(0.8, 0, 0.6, 1);
+}
+@keyframes unflood { from { transform: scale(1); } to { transform: scale(0); } }
+.flood-outline {
+  fill: none;
+  stroke: #489E85;
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.state.is-flooding { fill: #FFFFFF; }
+@media (hover: hover) {
+  .state.is-flooding.is-hover { fill: #CAE8E6; }
+}
+
+/* Keyboard focus: drawn on top so neighbours never hide it */
+.focus-ring {
+  fill: none;
+  stroke: #121413;
+  stroke-width: 3;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+  visibility: hidden;
+}
+.focus-ring.is-on { visibility: visible; }
+
+/* Names with a line, like the sketch */
+.leader {
+  fill: none;
+  stroke: #121413;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+.leader.is-drawing {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw-line 420ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+@keyframes draw-line { to { stroke-dashoffset: 0; } }
+
+.dot {
+  fill: #121413;
+  pointer-events: none;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.dot.is-new { animation: pop 260ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@keyframes pop { from { transform: scale(0); } to { transform: scale(1); } }
+
+.label { cursor: pointer; }
+.label text {
+  font-family: 'Figtree Variable', sans-serif;
+  font-size: 24px;
+  font-weight: 600;
+  fill: #121413;
+}
+.label:hover text { fill: #2F7A64; }
+.label-hit { fill: transparent; }
+.label.is-new { animation: fade-in 260ms 180ms ease both; }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* Unselecting = the selecting animation played backwards: the same 440ms
+   timeline mirrored (name fades out, line pulls back into the dot, dot
+   shrinks away), each easing curve flipped. Own keyframe names on purpose:
+   re-using fade-in/draw-line/pop would not restart a finished animation. */
+.label.is-leaving {
+  pointer-events: none;
+  animation: fade-out 260ms 0ms cubic-bezier(0.75, 0, 0.75, 0.9) both;
+}
+@keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }
+.leader.is-undrawing {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  animation: undraw-line 420ms 20ms cubic-bezier(0.8, 0, 0.8, 0.2) both;
+}
+@keyframes undraw-line { from { stroke-dashoffset: 0; } to { stroke-dashoffset: 1; } }
+.dot.is-leaving { animation: pop-out 260ms 180ms cubic-bezier(0.8, 0, 0.8, 0.2) both; }
+@keyframes pop-out { from { transform: scale(1); } to { transform: scale(0); } }
+
+/* Option C: search by city */
+.search {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+}
+.search-icon {
+  position: absolute;
+  left: 16px;
+  top: 26px;
+  transform: translateY(-50%);
+  color: #3D4A46;
+  pointer-events: none;
+}
+.search-input {
+  width: 100%;
+  height: 52px;
+  padding: 0 16px 0 48px;
+  background: #FFFFFF;
+  border: 1px solid #CAE8E6;
+  border-radius: 12px;
+  font-family: 'Figtree Variable', sans-serif;
+  font-size: 16px;
+  color: #121413;
+}
+.search-input::placeholder { color: #3D4A46; }
+.search-input:hover { border-color: #489E85; }
+.search-input:focus-visible { outline: 2px solid #489E85; outline-offset: 2px; }
+
+.suggestions {
+  position: absolute;
+  z-index: 6;
+  left: 0;
+  right: 0;
+  top: calc(100% + 6px);
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background: #FFFFFF;
+  border: 1px solid #CAE8E6;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(18, 20, 19, 0.12);
+}
+.suggestion {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.suggestion[aria-selected="true"] { background: #EEF9F5; }
+@media (hover: hover) { .suggestion:hover { background: #EEF9F5; } }
+.suggestion-city { font-size: 16px; font-weight: 600; }
+.suggestion-alias { font-weight: 400; color: #3D4A46; }
+.suggestion-state {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2F7A64;
+  text-align: right;
+}
+.suggestion-empty {
+  padding: 12px;
+  font-size: 15px;
+  line-height: 1.4;
+  color: #3D4A46;
+}
+
+/* 4. Chosen states (phone only) + Siguiente */
+.chips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: none;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 12px 0 16px;
+  background: #FFFFFF;
+  border: 1px solid #CAE8E6;
+  border-radius: 999px;
+  font-family: 'Figtree Variable', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: #121413;
+  cursor: pointer;
+}
+.chip:focus-visible { outline: 3px solid #489E85; outline-offset: 2px; }
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 12px 24px;
+}
+
+.count {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #3D4A46;
+}
+
+/* Shown instead of the count while nothing is chosen */
+.unsure-btn {
+  height: 48px;
+  padding: 0 24px;
+  background: #FFFFFF;
+  border: 1px solid #CAE8E6;
+  border-radius: 999px;
+  font-family: 'Figtree Variable', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: #121413;
+  cursor: pointer;
+  transition: border-color 160ms ease;
+}
+.unsure-btn:hover { border-color: #489E85; }
+.unsure-btn:focus-visible { outline: 3px solid #489E85; outline-offset: 2px; }
+.count[hidden], .unsure-btn[hidden] { display: none; }
+
+.next-btn {
+  height: 56px;
+  padding: 0 40px;
+  border: 0;
+  border-radius: 999px;
+  background: #121413;
+  color: #CAE8E6;
+  font-family: 'Anton', sans-serif;
+  font-size: 22px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+.next-btn:hover:not(:disabled) { background: #2F7A64; color: #FFFFFF; }
+.next-btn:focus-visible { outline: 3px solid #489E85; outline-offset: 3px; }
+.next-btn:disabled {
+  background: #CAE8E6;
+  color: #3D4A46;
+  cursor: not-allowed;
+}
+
+/* Small screens: map only (no side names), chosen states as chips,
+   Siguiente stays reachable at the bottom */
+@media (max-width: 700px) {
+  .page { padding: 20px 20px 0; }
+  .container, .content { gap: 18px; }
+  .hint { font-size: 16px; }
+  .map { height: auto; }
+  .labels, .leaders { display: none; }
+  .chips { display: flex; }
+  .actions {
+    flex-direction: column;
+    gap: 10px;
+    position: sticky;
+    bottom: 0;
+    margin: 0 -20px;
+    padding: 10px 20px 22px;
+    background: #EEF9F5;
+  }
+  /* soft fade above the bar so the map/chips slide under it */
+  .actions::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 100%;
+    height: 24px;
+    background: linear-gradient(rgba(238, 249, 245, 0), #EEF9F5);
+    pointer-events: none;
+  }
+  .next-btn { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .state, .next-btn, .pick { transition: none; }
+  .leader.is-drawing, .dot.is-new, .label.is-new,
+  .leader.is-undrawing, .dot.is-leaving, .label.is-leaving { animation: none; stroke-dasharray: none; }
+}
