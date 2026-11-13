@@ -4,8 +4,8 @@
 A Spanish-language website mock-up, "Medical Network", for doctors in Germany ("Ser médico ya es difícil, no te preocupes por la burocracia"). Three static pages, plain HTML + CSS + vanilla JS, **no framework, no build step, no npm**. Content in `[corchetes]` is placeholder text.
 
 - `index.html` — home. Menu button → `estados.html`.
-- `estados.html` — "¿En qué estado federal estás interesado?": a clickable map of the 16 German states + city search. Choose one or more, then **Siguiente** → `berlin.html`. **No lo sé** (shown instead of the count while nothing is chosen) → `berlin.html` with no states.
-- `berlin.html` — a state's page: green sidebar ("Tus estados" + calendar), big state title, news/document cards, chat. Clicking a state in the sidebar swaps title/chat (preview only, no reload).
+- `estados.html` — "¿En qué estado federal estás interesado?": a clickable map of the 16 German states + city search. Choose one or more, then **Siguiente** → `novedades.html`. **No lo sé** (shown instead of the count while nothing is chosen) → `novedades.html` with no states.
+- `novedades.html` — a state's page: green sidebar ("Tus estados" + calendar), big state title, news/document cards, chat. Clicking a state in the sidebar swaps title/chat (preview only, no reload).
 
 ## How the owner works
 - He does not write code. He describes a change; the model edits; he reviews the result in plain language (often on the iPad).
@@ -30,7 +30,7 @@ A Spanish-language website mock-up, "Medical Network", for doctors in Germany ("
 
 ## Saved choice (estados → berlin)
 - `localStorage` key **`mn_estados`** = `[{"id":"nw","name":"Nordrhein-Westfalen"}, …]` in the order picked. Written by Siguiente; `[]` = "No lo sé". Per browser/device only — not shared, no server.
-- `berlin.html` reads it: builds "Tus estados" from it and opens on the first state; `[]` shows "Todavía no has elegido estados." + link to `estados.html`; key missing or invalid → the sample list (Berlin, Baviera, NRW, Hamburgo) stays.
+- `novedades.html` reads it: builds "Tus estados" from it and opens on the first state; `[]` shows "Todavía no has elegido estados." + link to `estados.html`; key missing or invalid → the sample list (Berlin, Baviera, NRW, Hamburgo) stays.
 
 ## Conventions
 - Vanilla JS, ES5 style as in the files (`var`, `function`), each page self-contained (own `<style>` and `<script>`).
