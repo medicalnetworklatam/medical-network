@@ -437,7 +437,7 @@
 
       <header class="site-header">
         <a class="brand" href="index.html">Medical Network</a>
-        <a class="menu-btn" href="berlin.html" aria-label="Abrir menú">
+        <a class="menu-btn" href="novedades.html" aria-label="Abrir menú">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
             <line x1="4" y1="7" x2="20" y2="7"/>
             <line x1="4" y1="12" x2="20" y2="12"/>
@@ -1094,7 +1094,7 @@
 
   /* ---------- Siguiente / No lo sé ---------- */
   /* The choice is kept in this browser (localStorage "mn_estados") so that
-     berlin.html can list it under "Tus estados": [{id:"by", name:"Bayern"}, ...]
+     novedades.html can list it under "Tus estados": [{id:"by", name:"Bayern"}, ...]
      in the order picked. "No lo sé" saves an empty list. */
   function saveChoice(list) {
     try { localStorage.setItem('mn_estados', JSON.stringify(list)); } catch (e) {}
@@ -1103,12 +1103,12 @@
   nextBtn.addEventListener('click', function () {
     if (!chosen.length) return;
     saveChoice(chosen.map(function (s) { return { id: s.id.slice(3), name: s.name }; }));
-    window.location.href = 'berlin.html';
+    window.location.href = 'novedades.html';
   });
 
   unsureBtn.addEventListener('click', function () {
     saveChoice([]);
-    window.location.href = 'berlin.html';
+    window.location.href = 'novedades.html';
   });
 })();
 </script>

@@ -292,6 +292,39 @@
     text-align: center;
   }
 
+  /* Frosted title: cards scrolling up get gradually blurrier before they
+     slide under it. Two blur layers behind the title fade in over the last
+     48px (the title's bottom padding + the gap above the first card). */
+  @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .page-title { background: transparent; }
+    .page-title::before,
+    .page-title::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: -28px; /* reaches down to where the first card starts */
+      z-index: -1;
+      pointer-events: none;
+    }
+    /* light blur, starts lowest */
+    .page-title::before {
+      -webkit-backdrop-filter: blur(3px);
+      backdrop-filter: blur(3px);
+      -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 48px), transparent);
+      mask-image: linear-gradient(to bottom, #000 calc(100% - 48px), transparent);
+    }
+    /* strong blur + page colour, right under the title */
+    .page-title::after {
+      background: rgba(238, 249, 245, 0.72);
+      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(16px);
+      -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 48px), transparent calc(100% - 8px));
+      mask-image: linear-gradient(to bottom, #000 calc(100% - 48px), transparent calc(100% - 8px));
+    }
+  }
+
   .card {
     flex-shrink: 0;
     background: #FFFFFF;
@@ -302,19 +335,52 @@
     flex-direction: column;
     gap: 14px;
   }
-  .card-1 { min-height: 220px; }
-  .card-2 { min-height: 300px; }
-  .card-3 { min-height: 260px; }
+
+  /* Photo at the top of some cards */
+  .card-img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border-radius: 12px;
+    background: #CAE8E6;
+  }
+  .card-img.wide {
+    aspect-ratio: 3 / 1;
+    object-position: center 88%;
+  }
+
+  /* Type label + date */
+  .card-meta {
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 12px;
+  }
+  .card-tag {
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #CAE8E6;
+    color: #2F7A64;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  /* events use the calendar's orange */
+  .card-tag.event { background: #F2994A; color: #121413; }
+  .card-date {
+    font-size: 14px;
+    color: #3D4A46;
+  }
 
   .card h3 {
     margin: 0;
     font-size: 22px;
     font-weight: 700;
-  }
-  .card-subtitle {
-    margin: 0;
-    font-size: 17px;
-    font-weight: 600;
+    line-height: 1.25;
   }
   .card-text {
     margin: 0;
@@ -430,6 +496,71 @@
     }
   }
 
+  /* Desktop: the ✕ at the top left slides the chat out to the right,
+     leaving a strip on screen (like the left column); the chat icon in
+     the strip brings it back */
+  .chat-toggle { display: none; }
+
+  @media (min-width: 1101px) {
+    .workspace { overflow: hidden; }
+    .chat {
+      position: relative;
+      transition: margin-right 340ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    .chat.is-collapsed { margin-right: -264px; } /* 340px column, 76px strip stays */
+
+    /* The strip: one pale teal column behind the header */
+    .chat::before {
+      content: "";
+      position: absolute;
+      top: 16px;
+      bottom: 20px;
+      left: 0;
+      right: 16px;
+      background: #CAE8E6;
+      border-radius: 16px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 220ms ease;
+    }
+    .chat.is-collapsed::before { opacity: 1; }
+
+    /* same room on both sides of the button, so the title stays centred */
+    .chat-head { position: relative; padding-left: 60px; padding-right: 60px; }
+    .chat-head h2,
+    .messages,
+    .chat-form { transition: opacity 220ms ease, visibility 220ms; }
+    .chat.is-collapsed .chat-head h2,
+    .chat.is-collapsed .messages,
+    .chat.is-collapsed .chat-form {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    .chat-toggle {
+      position: absolute;
+      top: 50%;
+      left: 16px;
+      transform: translateY(-50%);
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      border: 0;
+      border-radius: 12px;
+      background: transparent;
+      color: #121413;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .chat-toggle:hover { background: rgba(72, 158, 133, 0.2); }
+    .chat-toggle:focus-visible { outline: 3px solid #489E85; outline-offset: 2px; }
+    .chat-toggle .icon-open,
+    .chat.is-collapsed .chat-toggle .icon-close { display: none; }
+    .chat.is-collapsed .chat-toggle .icon-open { display: block; }
+  }
+
   /* Phone-only controls (hidden on larger screens) */
   .chat-fab,
   .chat-close { display: none; }
@@ -492,15 +623,14 @@
       background: transparent;
       font-size: 64px;
     }
+    /* the title scrolls away with the page here, so no blur layers */
+    .page-title::before,
+    .page-title::after { display: none; }
     .card {
       padding: 18px 20px;
       gap: 10px;
     }
-    .card-1 { min-height: 150px; }
-    .card-2 { min-height: 170px; }
-    .card-3 { min-height: 300px; }
     .card h3 { font-size: 20px; }
-    .card-subtitle { font-size: 16px; }
     .card-text { font-size: 15px; }
 
     /* Floating "Chat Berlin" button */
@@ -589,7 +719,11 @@
     .sidebar-header,
     .profile,
     .sidebar-body,
-    .chat { transition: none; }
+    .chat,
+    .chat::before,
+    .chat-head h2,
+    .messages,
+    .chat-form { transition: none; }
   }
 </style>
 </head>
@@ -660,27 +794,70 @@
       <main class="main">
         <h1 class="page-title" id="page-title">BERLIN</h1>
 
-        <article class="card card-1">
-          <h3>Noticia</h3>
-          <p class="card-subtitle">[Titular de la noticia]</p>
-          <p class="card-text">[Resumen de la noticia para los médicos en Berlin]</p>
+        <!-- Example news and updates (made up for the mock-up) -->
+        <article class="card">
+          <img class="card-img" src="img/edificio.jpg" width="1200" height="805"
+               alt="Edificio blanco de formas curvas bajo un cielo azul">
+          <p class="card-meta">
+            <span class="card-tag">Noticia</span>
+            <time class="card-date" datetime="2026-11-12">12 nov 2026</time>
+          </p>
+          <h3>Berlin amplía las fechas para la Kenntnisprüfung</h3>
+          <p class="card-text">La autoridad sanitaria de Berlin (LAGeSo) abrirá más fechas de examen a partir de enero para reducir la espera. Si ya enviaste tu solicitud, recibirás la nueva fecha por correo: no hace falta volver a presentar los documentos.</p>
         </article>
 
-        <article class="card card-2">
-          <h3>Documento actualizado</h3>
-          <p class="card-subtitle">[Nombre del documento]</p>
-          <p class="card-text">[Qué cambió y desde cuándo aplica]</p>
+        <article class="card">
+          <p class="card-meta">
+            <span class="card-tag">Documento actualizado</span>
+            <time class="card-date" datetime="2026-11-09">9 nov 2026</time>
+          </p>
+          <h3>Nuevo formulario de solicitud de la Approbation</h3>
+          <p class="card-text">Desde el 1 de diciembre solo se acepta la versión 2026 del formulario. Cambian la sección de experiencia profesional y la lista de documentos que necesitan traducción jurada.</p>
         </article>
 
-        <article class="card card-3">
-          <h3>Documento A</h3>
-          <p class="card-text">[Descripción del documento]</p>
+        <article class="card">
+          <p class="card-meta">
+            <span class="card-tag">Plazo</span>
+            <time class="card-date" datetime="2026-11-05">5 nov 2026</time>
+          </p>
+          <h3>Seguro de responsabilidad profesional: renuévalo antes del 31 de diciembre</h3>
+          <p class="card-text">La Ärztekammer pide el certificado actualizado de tu Berufshaftpflicht para mantener activo tu registro. Puedes subirlo en el portal de miembros en pocos minutos.</p>
+        </article>
+
+        <article class="card">
+          <img class="card-img wide" src="img/edificio.jpg" width="1200" height="805" loading="lazy"
+               alt="Fachada blanca con una fila de ventanas cuadradas">
+          <p class="card-meta">
+            <span class="card-tag event">Evento</span>
+            <time class="card-date" datetime="2026-11-15T18:00">Domingo 15 nov · 18:00</time>
+          </p>
+          <h3>Sesión online: tu primer año como médico en Alemania</h3>
+          <p class="card-text">Contrato, guardias, impuestos y seguro social, explicados en español por médicos que ya pasaron por ello. Gratis y con tiempo para preguntas al final.</p>
+        </article>
+
+        <article class="card">
+          <p class="card-meta">
+            <span class="card-tag">Guía</span>
+            <time class="card-date" datetime="2026-10-28">28 oct 2026</time>
+          </p>
+          <h3>Fachsprachprüfung: qué esperar el día del examen</h3>
+          <p class="card-text">Paso a paso: la conversación con el paciente, el informe escrito y la presentación del caso a un colega. Incluye frases útiles en alemán para cada parte.</p>
         </article>
       </main>
 
       <!-- Right: chat -->
       <aside class="chat" id="chat" aria-label="Chat Berlin">
         <div class="chat-head">
+          <!-- Desktop only: hides / shows the chat -->
+          <button type="button" class="chat-toggle" id="chat-toggle"
+                  aria-expanded="true" aria-controls="messages" aria-label="Ocultar chat">
+            <svg class="icon-close" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+              <path d="M6 6l12 12M18 6L6 18"/>
+            </svg>
+            <svg class="icon-open" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.4A8 8 0 1 1 21 12z"/>
+            </svg>
+          </button>
           <h2>Chat <span class="chat-name" id="chat-title">Berlin</span></h2>
           <button type="button" class="chat-close" id="chat-close" aria-label="Cerrar chat">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
@@ -784,6 +961,15 @@
   chatClose.addEventListener('click', function () { setChatOpen(false); });
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && chat.classList.contains('is-open')) setChatOpen(false);
+  });
+
+  /* Desktop: ✕ slides the chat out to the right, the chat icon brings it back */
+  var chatToggle = document.getElementById('chat-toggle');
+  chatToggle.addEventListener('click', function () {
+    var collapsed = !chat.classList.contains('is-collapsed');
+    chat.classList.toggle('is-collapsed', collapsed);
+    chatToggle.setAttribute('aria-expanded', String(!collapsed));
+    chatToggle.setAttribute('aria-label', collapsed ? 'Mostrar chat' : 'Ocultar chat');
   });
 
   function selectState(link) {
