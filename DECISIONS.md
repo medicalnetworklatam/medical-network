@@ -78,6 +78,12 @@ Last updated: 13 Nov 2026. This is the source of truth for the project. When a d
   - This is the hardest decision to reverse once clients have saved progress.
 - **Row Level Security (RLS) is on for every table.** RLS is the set of database rules that decide who can read or change each row. It's required by the stack, because the website talks to the database directly with a public key.
 - **The secret (service-role) key never goes into the website code.**
+- **Supabase project settings** (13 Nov 2026):
+  - project `mnl-client-area`, Frankfurt, Free plan
+  - Data API on
+  - "Automatically expose new tables" **off**: every migration must grant table access explicitly
+  - "Automatic RLS" **on**, as a safety net. Migrations still enable RLS explicitly.
+  - No GitHub link in Supabase; changes are applied by hand.
 - **Database changes are written as SQL files** in `supabase/migrations/` in the repository. Ivan applies them by pasting them into Supabase's SQL Editor, so no Supabase keys are ever given to Claude Code.
 - **Two-factor login for admins:** not needed for now (Ivan's decision, 13 Nov 2026). Suggested to revisit before the first real client's data goes in.
 - **Admin client overview:**
