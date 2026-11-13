@@ -3,7 +3,7 @@
 ## What this is
 A Spanish-language website mock-up, "Medical Network", for doctors in Germany ("Ser médico ya es difícil, no te preocupes por la burocracia"). Three static pages, plain HTML + CSS + vanilla JS, **no framework, no build step, no npm**. Content in `[corchetes]` is placeholder text.
 
-- `index.html` — home. Menu button → `berlin.html`. (Nothing links to `estados.html` yet.)
+- `index.html` — home. Menu button → `estados.html`.
 - `estados.html` — "¿En qué estado federal estás interesado?": a clickable map of the 16 German states + city search. Choose one or more, then **Siguiente** → `berlin.html`. **No lo sé** (shown instead of the count while nothing is chosen) → `berlin.html` with no states.
 - `berlin.html` — a state's page: green sidebar ("Tus estados" + calendar), big state title, news/document cards, chat. Clicking a state in the sidebar swaps title/chat (preview only, no reload).
 
