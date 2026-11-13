@@ -40,6 +40,10 @@ of them should be marked "RLS disabled" / "Unrestricted".
 
 ## 2. Make yourself and your cousin admins
 
+Accounts are only created by admins, through **Invite user**. Public sign-ups
+are disabled in Supabase (**Authentication** settings, "Allow new users to
+sign up" is off), so nobody can register themselves. Keep that setting off.
+
 1. **Authentication → Users → Invite user**, with your own email. A profile
    row is created automatically. You can see it in Table Editor → `profiles`.
 2. In the SQL Editor, run this (with the right email):
