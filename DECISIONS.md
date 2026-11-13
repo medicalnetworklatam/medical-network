@@ -65,13 +65,25 @@ Last updated: 13 Nov 2026. This is the source of truth for the project. When a d
   - Easy to switch later: it's one setting in Supabase.
   - Fallback: the IONOS mailbox, untested.
   - Setup: Brevo's DKIM record is added at IONOS, and Brevo is merged into the existing SPF record. A domain must have only one SPF record.
-- **Data design:**
-  - `profiles`: name, main Bundesland, route, plan (free/paid), is_admin
+- **Data design** (built in migration 1, `supabase/migrations/20261113120000_initial_schema.sql`, 13 Nov 2026):
+  - `profiles`: name, email (a copy of the login email, kept in sync), main Bundesland, route, plan (free/paid), is_admin, created date. Created automatically when a user is invited.
+  - `routes`: permanent short code, Spanish name, sort order, archived. Starts empty; Ivan will give the route names later.
   - `followed_states`: user_id, Bundesland, for news
-  - `checklist_items`: permanent ID, Bundesland, route, title, text, sort order, archived
-  - `progress`: user_id, item_id, done_at
-  - `news_posts`: title, body, Bundesland, publish date, published, paid_only
+  - `checklist_items`: permanent automatic ID (what progress uses), optional unique readable code (like `by-kp-010`, for humans and spreadsheet imports), Bundesland, route, title, text, sort order, archived
+  - `progress`: user_id, item_id, done_at (set by the database)
+  - `news_posts`: title, body (plain text), Bundesland (empty = all states), publish date, published, paid_only (ticked by default)
+  - Bundesländer are stored as the map's 16 short codes (`by`, `nw`, `th`…); the database refuses anything else.
   - Adding tables or columns later is normal. Restructuring is cheap until real clients have data.
+- **Who can do what** (confirmed 13 Nov 2026, enforced by grants and RLS, proven by `supabase/tests/rls_check.sql`):
+  - Logged-out visitors can read nothing.
+  - Clients read and change only their own rows. On their profile they can change only their name.
+  - Main Bundesland, route, plan and is_admin are changed only by admins.
+  - Clients choose their own followed states.
+  - **Paid unlocks the checklist:** only paid users and admins can read checklist items, and only they can tick them.
+  - News: free users only see posts with `paid_only = false`. Clients only see published posts whose date has come. Posts for "all states" are shown to everyone who passes the paid_only rule. The website, not the database, filters news by followed states.
+  - The client ticks their own items; admins can only view progress.
+  - Only admins write routes, checklist items and news. Checklist items and routes are never deleted, not even by admins (retire them with `archived = true`).
+  - Admin overview "last activity" = the client's most recent tick.
 - **Progress is saved by each item's permanent ID,** never by its position in the list.
   - Never reuse or rename an ID once it's live.
   - To retire an item, set `archived = true` instead of deleting it.
@@ -120,9 +132,7 @@ Last updated: 13 Nov 2026. This is the source of truth for the project. When a d
   - The plain-HTML mock-up now lives in `design-mockup/`.
   - The React + Vite + TypeScript version is merged into `main` (pull request #3) and live on Cloudflare Pages. GitHub Pages is turned off.
 
-- **Profile fields** (name, email, Bundesland, route, plan)
-- **How each user's checklist is created and how items are ticked** (the client ticks their own items; admins can only view)
-- **What a news post can include** (title, text with links, Bundesland, date, a "paid only" tickbox; no comments, likes or photos)
+- **What a news post can include:** the fields are decided (see Data design). Still open: links inside the text (suggested: the site turns web addresses into links safely); no comments, likes or photos.
 - **Alerts** (none in the first version)
 - **Calendar** (deferred)
 - **Students and doctors already working in Germany** (treat them as another route)
