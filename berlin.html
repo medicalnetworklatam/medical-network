@@ -292,6 +292,39 @@
     text-align: center;
   }
 
+  /* Frosted title: cards scrolling up get gradually blurrier before they
+     slide under it. Two blur layers behind the title fade in over the last
+     48px (the title's bottom padding + the gap above the first card). */
+  @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .page-title { background: transparent; }
+    .page-title::before,
+    .page-title::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: -28px; /* reaches down to where the first card starts */
+      z-index: -1;
+      pointer-events: none;
+    }
+    /* light blur, starts lowest */
+    .page-title::before {
+      -webkit-backdrop-filter: blur(3px);
+      backdrop-filter: blur(3px);
+      -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 48px), transparent);
+      mask-image: linear-gradient(to bottom, #000 calc(100% - 48px), transparent);
+    }
+    /* strong blur + page colour, right under the title */
+    .page-title::after {
+      background: rgba(238, 249, 245, 0.72);
+      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(16px);
+      -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 48px), transparent calc(100% - 8px));
+      mask-image: linear-gradient(to bottom, #000 calc(100% - 48px), transparent calc(100% - 8px));
+    }
+  }
+
   .card {
     flex-shrink: 0;
     background: #FFFFFF;
@@ -557,6 +590,9 @@
       background: transparent;
       font-size: 64px;
     }
+    /* the title scrolls away with the page here, so no blur layers */
+    .page-title::before,
+    .page-title::after { display: none; }
     .card {
       padding: 18px 20px;
       gap: 10px;
