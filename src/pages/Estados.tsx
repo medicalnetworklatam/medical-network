@@ -4,6 +4,7 @@ import {
 } from 'react'
 import { Link, useNavigate } from 'react-router'
 import MenuIcon from './MenuIcon.tsx'
+import SessionButton from './SessionButton.tsx'
 import { usePageTitle } from '../lib/usePageTitle.ts'
 import { useMediaQuery } from '../lib/useMediaQuery.ts'
 import { saveChosenStates } from '../lib/savedStates.ts'
@@ -184,9 +185,12 @@ export default function Estados() {
 
         <header className={styles.siteHeader}>
           <Link className={styles.brand} to="/">Medical Network</Link>
-          <Link className={styles.menuBtn} to="/novedades" aria-label="Abrir menú">
-            <MenuIcon />
-          </Link>
+          <div className={styles.headerActions}>
+            <SessionButton />
+            <Link className={styles.menuBtn} to="/novedades" aria-label="Abrir menú">
+              <MenuIcon />
+            </Link>
+          </div>
         </header>
 
         <main className={styles.content}>

@@ -8,6 +8,7 @@ and Claude Code never connects to Supabase.
 |---|---|
 | `migrations/20261113120000_initial_schema.sql` | **Migration 1.** Creates the tables, switches on Row Level Security, and adds the access rules and the automatic profile. Run it **once**. |
 | `tests/rls_check.sql` | **The RLS test.** Proves that clients can't see or change each other's data and that admins can do their job. Run it as often as you like. |
+| `templates/` | **Login emails and settings.** The Spanish invite and reset-password emails, plus the guide (`templates/README.md`) to the URL, password and email settings that logins need. |
 
 A **migration** is one SQL file that changes the database one step forward.
 They're numbered by date and time, and you apply them in that order. Once a

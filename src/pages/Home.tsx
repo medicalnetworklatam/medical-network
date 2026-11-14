@@ -1,5 +1,6 @@
 import { Link } from 'react-router'
 import MenuIcon from './MenuIcon.tsx'
+import SessionButton from './SessionButton.tsx'
 import { usePageTitle } from '../lib/usePageTitle.ts'
 import styles from './Home.module.css'
 
@@ -13,9 +14,12 @@ export default function Home() {
 
         <header className={styles.siteHeader}>
           <p className={styles.brand}>Medical Network</p>
-          <Link className={styles.menuBtn} to="/estados" aria-label="Abrir menú">
-            <MenuIcon />
-          </Link>
+          <div className={styles.headerActions}>
+            <SessionButton />
+            <Link className={styles.menuBtn} to="/estados" aria-label="Abrir menú">
+              <MenuIcon />
+            </Link>
+          </div>
         </header>
 
         <main>
