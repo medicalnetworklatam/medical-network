@@ -59,6 +59,13 @@
 .menu-btn:hover { border-color: #489E85; }
 .menu-btn:focus-visible { outline: 3px solid #489E85; outline-offset: 2px; }
 
+/* "Entrar" / "Cerrar sesión" pill and menu button, side by side */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 /* 2. Question */
 .intro { text-align: center; }
 

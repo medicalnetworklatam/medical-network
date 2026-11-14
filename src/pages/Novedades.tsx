@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
 import MenuIcon from './MenuIcon.tsx'
+import SessionButton from './SessionButton.tsx'
 import { usePageTitle } from '../lib/usePageTitle.ts'
 import { loadChosenStates, type SavedState } from '../lib/savedStates.ts'
 import edificio from '../assets/edificio.jpg'
@@ -157,6 +158,8 @@ export default function Novedades() {
                 </div>
               </div>
             </section>
+
+            <SessionButton onGreen />
           </div>
         </nav>
 

@@ -1,0 +1,45 @@
+/* "Entrar" / "Cerrar sesión" pill (SessionButton.tsx), same look as the
+   white "No lo sé" pill on the state picker */
+
+.pill {
+  height: 48px;
+  padding: 0 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #FFFFFF;
+  border: 1px solid #CAE8E6;
+  border-radius: 999px;
+  font-family: 'Figtree Variable', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: #121413;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color 160ms ease;
+}
+.pill:hover { border-color: #489E85; }
+.pill:focus-visible { outline: 3px solid #489E85; outline-offset: 2px; }
+.pill:disabled { color: #3D4A46; cursor: wait; }
+
+/* In the green sidebar of Novedades */
+.on-green {
+  align-self: flex-start;
+  background: #EEF9F5;
+  border-color: #EEF9F5;
+}
+.on-green:hover { border-color: #121413; }
+.on-green:focus-visible { outline-color: #EEF9F5; }
+
+/* On a phone the header is narrow: "Salir" instead of "Cerrar sesión" */
+.short { display: none; }
+@media (max-width: 700px) {
+  .pill:not(.on-green) { padding: 0 18px; }
+  .pill:not(.on-green) .long { display: none; }
+  .pill:not(.on-green) .short { display: inline; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pill { transition: none; }
+}

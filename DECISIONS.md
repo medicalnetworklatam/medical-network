@@ -1,6 +1,6 @@
 # MNL client area: decisions log
 
-Last updated: 13 Nov 2026. This is the source of truth for the project. When a decision changes, update this file in the Claude project knowledge and in the code repository.
+Last updated: 14 Nov 2026. This is the source of truth for the project. When a decision changes, update this file in the Claude project knowledge and in the code repository.
 
 ## Context
 
@@ -46,6 +46,17 @@ Last updated: 13 Nov 2026. This is the source of truth for the project. When a d
 - Accounts are created by hand with Supabase's "Invite user". The client gets an email and sets their own password.
 - Only admins create accounts. Public sign-ups are disabled in Supabase, so nobody can register themselves.
 - Sign-in is email and password, with a "Forgot password" link.
+- **Login screens** (built 14 Nov 2026):
+  - addresses: `/iniciar-sesion` (log in), `/recuperar-contrasena` (forgot password), `/nueva-contrasena` (set password; invite and reset links land here)
+  - default access: the home page and the three login screens are public; every other page needs a login and sends logged-out visitors to `/iniciar-sesion`
+  - after logging in, people return to the page they wanted, but only to an address on this site (a path starting with a single `/`, never a full URL or `//`), to prevent open redirects; otherwise they go to `/novedades`, as do logged-in people who open `/iniciar-sesion`
+  - an "Entrar" / "Cerrar sesión" pill is in the header of the home page and the state picker, and at the bottom of the green column on Novedades. "Cerrar sesión" logs out this device only.
+  - the one-time code in invite and reset links is only used when the person presses "Guardar contraseña", so email scanners can't use it up
+  - passwords need at least 8 characters, set in Supabase too so the server enforces it
+  - email links are valid for 24 hours (one setting for invite and reset links)
+  - invite links always go to the Site URL (production); reset links go back to the site where the form was used (production, a Cloudflare preview or localhost)
+  - emails are Spanish templates in `supabase/templates/`; the setup steps are in `supabase/templates/README.md`
+  - the website reads two environment variables: `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`, set in Cloudflare Pages for Production and Preview
 - There is no check that a user is a doctor.
 - **Roles:**
   - free client
@@ -98,6 +109,8 @@ Last updated: 13 Nov 2026. This is the source of truth for the project. When a d
   - "Automatic RLS" **on**, as a safety net. Migrations still enable RLS explicitly.
   - Public sign-ups **disabled** (Authentication settings, "Allow new users to sign up" off). Accounts are only created by admins.
   - No GitHub link in Supabase; changes are applied by hand.
+  - Migration 1 was applied on 14 Nov 2026. rls_check.sql showed ALL RLS TESTS PASSED.
+  - The admin account is web@medicalnetworklatam.com (shared for now). Suggested: separate admin logins for Ivan and his cousin before real clients arrive.
 - **Database changes are written as SQL files** in `supabase/migrations/` in the repository. Ivan applies them by pasting them into Supabase's SQL Editor, so no Supabase keys are ever given to Claude Code.
 - **Two-factor login for admins:** not needed for now (Ivan's decision, 13 Nov 2026). Suggested to revisit before the first real client's data goes in.
 - **Admin client overview:**

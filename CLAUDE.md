@@ -75,7 +75,7 @@ Out of scope:
 ## Commands and checks
 - Commands (run them in the project folder; they need Node.js 22, see `.node-version`):
   - `npm install`: downloads the tools listed in `package.json` into `node_modules/`. Run it after cloning, and after a `git pull` that changed `package.json`.
-  - `npm run dev`: starts the live preview at http://localhost:5173. Pages reload as you save.
+  - `npm run dev`: starts the live preview at http://localhost:5173. Pages reload as you save. For logins to work, first copy `.env.example` to `.env.local` and fill in the two Supabase values.
   - `npm run build`: checks the TypeScript types, then makes the final website files in `dist/`. Cloudflare Pages runs this on every push.
   - `npm run preview`: serves the built `dist/` folder at http://localhost:4173, to check what will go online.
   - `npm run lint`: runs oxlint, which warns about common code mistakes.
@@ -86,5 +86,7 @@ Out of scope:
   - `src/pages/`: one `.tsx` file per page, plus its own `.module.css`.
   - `src/estados/`: map shapes, city search data and map animations.
   - `src/lib/savedStates.ts`: the chosen states, in the browser for now.
+  - `src/lib/supabase.ts`: the one connection to Supabase. `src/lib/auth.ts` and `AuthProvider.tsx` share who is logged in; `src/pages/RequireLogin.tsx` guards the pages that need a login.
+  - `supabase/templates/`: the Spanish login emails and the guide to Supabase's login settings.
   - `supabase/`: database migrations (SQL files Ivan pastes into the SQL Editor), the RLS test and a guide. Never edit a migration that's already applied; add a new one.
 - Check every visual change at phone width (375px), iPad landscape and desktop.
