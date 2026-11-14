@@ -234,8 +234,9 @@ export default function Estados() {
                   id={'city-opt-' + i}
                   role="option"
                   aria-selected={i === active}
-                  /* pointerdown + preventDefault keeps focus in the box */
-                  onPointerDown={(e) => e.preventDefault()}
+                  /* mousedown + preventDefault keeps focus in the box. Not
+                     pointerdown: on iPhone/iPad that cancels the tap's click. */
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => choose(r.e)}
                 >
                   <span className={styles.suggestionCity} lang="de">
