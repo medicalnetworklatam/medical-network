@@ -77,6 +77,11 @@ Last updated: 14 Nov 2026. This is the source of truth for the project. When a d
   - Easy to switch later: it's one setting in Supabase.
   - Fallback: the IONOS mailbox, untested.
   - Setup: Brevo's DKIM record is added at IONOS, and Brevo is merged into the existing SPF record. A domain must have only one SPF record.
+  - **Status (14 Nov 2026):**
+    - Brevo is connected to Supabase as custom SMTP; the sender web@medicalnetworklatam.com is verified.
+    - The Spanish Invite and Reset templates are pasted in. Supabase only allows editing templates once custom SMTP is set up.
+    - Tested on the live site: log in, log out, forgot password and invite all work, emails included.
+    - Still to do before real clients: authenticate the domain in Brevo (DKIM records at IONOS), and fix DMARC. The domain already has a DMARC record without a "rua" tag; edit it, never add a second one. This needs the IONOS login.
 - **Data design** (built in migration 1, `supabase/migrations/20261113120000_initial_schema.sql`, 13 Nov 2026):
   - `profiles`: name, email (a copy of the login email, kept in sync), main Bundesland, route, plan (free/paid), is_admin, created date. Created automatically when a user is invited.
   - `routes`: permanent short code, Spanish name, sort order, archived. Starts empty; Ivan will give the route names later.
@@ -162,4 +167,4 @@ Last updated: 14 Nov 2026. This is the source of truth for the project. When a d
   - Done (13 Nov 2026):
     - a company GitHub account owns a GitHub organization, with Ivan's personal account as a second owner, and the repository has been transferred into it
     - Cloudflare Pages has been recreated in a company Cloudflare account, and the old project in Ivan's personal account is deleted
-  - Still to do: create Supabase and Brevo directly with the company email.
+  - Supabase and Brevo were created with the company email (13 to 14 Nov 2026).

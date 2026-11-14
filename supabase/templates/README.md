@@ -100,6 +100,10 @@ Keep **"Allow new users to sign up"** off (see `supabase/README.md`).
 
 ## 4. Paste the email templates (once, and again after any change)
 
+Supabase only lets you edit the templates once custom SMTP is set up
+(Brevo, in **Authentication → Emails → SMTP Settings**). Before that, the
+templates can't be changed.
+
 **Authentication → Emails → Templates**:
 
 1. Choose **Invite user**.
