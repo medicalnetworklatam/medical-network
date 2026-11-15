@@ -349,6 +349,10 @@
 .next-btn {
   height: 56px;
   padding: 0 40px;
+  display: inline-flex;   /* also used on the "Ir a novedades" link */
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
   border: 0;
   border-radius: 999px;
   background: #121413;
@@ -366,6 +370,46 @@
   background: #CAE8E6;
   color: #3D4A46;
   cursor: not-allowed;
+}
+.unsure-btn:disabled { cursor: not-allowed; opacity: 0.6; }
+
+/* Save failed (e.g. the state was already saved). Red only for errors. */
+.save-error {
+  margin: 0 auto;
+  max-width: 640px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #FDECEA;
+  color: #B42318;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.search[hidden], .chips[hidden] { display: none; }
+
+/* "¿Confirmas Bayern?" box, shown over the page */
+.dialog {
+  width: calc(100% - 32px);
+  max-width: 460px;
+  padding: 32px;
+  border: 0;
+  border-radius: 20px;
+  background: #FFFFFF;
+  color: #121413;
+}
+.dialog::backdrop { background: rgba(18, 20, 19, 0.45); }
+.dialog-text {
+  margin: 0 0 24px;
+  font-size: 18px;
+  line-height: 1.45;
+}
+.dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px;
 }
 
 /* Small screens: map only (no side names), chosen states as chips,
@@ -398,6 +442,9 @@
     pointer-events: none;
   }
   .next-btn { width: 100%; }
+  .dialog { padding: 24px 20px; border-radius: 16px; }
+  .dialog-actions { flex-direction: column-reverse; }
+  .dialog-actions button { width: 100%; }
 }
 
 @media (prefers-reduced-motion: reduce) {

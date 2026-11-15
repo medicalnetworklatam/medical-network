@@ -89,8 +89,8 @@ Out of scope:
   - `src/main.tsx` starts the app and lists the pages.
   - `src/pages/`: one `.tsx` file per page, plus its own `.module.css`.
   - `src/estados/`: map shapes, city search data and map animations.
-  - `src/lib/savedStates.ts`: the chosen states, in the browser for now.
-  - `src/lib/supabase.ts`: the one connection to Supabase. `src/lib/auth.ts` and `AuthProvider.tsx` share who is logged in; `src/pages/RequireLogin.tsx` guards the pages that need a login.
+  - `src/lib/profile.ts` and `ProfileProvider.tsx`: the logged-in user's own profile (name, state, plan, admin), loaded once after login and shared with every page.
+  - `src/lib/supabase.ts`: the one connection to Supabase. `src/lib/auth.ts` and `AuthProvider.tsx` share who is logged in; `src/pages/RequireLogin.tsx` guards the pages that need a login, and sends users without a first name to `/perfil` first.
   - `supabase/templates/`: the Spanish login emails and the guide to Supabase's login settings.
   - `supabase/`: database migrations (SQL files Ivan pastes into the SQL Editor), the RLS test and a guide. Never edit a migration that's already applied; add a new one.
 - Check every visual change at phone width (375px), iPad landscape and desktop.

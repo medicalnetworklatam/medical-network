@@ -50,6 +50,11 @@ Last updated: 15 Nov 2026. This is the source of truth for the project. When a d
   - The route is still set by an admin.
   - If an admin changes a client's state, the old state's progress stays saved but isn't shown.
   - `followed_states` is removed in migration 2. The state map becomes single-choice and saves to the account, not to the browser.
+  - **Confirming the state** (decided 15 Nov 2026):
+    - Before saving, the map asks: "¿Confirmas <Bundesland>? Para cambiarlo después tendrás que contactarnos." Only "Sí, confirmar" saves `main_state`; then the client goes to Novedades.
+    - "No lo sé" saves nothing and goes to Novedades.
+    - Once a state is saved, the map only shows it (highlighted, nothing to choose) with "Tu estado es <Bundesland>. Para cambiarlo, contáctanos."
+    - If the database refuses the save because a state was already saved (for example from another device), the page says so in Spanish and reloads the profile.
 - **Website code is written in TypeScript** (confirmed 13 Nov 2026), JavaScript with type labels that catch mistakes before the site is built.
 - **Fonts are self-hosted** (confirmed 13 Nov 2026). The font files are served from our own site, never from Google's servers (a GDPR risk in Germany).
   - **Figtree** for all text, except **Anton** for the big uppercase page titles. The mock-up's home page used Archivo for body text; that is dropped.
@@ -75,6 +80,12 @@ Last updated: 15 Nov 2026. This is the source of truth for the project. When a d
   - invite links always go to the Site URL (production); reset links go back to the site where the form was used (production, a Cloudflare preview or localhost)
   - emails are Spanish templates in `supabase/templates/`; the setup steps are in `supabase/templates/README.md`
   - the website reads two environment variables: `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`, set in Cloudflare Pages for Production and Preview
+- **Name step** (decided 15 Nov 2026):
+  - After logging in, a user whose first name is empty goes to `/perfil` ("Completa tu perfil") before any other login-only page, then on to the page they wanted (same safe-address rule as the login).
+  - Two required fields, "Nombre(s)" and "Apellidos", up to 100 characters each, with spaces at the start and end removed. The page saves only `first_name` and `last_names`.
+  - The page explains that other members see "Nombre I." on community posts, and shows how the user's own name will look.
+  - The same page is used later to change the name (the profile button on Novedades links to it).
+  - If a logged-in user has no profile row (it should never happen; the database creates it on invite), the site shows "Tu cuenta no está lista. Contáctanos." with "Cerrar sesión".
 - There is no check that a user is a doctor.
 - **Roles:**
   - free client (no real use right now; kept for later)
@@ -134,7 +145,7 @@ Last updated: 15 Nov 2026. This is the source of truth for the project. When a d
   - `news_posts`: title, body (plain text), Bundesland (empty = all states), publish date, published, paid_only (ticked by default)
   - Bundesländer are stored as the map's 16 short codes (`by`, `nw`, `th`…); the database refuses anything else.
   - Adding tables or columns later is normal. Restructuring is cheap until real clients have data.
-- **Migration 2** (written 15 Nov 2026, `supabase/migrations/20261115120000_one_state_news_community.sql`, not yet applied):
+- **Migration 2** (applied 15 Nov 2026, `supabase/migrations/20261115120000_one_state_news_community.sql`):
   - removes `followed_states`
   - replaces `profiles.full_name` with `first_name` and `last_names`
   - lets a client set `main_state` once, while it is still empty
@@ -144,7 +155,7 @@ Last updated: 15 Nov 2026. This is the source of truth for the project. When a d
   - extends `rls_check.sql` to cover all of this (75 checks; all passed on a local Postgres 16 with a small stand-in for Supabase's login parts, before handing over)
   - the state chat may later reuse `community_posts` with an added Bundesland column; decide when it's built
 - **Who can do what** (confirmed 13 Nov 2026, updated 15 Nov 2026, enforced by grants and RLS, proven by `supabase/tests/rls_check.sql`):
-  - The 15 Nov changes take effect when migration 2 is applied; until then the database follows the 13 Nov rules.
+  - The 15 Nov changes are in force since migration 2 was applied (15 Nov 2026).
   - Logged-out visitors can read nothing.
   - Clients read and change only their own rows. On their profile they can change their first name and last names, and set their Bundesland once while it is empty.
   - Route, plan, is_admin, and the Bundesland once set, are changed only by admins.
@@ -171,7 +182,7 @@ Last updated: 15 Nov 2026. This is the source of truth for the project. When a d
   - Public sign-ups **disabled** (Authentication settings, "Allow new users to sign up" off). Accounts are only created by admins.
   - No GitHub link in Supabase; changes are applied by hand.
   - Migration 1 was applied on 14 Nov 2026. rls_check.sql showed ALL RLS TESTS PASSED.
-  - Migration 2 was written on 15 Nov 2026 and is waiting for Ivan to apply it and re-run rls_check.sql.
+  - Migration 2 was applied on 15 Nov 2026. rls_check.sql showed ALL RLS TESTS PASSED.
   - The admin account is web@medicalnetworklatam.com (shared for now). Suggested: separate admin logins for Ivan and his cousin before real clients arrive.
 - **Database changes are written as SQL files** in `supabase/migrations/` in the repository. Ivan applies them by pasting them into Supabase's SQL Editor, so no Supabase keys are ever given to Claude Code.
 - **Two-factor login for admins:** not needed for now (Ivan's decision, 13 Nov 2026). Suggested to revisit before the first real client's data goes in.
