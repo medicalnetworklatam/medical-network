@@ -160,6 +160,11 @@ export default function Novedades() {
           </div>
 
           <div className={styles.sidebarBody} id="sidebar-body">
+            <Link className={styles.communityLink} to="/comunidad">
+              <ChatIcon />
+              Comunidad
+            </Link>
+
             {/* Calendar: preview only */}
             <section className={styles.calendar} aria-labelledby="cal-heading">
               <div className={styles.sectionHead}>

@@ -13,6 +13,10 @@ export const NO_CONNECTION =
 /** Postgres "insufficient_privilege": the database refused the change */
 export const NOT_ALLOWED = '42501'
 
+/** Postgres "check_violation": a value broke a rule of the table, e.g. a
+    community post that is empty or longer than 2,000 characters */
+export const CHECK_FAILED = '23514'
+
 interface DbError {
   code?: string
   message?: string

@@ -122,6 +122,15 @@ Last updated: 15 Nov 2026. This is the source of truth for the project. When a d
 - **Moderation:**
   - Posts appear immediately; admins can delete any post afterwards.
   - No approval before a post appears.
+- **Board page** (built 15 Nov 2026):
+  - Address `/comunidad` ("Comunidad"), login only. Linked from the green column on Novedades (the menu on a phone), with a "← Novedades" link back.
+  - Members with no state can open it. They see "Aún no has elegido tu estado." with an "Elegir mi estado" link above the board.
+  - Free users see only "La comunidad es para miembros con el paquete completo." The page makes no request for posts (the database refuses them anyway).
+  - Posts are listed newest first, 30 at a time, with "Ver más" for older ones. "Ver más" asks for posts older than the last one shown (by `created_at`, then `id` for posts with the very same time), using `created_at` exactly as the database sent it, so no post is skipped or shown twice.
+  - No realtime: the list loads when the page opens, after publishing, and with an "Actualizar" button. After publishing, the new post shows at the top and the list goes back to the newest 30.
+  - Each post shows the author name, the date and time in the reader's own time zone (news dates stay in German time), and the body as plain text with its line breaks. No automatic links.
+  - The form's counter ("0 / 2000") follows the database's rule exactly: it removes only spaces, tabs, carriage returns and line breaks at both ends, and counts an emoji as one character. "Publicar" is disabled when the text is empty, over 2,000 characters, or while sending. The page sends only the body.
+  - "Eliminar" is shown on the user's own posts, and on every post for admins. It asks for confirmation inside the post ("¿Eliminar esta publicación?" with "Sí, eliminar" and "Cancelar"), not with the browser's own pop-up, so every word stays in Spanish.
 
 ### Data and security (confirmed 13 Nov 2026)
 

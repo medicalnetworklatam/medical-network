@@ -18,6 +18,7 @@ import IniciarSesion from './pages/IniciarSesion.tsx'
 import RecuperarContrasena from './pages/RecuperarContrasena.tsx'
 import NuevaContrasena from './pages/NuevaContrasena.tsx'
 import Perfil from './pages/Perfil.tsx'
+import Comunidad from './pages/Comunidad.tsx'
 
 // The state picker used to keep the chosen states in this browser only
 // ("mn_estados"). The state is now saved to the account: remove the old copy.
@@ -45,6 +46,7 @@ createRoot(document.getElementById('root')!).render(
               <Route path="/perfil" element={<Perfil />} />
               <Route path="/estados" element={<Estados />} />
               <Route path="/novedades" element={<Novedades />} />
+              <Route path="/comunidad" element={<Comunidad />} />
             </Route>
 
             {/* Unknown addresses show the home page */}
