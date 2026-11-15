@@ -1,6 +1,6 @@
 # CLAUDE.md: Medical Network client area (read every session)
 
-Private client area for medicalnetworklatam.com (Medical Network LATAM): Latin American doctors track their German licensure checklist and read news for the Bundesländer they follow. **DECISIONS.md is the source of truth. Read it before planning a feature, and update it when a decision changes.**
+Private client area for medicalnetworklatam.com (Medical Network LATAM): Latin American doctors track their German licensure checklist and read news for their Bundesland. **DECISIONS.md is the source of truth. Read it before planning a feature, and update it when a decision changes.**
 
 ## How the owner works
 - Ivan is the developer, a computer science student who is new to backend work. Explain every technical term in plain words the first time you use it. Write to him in English.
@@ -31,21 +31,25 @@ Private client area for medicalnetworklatam.com (Medical Network LATAM): Latin A
   - Fonts, scripts and images are served from our own site. No Google Fonts or similar external servers (a GDPR risk in Germany), and no analytics, without asking Ivan.
 - **Domain and email:** never change the domain's DNS or email settings. Ivan does that by hand at IONOS.
 - **Safe text:** show anything from the database or user input as plain text. Never insert it as raw HTML.
+- **Limits on what users see:** any limit on what a user may see (their state, paid features) is enforced by RLS in the database, never only by the website. User-written text is always rendered as plain text.
 
 ## First version scope
 In scope:
-- accounts with free and paid profiles, created by admin invite (email and password)
+- accounts with paid profiles (free stays possible in the data, unused for now), created by admin invite (email and password)
 - the client's checklist for their main state (always the latest version, progress saved to the account)
-- news for the states they follow, published through an admin form
+- news for the client's one Bundesland, published through an admin form
+- a community board (text posts from all members)
 - an admin overview of every client's progress
 
-Chat and calendar appear as **non-working previews only**.
+The calendar and the state chat appear as **non-working previews only**.
 
 Out of scope:
 - payment inside the site
 - file uploads
-- a working chat
+- a working state chat (next, after the board)
+- private messages between members
 - automatic account creation on payment
+- legal texts (handled by a law firm)
 
 ## Look & feel (carry over from the mock-up, keep consistent)
 - **Colours:**
@@ -70,7 +74,7 @@ Out of scope:
 - **Map rules that always apply:**
   - Never hand-edit the SVG path `d` attributes. The scripts that generated them are gone, so copy them exactly.
   - Neighbouring states must keep sharing exactly the same border.
-- **Saving the choice:** in the mock-up, chosen states were saved only in the browser (`localStorage`). In the app they will be saved to the user's account: several followed states for news, plus one main state for the checklist.
+- **Saving the choice:** in the mock-up, chosen states were saved only in the browser (`localStorage`). In the app: one Bundesland per user, chosen once on the map, saved to the account.
 
 ## Commands and checks
 - Commands (run them in the project folder; they need Node.js 22, see `.node-version`):
