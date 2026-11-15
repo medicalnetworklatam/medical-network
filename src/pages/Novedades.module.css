@@ -64,6 +64,7 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  text-decoration: none;
 }
 
 .profile-name {
@@ -123,53 +124,6 @@
   line-height: 1.2;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-}
-
-.states {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.state-link {
-  display: block;
-  background: #FFFFFF;
-  border-radius: 12px;
-  padding: 16px 18px;
-  font-size: 18px;
-  color: #121413;
-  text-decoration: none;
-}
-.state-link:hover { color: #2F7A64; }
-.state-link[aria-current="page"] {
-  font-weight: 700;
-  box-shadow: 0 0 0 2px #121413;
-}
-.state-link:focus-visible {
-  outline: 3px solid #EEF9F5;
-  outline-offset: 3px;
-}
-
-/* Shown when "No lo sé" was picked on the state picker */
-.states-empty {
-  background: #FFFFFF;
-  border-radius: 12px;
-  padding: 16px 18px;
-  font-size: 16px;
-  line-height: 1.4;
-}
-.states-empty p { margin: 0 0 6px; }
-.states-empty a {
-  font-weight: 700;
-  color: #2F7A64;
-}
-.states-empty a:focus-visible {
-  outline: 3px solid #489E85;
-  outline-offset: 2px;
-  border-radius: 4px;
 }
 
 /* Calendar */
@@ -310,22 +264,7 @@
   gap: 14px;
 }
 
-/* Photo at the top of some cards */
-.card-img {
-  display: block;
-  width: 100%;
-  height: auto;
-  aspect-ratio: 16 / 9;
-  object-fit: cover;
-  border-radius: 12px;
-  background: #CAE8E6;
-}
-.card-img.wide {
-  aspect-ratio: 3 / 1;
-  object-position: center 88%;
-}
-
-/* Type label + date */
+/* Date */
 .card-meta {
   margin: 0;
   display: flex;
@@ -333,18 +272,6 @@
   align-items: center;
   gap: 6px 12px;
 }
-.card-tag {
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: #CAE8E6;
-  color: #2F7A64;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-/* events use the calendar's orange */
-.card-tag.event { background: #F2994A; color: #121413; }
 .card-date {
   font-size: 14px;
   color: #3D4A46;
@@ -361,6 +288,48 @@
   font-size: 16px;
   line-height: 1.5;
 }
+/* News is plain text: keep its line breaks, and let very long words or
+   web addresses wrap instead of overflowing the card */
+.card h3,
+.card-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* No state chosen / loading / no news / error: one white box */
+.message {
+  flex-shrink: 0;
+  margin: 0;
+  background: #FFFFFF;
+  border: 1px solid #CAE8E6;
+  border-radius: 16px;
+  padding: 24px 28px;
+  font-size: 17px;
+  line-height: 1.45;
+  color: #3D4A46;
+  text-align: center;
+}
+.message p { margin: 0 0 16px; }
+.message.is-error { background: #FDECEA; border-color: #FDECEA; color: #B42318; font-weight: 600; }
+.message-btn {
+  min-height: 48px;
+  padding: 0 28px;
+  border: 0;
+  border-radius: 999px;
+  background: #121413;
+  color: #CAE8E6;
+  font-family: 'Figtree Variable', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+.message-btn:hover { background: #2F7A64; color: #FFFFFF; }
+.message-btn:focus-visible { outline: 3px solid #489E85; outline-offset: 3px; }
 
 /* ---------- Right: chat ---------- */
 .chat {
@@ -706,5 +675,6 @@
   .chat::before,
   .chat-head h2,
   .messages,
-  .chat-form { transition: none; }
+  .chat-form,
+  .message-btn { transition: none; }
 }

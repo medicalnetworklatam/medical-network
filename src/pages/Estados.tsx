@@ -7,7 +7,10 @@ import MenuIcon from './MenuIcon.tsx'
 import SessionButton from './SessionButton.tsx'
 import { usePageTitle } from '../lib/usePageTitle.ts'
 import { useMediaQuery } from '../lib/useMediaQuery.ts'
-import { saveChosenStates } from '../lib/savedStates.ts'
+import { supabase } from '../lib/supabase.ts'
+import { useAuth } from '../lib/auth.ts'
+import { PROFILE_COLUMNS, useProfile, type Profile } from '../lib/profile.ts'
+import { dataErrorMessage, NOT_ALLOWED } from '../lib/dataErrors.ts'
 import {
   HIT_R_MOUSE, HIT_R_TOUCH, MAP_STATES, VIEW_NARROW, VIEW_WIDE,
   createMapAnimator, type MapAnimator, type MapClasses, type MapState,
@@ -15,7 +18,9 @@ import {
 import { plain, search, type SearchEntry } from '../estados/citySearch.ts'
 import styles from './Estados.module.css'
 
-const HINT = 'Toca los estados en el mapa o busca tu ciudad.'
+const HINT = 'Toca tu estado en el mapa o busca tu ciudad.'
+const ALREADY_SET =
+  'Tu estado ya estaba guardado, quizá desde otro dispositivo. Para cambiarlo, contáctanos.'
 
 /* Berlin, Hamburg and Bremen are tiny: invisible circles enlarge their tap area */
 const CITY_STATES = ['be', 'hb', 'hh'].map((id) => MAP_STATES.find((s) => s.id === id)!)
@@ -38,12 +43,20 @@ const MAP_CLASSES: MapClasses = {
 }
 
 /** "¿En qué estado federal estás interesado?": the state picker map
-    (from design-mockup/estados.html) */
+    (from design-mockup/estados.html). One state per user: it is chosen once,
+    confirmed, and saved to the account (profiles.main_state). Once it is set,
+    the map only shows it; only an admin can change it. */
 export default function Estados() {
   usePageTitle('Estados · Medical Network')
   const navigate = useNavigate()
+  const { session } = useAuth()
+  const { profile, reload, replace } = useProfile()
 
-  /* The chosen states, in the order they were picked. The ref always holds
+  /* The saved state, if there is one: then nothing can be chosen here */
+  const locked = MAP_STATES.find((s) => s.id === profile?.main_state) ?? null
+  const lockedRef = useRef<MapState | null>(null)
+
+  /* The chosen state: an empty list or exactly one. The ref always holds
      the latest list, so a quick second click sees the first one. */
   const [chosen, setChosen] = useState<MapState[]>([])
   const chosenRef = useRef<MapState[]>([])
@@ -62,35 +75,68 @@ export default function Estados() {
   const labelsRef = useRef<SVGGElement>(null)
   const animator = useRef<MapAnimator | null>(null)
 
-  /* Only uses refs and state setters, so the same function is kept for the
+  /* Single choice: tapping a state chooses only that one (the previous one
+     is un-filled); tapping the chosen state again un-chooses it.
+     Only uses refs and state setters, so the same function is kept for the
      whole visit (the drawing code calls it when a name beside the map is clicked) */
   const toggle = useCallback((s: MapState) => {
-    const before = chosenRef.current
-    const on = !before.includes(s)
-    const now = on ? [...before, s] : before.filter((x) => x !== s)
-    chosenRef.current = now
-    setChosen(now)
-    setAnnouncement(s.name + (on ? ' elegido' : ' quitado'))
-    animator.current?.toggled(s, on, now)
+    if (lockedRef.current) return
+    const before = chosenRef.current[0]
+    const a = animator.current
+    if (before === s) {
+      chosenRef.current = []
+      setChosen([])
+      setAnnouncement(s.name + ' quitado')
+      a?.toggled(s, false, [])
+      return
+    }
+    if (before) a?.toggled(before, false, [])
+    chosenRef.current = [s]
+    setChosen([s])
+    setAnnouncement(s.name + ' elegido')
+    a?.toggled(s, true, [s])
   }, [])
 
   useEffect(() => {
-    const a = createMapAnimator(
-      {
-        svg: svgRef.current!,
-        floods: floodsRef.current!,
-        floodClips: floodClipsRef.current!,
-        leaders: leadersRef.current!,
-        labels: labelsRef.current!,
-      },
-      MAP_CLASSES,
-      toggle,
-    )
+    const layers = {
+      svg: svgRef.current!,
+      floods: floodsRef.current!,
+      floodClips: floodClipsRef.current!,
+      leaders: leadersRef.current!,
+      labels: labelsRef.current!,
+    }
+    const a = createMapAnimator(layers, MAP_CLASSES, toggle)
     animator.current = a
-    return () => { a.destroy(); animator.current = null }
+    /* draw what is already chosen (the saved state, when the drawing is redone) */
+    const now = chosenRef.current
+    now.forEach((s) => a.toggled(s, true, now))
+    return () => {
+      a.destroy()
+      animator.current = null
+      /* remove what it drew, so a new drawing starts clean */
+      layers.floods.replaceChildren()
+      layers.floodClips.replaceChildren()
+      layers.leaders.replaceChildren()
+      layers.labels.replaceChildren()
+      layers.svg.querySelectorAll('.' + styles.isFlooding).forEach((p) => p.classList.remove(styles.isFlooding))
+    }
   }, [toggle])
 
+  /* The saved state: show it filled (with its name beside the map) */
+  useEffect(() => {
+    lockedRef.current = locked
+    if (!locked) return
+    const before = chosenRef.current[0]
+    if (before === locked) return
+    const a = animator.current
+    if (before) a?.toggled(before, false, [])
+    chosenRef.current = [locked]
+    setChosen([locked])
+    a?.toggled(locked, true, [locked])
+  }, [locked])
+
   function hoverHandlers(s: MapState) {
+    if (locked) return {}
     return {
       onPointerEnter: (e: PointerEvent) => { if (e.pointerType === 'mouse') animator.current?.setHover(s, true) },
       onPointerLeave: () => animator.current?.setHover(s, false),
@@ -159,7 +205,7 @@ export default function Estados() {
 
   function choose(e: SearchEntry) {
     pressingList.current = false
-    if (!chosenRef.current.includes(e.state)) toggle(e.state)   /* never un-chooses */
+    if (chosenRef.current[0] !== e.state) toggle(e.state)   /* never un-chooses */
     const msg = e.isState
       ? e.state.name + ' elegido.'
       : e.label + ' está en ' + e.state.name + ' (elegido).'
@@ -185,20 +231,55 @@ export default function Estados() {
     }
   }
 
-  /* ---------- Siguiente / No lo sé ---------- */
+  /* ---------- Siguiente (asks to confirm, then saves) / No lo sé ---------- */
+  const dialogRef = useRef<HTMLDialogElement>(null)
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
+
   function onNext() {
     if (!chosen.length) return
-    saveChosenStates(chosen.map((s) => ({ id: s.id, name: s.name })))
-    navigate('/novedades')
+    setSaveError('')
+    dialogRef.current?.showModal()
   }
+
+  async function onConfirm() {
+    const s = chosenRef.current[0]
+    if (!s || saving || !supabase || !session) return
+    setSaving(true)
+    let message: string
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .update({ main_state: s.id })
+        .eq('id', session.user.id)
+        .select(PROFILE_COLUMNS)
+        .maybeSingle<Profile>()
+      if (!error && data?.main_state === s.id) {
+        replace(data)
+        navigate('/novedades')
+        return
+      }
+      /* The database refuses (code 42501) when a state was already saved,
+         e.g. from another device */
+      message = error?.code === NOT_ALLOWED ? ALREADY_SET
+        : error ? dataErrorMessage(error)
+        : 'No se pudo guardar tu estado. Inténtalo de nuevo.'
+    } catch (err) {
+      message = dataErrorMessage(err)
+    }
+    dialogRef.current?.close()
+    setSaveError(message)
+    await reload()
+    setSaving(false)
+  }
+
+  /* Nothing is saved: Novedades then asks to choose a state */
   function onUnsure() {
-    saveChosenStates([])
     navigate('/novedades')
   }
 
   const n = chosen.length
-  const countText = n === 0 ? 'Ningún estado elegido'
-    : n === 1 ? '1 estado elegido' : n + ' estados elegidos'
+  const countText = n === 0 ? 'Ningún estado elegido' : '1 estado elegido'
 
   return (
     <div className={styles.page}>
@@ -216,11 +297,26 @@ export default function Estados() {
 
         <main className={styles.content}>
           <div className={styles.intro}>
-            <h1 className={styles.pageTitle} id="page-title">¿En qué estado federal estás interesado?</h1>
-            <p className={styles.hint}>{hint}</p>
+            {locked ? (
+              <>
+                <h1 className={styles.pageTitle} id="page-title">Tu estado federal</h1>
+                <p className={styles.hint}>
+                  Tu estado es <span lang="de">{locked.name}</span>. Para cambiarlo, contáctanos.
+                </p>
+              </>
+            ) : (
+              <>
+                <h1 className={styles.pageTitle} id="page-title">¿En qué estado federal estás interesado?</h1>
+                <p className={styles.hint}>{hint}</p>
+              </>
+            )}
           </div>
 
-          <div className={styles.search} ref={searchRef}>
+          <div aria-live="assertive">
+            {saveError && <p className={styles.saveError}>{saveError}</p>}
+          </div>
+
+          <div className={styles.search} ref={searchRef} hidden={!!locked}>
             <svg className={styles.searchIcon} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
               <circle cx="11" cy="11" r="7" />
               <path d="M20 20l-4-4" />
@@ -279,7 +375,7 @@ export default function Estados() {
             <svg
               ref={svgRef} className={styles.map} id="map"
               viewBox={narrow ? VIEW_NARROW : VIEW_WIDE}
-              role="group" aria-labelledby="page-title"
+              role="radiogroup" aria-labelledby="page-title"
             >
               <g className={styles.states}>
                 {MAP_STATES.map((s) => (
@@ -289,8 +385,10 @@ export default function Estados() {
                        is-hover / is-flooding to it directly */
                     className={styles.state}
                     id={'st-' + s.id}
-                    role="checkbox"
-                    tabIndex={0}
+                    role="radio"
+                    /* saved state: the map only shows it, nothing to choose */
+                    tabIndex={locked ? -1 : 0}
+                    aria-disabled={locked ? true : undefined}
                     aria-checked={chosen.includes(s)}
                     aria-label={s.name}
                     d={s.d}
@@ -325,7 +423,7 @@ export default function Estados() {
             </svg>
           </div>
 
-          <ul className={styles.chips} ref={chipsRef} aria-label="Estados elegidos">
+          <ul className={styles.chips} ref={chipsRef} aria-label="Estado elegido" hidden={!!locked}>
             {chosen.map((s) => (
               <li key={s.id}>
                 <button type="button" className={styles.chip} aria-label={'Quitar ' + s.name} onClick={() => removeChip(s)}>
@@ -336,13 +434,37 @@ export default function Estados() {
             ))}
           </ul>
 
-          <div className={styles.actions}>
-            {/* "No lo sé" takes the count's place while nothing is chosen */}
-            <button type="button" className={styles.unsureBtn} hidden={n !== 0} onClick={onUnsure}>No lo sé</button>
-            <p className={styles.count} aria-live="polite" hidden={n === 0}>{countText}</p>
-            <button type="button" className={styles.nextBtn} ref={nextRef} disabled={n === 0} onClick={onNext}>Siguiente</button>
-          </div>
+          {locked ? (
+            <div className={styles.actions}>
+              <Link className={styles.nextBtn} to="/novedades">Ir a novedades</Link>
+            </div>
+          ) : (
+            <div className={styles.actions}>
+              {/* "No lo sé" takes the count's place while nothing is chosen */}
+              <button type="button" className={styles.unsureBtn} hidden={n !== 0} onClick={onUnsure}>No lo sé</button>
+              <p className={styles.count} aria-live="polite" hidden={n === 0}>{countText}</p>
+              <button type="button" className={styles.nextBtn} ref={nextRef} disabled={n === 0} onClick={onNext}>Siguiente</button>
+            </div>
+          )}
           <p className="sr-only" aria-live="polite">{announcement}</p>
+
+          {/* Asks before saving: the state can only be chosen once */}
+          <dialog
+            ref={dialogRef} className={styles.dialog} aria-labelledby="confirm-text"
+            onCancel={(e) => { if (saving) e.preventDefault() }}
+          >
+            <p className={styles.dialogText} id="confirm-text">
+              ¿Confirmas <strong lang="de">{chosen[0]?.name}</strong>? Para cambiarlo después tendrás que contactarnos.
+            </p>
+            <div className={styles.dialogActions}>
+              <button type="button" className={styles.unsureBtn} disabled={saving} onClick={() => dialogRef.current?.close()}>
+                Volver
+              </button>
+              <button type="button" className={styles.nextBtn} disabled={saving} onClick={onConfirm}>
+                {saving ? 'Guardando…' : 'Sí, confirmar'}
+              </button>
+            </div>
+          </dialog>
         </main>
 
       </div>
