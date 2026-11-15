@@ -131,6 +131,26 @@ export default function Estados() {
   const [listOpen, setListOpen] = useState(false)
   const [active, setActive] = useState(-1)
   const results = useMemo(() => search(query), [query])
+  const searchRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+  /* True while a finger or mouse is pressing the list. On iPhone/iPad the box
+     loses focus before the tap's click arrives; closing the list then would
+     remove the city before it can be chosen. */
+  const pressingList = useRef(false)
+
+  /* Every new press starts "outside the list" (the list's own handler runs
+     after this one). A press outside the search box, while the box no longer
+     has focus, closes the list. */
+  useEffect(() => {
+    function onPress(e: globalThis.PointerEvent) {
+      pressingList.current = false
+      if (!searchRef.current?.contains(e.target as Node) && document.activeElement !== inputRef.current) {
+        openList(false)
+      }
+    }
+    document.addEventListener('pointerdown', onPress, true)
+    return () => document.removeEventListener('pointerdown', onPress, true)
+  }, [])
 
   function openList(open: boolean) {
     setListOpen(open)
@@ -138,6 +158,7 @@ export default function Estados() {
   }
 
   function choose(e: SearchEntry) {
+    pressingList.current = false
     if (!chosenRef.current.includes(e.state)) toggle(e.state)   /* never un-chooses */
     const msg = e.isState
       ? e.state.name + ' elegido.'
@@ -199,13 +220,14 @@ export default function Estados() {
             <p className={styles.hint}>{hint}</p>
           </div>
 
-          <div className={styles.search}>
+          <div className={styles.search} ref={searchRef}>
             <svg className={styles.searchIcon} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
               <circle cx="11" cy="11" r="7" />
               <path d="M20 20l-4-4" />
             </svg>
             <label className="sr-only" htmlFor="city">Busca tu ciudad</label>
             <input
+              ref={inputRef}
               className={styles.searchInput} id="city" type="text" role="combobox"
               aria-autocomplete="list" aria-expanded={listOpen} aria-controls="city-list"
               aria-activedescendant={listOpen && active >= 0 ? 'city-opt-' + active : undefined}
@@ -218,10 +240,11 @@ export default function Estados() {
                 setListOpen(plain(e.target.value) !== '')
               }}
               onFocus={() => { if (query) openList(plain(query) !== '') }}
-              onBlur={() => openList(false)}
+              onBlur={() => { if (!pressingList.current) openList(false) }}
               onKeyDown={onSearchKeyDown}
             />
-            <ul className={styles.suggestions} id="city-list" role="listbox" aria-label="Ciudades" hidden={!listOpen}>
+            <ul className={styles.suggestions} id="city-list" role="listbox" aria-label="Ciudades" hidden={!listOpen}
+              onPointerDown={() => { pressingList.current = true }}>
               {listOpen && results.length === 0 && (
                 <li className={styles.suggestionEmpty} role="presentation">
                   No encontramos esa ciudad. Prueba con una ciudad grande cercana, o toca el estado en el mapa.
@@ -234,8 +257,9 @@ export default function Estados() {
                   id={'city-opt-' + i}
                   role="option"
                   aria-selected={i === active}
-                  /* pointerdown + preventDefault keeps focus in the box */
-                  onPointerDown={(e) => e.preventDefault()}
+                  /* mousedown + preventDefault keeps focus in the box. Not
+                     pointerdown: on iPhone/iPad that cancels the tap's click. */
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => choose(r.e)}
                 >
                   <span className={styles.suggestionCity} lang="de">
