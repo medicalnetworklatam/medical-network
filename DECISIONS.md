@@ -216,7 +216,7 @@ Last updated: 15 Nov 2026. This is the source of truth for the project. When a d
 
 ## For the law firm
 
-The owner has hired a law firm for all legal work (decided 15 Nov 2026). Ivan and Claude don't write or choose these texts.
+The owner will hire a law firm for all legal work (decided 15 Nov 2026). Ivan and Claude don't write or choose these texts.
 
 - Impressum
 - Datenschutzerklärung (Spanish and German)
