@@ -22,6 +22,7 @@ Last updated: 15 Nov 2026. This is the source of truth for the project. When a d
 - **Community board** for all members, now part of the prototype (see "Community").
 - **Chat per Bundesland:** confirmed, but it waits until the board is done. If time runs short, it moves past the prototype.
 - **Free users:** no real use right now. The `free` plan stays in the database; nothing new is designed for free users.
+- **Names are split** into first name (nombre/s) and last names (apellidos), replacing the single full name. Most members have two surnames, so a single field gives the wrong initial in "María G." (see "Community").
 
 ## Confirmed decisions (13 Nov 2026)
 
@@ -81,6 +82,7 @@ Last updated: 15 Nov 2026. This is the source of truth for the project. When a d
   - admin (Ivan and his cousin)
 - **Profile privacy:**
   - Other users can't see profiles. The only exception is the "María G." author name on community posts (see "Community").
+  - Community posts also carry the author's user ID (`author_id`), readable by other members. It's a random ID that can't be used to look anything up, and the website needs it to show "Eliminar" only on your own posts (confirmed 15 Nov 2026).
   - Admins can see every client's data and progress.
 
 ### News
@@ -101,8 +103,11 @@ Last updated: 15 Nov 2026. This is the source of truth for the project. When a d
   - One per Bundesland. Members see only their own state's chat.
   - It waits until the board is done.
 - **Author name:**
-  - First name + initial of the last name (e.g. "María G."), produced by the database. A client can't type a different name.
+  - Produced by the database from the profile, when the post is written. A client can't type a different name, and a later name change doesn't change old posts.
+  - Rule: first word of `first_name` + " " + first letter of `last_names` in uppercase + "." ("José" + "Pérez García" → "José P."; "María Fernanda" + "García López" → "María G.").
+  - No last names: just the first word of `first_name` ("María"). No first name: "Miembro".
   - Never the email, full name, state or progress.
+- **Post text:** plain text, 1 to 2,000 characters. The database removes spaces and line breaks at the start and end, so a post of only spaces counts as empty and is refused (confirmed 15 Nov 2026).
 - **Moderation:**
   - Posts appear immediately; admins can delete any post afterwards.
   - No approval before a post appears.
@@ -119,29 +124,33 @@ Last updated: 15 Nov 2026. This is the source of truth for the project. When a d
     - Tested on the live site: log in, log out, forgot password and invite all work, emails included.
     - Still to do before real clients: authenticate the domain in Brevo (DKIM records at IONOS), and fix DMARC. The domain already has a DMARC record without a "rua" tag; edit it, never add a second one. This needs the IONOS login.
 - **Data design** (built in migration 1, `supabase/migrations/20261113120000_initial_schema.sql`, 13 Nov 2026):
-  - `profiles`: name, email (a copy of the login email, kept in sync), main Bundesland, route, plan (free/paid), is_admin, created date. Created automatically when a user is invited.
+  - `profiles`: first name (`first_name`, nombre/s) and last names (`last_names`, apellidos), each up to 100 characters; email (a copy of the login email, kept in sync), main Bundesland, route, plan (free/paid), is_admin, created date. Created automatically when a user is invited; the names can come from the invite's `first_name` and `last_names` metadata.
+    - Migration 2 replaced the single `full_name` with `first_name` and `last_names`. An existing `full_name` was moved into `first_name`.
   - `routes`: permanent short code, Spanish name, sort order, archived. Starts empty; Ivan will give the route names later.
   - `followed_states`: user_id, Bundesland, for news. **Removed in migration 2 (15 Nov decision).**
+  - `community_posts` (migration 2): id, author_id (deleted together with the author's account), author_name, body (plain text, 1 to 2,000 characters, trimmed), created date. The website sends only the body; the database sets everything else. Listed newest first.
   - `checklist_items`: permanent automatic ID (what progress uses), optional unique readable code (like `by-kp-010`, for humans and spreadsheet imports), Bundesland, route, title, text, sort order, archived
   - `progress`: user_id, item_id, done_at (set by the database)
   - `news_posts`: title, body (plain text), Bundesland (empty = all states), publish date, published, paid_only (ticked by default)
   - Bundesländer are stored as the map's 16 short codes (`by`, `nw`, `th`…); the database refuses anything else.
   - Adding tables or columns later is normal. Restructuring is cheap until real clients have data.
-- **Migration 2** (planned 15 Nov 2026):
+- **Migration 2** (written 15 Nov 2026, `supabase/migrations/20261115120000_one_state_news_community.sql`, not yet applied):
   - removes `followed_states`
+  - replaces `profiles.full_name` with `first_name` and `last_names`
   - lets a client set `main_state` once, while it is still empty
-  - news: only posts for the client's state, or for all states if the client has chosen a state; a client with no state sees no news at all
+  - news: only posts for the client's state, or for all states if the client has chosen a state; a client with no state sees no news at all. A private helper, `my_state()`, gives the policy the user's own state.
   - adds `community_posts`: author, author name (made by the database), body (plain text), created date. Posts are deleted together with the author's account.
-  - extends `rls_check.sql` to cover all of this
+  - new functions get no access for anyone by default; only logged-in users may run `my_state()`, and nobody may call trigger functions directly
+  - extends `rls_check.sql` to cover all of this (75 checks; all passed on a local Postgres 16 with a small stand-in for Supabase's login parts, before handing over)
   - the state chat may later reuse `community_posts` with an added Bundesland column; decide when it's built
 - **Who can do what** (confirmed 13 Nov 2026, updated 15 Nov 2026, enforced by grants and RLS, proven by `supabase/tests/rls_check.sql`):
   - The 15 Nov changes take effect when migration 2 is applied; until then the database follows the 13 Nov rules.
   - Logged-out visitors can read nothing.
-  - Clients read and change only their own rows. On their profile they can change their name, and set their Bundesland once while it is empty.
+  - Clients read and change only their own rows. On their profile they can change their first name and last names, and set their Bundesland once while it is empty.
   - Route, plan, is_admin, and the Bundesland once set, are changed only by admins.
   - **Paid unlocks the checklist:** only paid users and admins can read checklist items, and only they can tick them.
   - News: free users only see posts with `paid_only = false`. Clients only see published posts whose date has come, for their own Bundesland or for all states. A client with no Bundesland sees no news at all.
-  - **Community board:** only paid users and admins read and write. Clients delete their own posts; admins delete any post. Nobody edits posts in the first version.
+  - **Community board:** only paid users and admins read and write. Clients delete their own posts; admins delete any post. Nobody edits posts in the first version. A client with no Bundesland still sees the board.
   - The client ticks their own items; admins can only view progress.
   - Only admins write routes, checklist items and news. Checklist items and routes are never deleted, not even by admins (retire them with `archived = true`).
   - Admin overview "last activity" = the client's most recent tick.
@@ -149,6 +158,7 @@ Last updated: 15 Nov 2026. This is the source of truth for the project. When a d
   - Never reuse or rename an ID once it's live.
   - To retire an item, set `archived = true` instead of deleting it.
   - This is the hardest decision to reverse once clients have saved progress.
+- **No function, view or table may ever take a user ID and return information about another user.**
 - **Row Level Security (RLS) is on for every table.** RLS is the set of database rules that decide who can read or change each row. It's required by the stack, because the website talks to the database directly with a public key.
 - **Any rule that limits what a user may see** (their state, paid features) must be enforced by RLS, never only by the website.
 - **Text written by users is always shown as plain text,** never as HTML.
@@ -161,11 +171,12 @@ Last updated: 15 Nov 2026. This is the source of truth for the project. When a d
   - Public sign-ups **disabled** (Authentication settings, "Allow new users to sign up" off). Accounts are only created by admins.
   - No GitHub link in Supabase; changes are applied by hand.
   - Migration 1 was applied on 14 Nov 2026. rls_check.sql showed ALL RLS TESTS PASSED.
+  - Migration 2 was written on 15 Nov 2026 and is waiting for Ivan to apply it and re-run rls_check.sql.
   - The admin account is web@medicalnetworklatam.com (shared for now). Suggested: separate admin logins for Ivan and his cousin before real clients arrive.
 - **Database changes are written as SQL files** in `supabase/migrations/` in the repository. Ivan applies them by pasting them into Supabase's SQL Editor, so no Supabase keys are ever given to Claude Code.
 - **Two-factor login for admins:** not needed for now (Ivan's decision, 13 Nov 2026). Suggested to revisit before the first real client's data goes in.
 - **Admin client overview:**
-  - one row per client: name, Bundesland, plan, progress %, last activity
+  - one row per client: name (shown as "first_name last_names"), Bundesland, plan, progress %, last activity
   - opening a client shows their checklist read-only
 
 ## First version scope
@@ -203,7 +214,6 @@ Last updated: 15 Nov 2026. This is the source of truth for the project. When a d
 
 - **What a news post can include:** the fields are decided (see Data design). Still open: links inside the text (suggested: the site turns web addresses into links safely); no comments, likes or photos. The same safe link rule would apply to community posts too.
 - **Replies to community posts** (none in the prototype; replies can be added later)
-- **Maximum length of a community post** (2,000 characters)
 - **Alerts** (none in the first version)
 - **Calendar** (deferred)
 - **Students and doctors already working in Germany** (treat them as another route)
