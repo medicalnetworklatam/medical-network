@@ -1,6 +1,6 @@
 # MNL client area: decisions log
 
-Last updated: 14 Nov 2026. This is the source of truth for the project. When a decision changes, update this file in the Claude project knowledge and in the code repository.
+Last updated: 15 Nov 2026. This is the source of truth for the project. When a decision changes, update this file in the Claude project knowledge and in the code repository.
 
 ## Context
 
@@ -15,6 +15,14 @@ Last updated: 14 Nov 2026. This is the source of truth for the project. When a d
   - Spanish only, web only
 - **Admins:** Ivan and his cousin.
 
+## Changes on 15 Nov 2026
+
+- **Legal work goes to a law firm** hired by the owner. Ivan and Claude don't write or choose legal texts (see "For the law firm").
+- **One state per user.** This replaces the 13 Nov "follow several states" decision (see "States per user").
+- **Community board** for all members, now part of the prototype (see "Community").
+- **Chat per Bundesland:** confirmed, but it waits until the board is done. If time runs short, it moves past the prototype.
+- **Free users:** no real use right now. The `free` plan stays in the database; nothing new is designed for free users.
+
 ## Confirmed decisions (13 Nov 2026)
 
 ### Stack
@@ -27,11 +35,20 @@ Last updated: 14 Nov 2026. This is the source of truth for the project. When a d
   - React builds screens from reusable pieces. Vite turns the code into files the browser can run.
   - The plain-HTML design mock-up in the repository `pinatryingtocode/medical-network` was a test. Its look gets carried into React: colours, fonts, layouts and the state map.
   - Chosen because the first version is app-like: about 10 screens that depend on data.
-- **Chat and calendar:** visible in the prototype as non-working previews only.
-- **States per user** (confirmed 13 Nov 2026):
-  - A user can follow news from several states.
-  - The checklist is for one main state, where they'll apply for the Approbation.
-  - Data impact: `profiles` keeps one main Bundesland (and route), plus a new table `followed_states` (user_id, Bundesland) for news.
+- **Chat and calendar:**
+  - The calendar is a non-working preview.
+  - The state chat is a non-working preview until it is built (after the community board).
+- **States per user** (confirmed 15 Nov 2026, replaces 13 Nov):
+  - Each user has exactly one Bundesland (`profiles.main_state`). It decides their checklist, their news and, later, their state chat.
+  - A client only ever sees one state's news.
+  - The client picks it once on the state map. After that, only an admin can change it. This stops one payment from unlocking all 16 states.
+  - **No state chosen = no news:**
+    - A client may skip choosing ("No lo sé").
+    - Until they choose, they see NO news at all, not even "all states" posts.
+    - They still see the community board, with a reminder to pick a state.
+  - The route is still set by an admin.
+  - If an admin changes a client's state, the old state's progress stays saved but isn't shown.
+  - `followed_states` is removed in migration 2. The state map becomes single-choice and saves to the account, not to the browser.
 - **Website code is written in TypeScript** (confirmed 13 Nov 2026), JavaScript with type labels that catch mistakes before the site is built.
 - **Fonts are self-hosted** (confirmed 13 Nov 2026). The font files are served from our own site, never from Google's servers (a GDPR risk in Germany).
   - **Figtree** for all text, except **Anton** for the big uppercase page titles. The mock-up's home page used Archivo for body text; that is dropped.
@@ -59,17 +76,36 @@ Last updated: 14 Nov 2026. This is the source of truth for the project. When a d
   - the website reads two environment variables: `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`, set in Cloudflare Pages for Production and Preview
 - There is no check that a user is a doctor.
 - **Roles:**
-  - free client
+  - free client (no real use right now; kept for later)
   - paid client
   - admin (Ivan and his cousin)
 - **Profile privacy:**
-  - Other users can't see profiles.
+  - Other users can't see profiles. The only exception is the "María G." author name on community posts (see "Community").
   - Admins can see every client's data and progress.
 
 ### News
 
 - The cousin, who isn't technical, writes all the news. He publishes through a small admin form that we build ourselves (no separate CMS).
-- Clients see only the posts for the Bundesländer they follow.
+- Clients see only the posts for their one Bundesland, plus "all states" posts (confirmed again 15 Nov 2026).
+- A client with no Bundesland sees no news at all, not even "all states" posts.
+- The admin news form keeps the "all states" option.
+- From migration 2, the database enforces this, not the website.
+
+### Community (confirmed 15 Nov 2026)
+
+- **Board:**
+  - One board for all members, regardless of state.
+  - Text only: no files, no photos.
+  - Built in the prototype.
+- **State chat:**
+  - One per Bundesland. Members see only their own state's chat.
+  - It waits until the board is done.
+- **Author name:**
+  - First name + initial of the last name (e.g. "María G."), produced by the database. A client can't type a different name.
+  - Never the email, full name, state or progress.
+- **Moderation:**
+  - Posts appear immediately; admins can delete any post afterwards.
+  - No approval before a post appears.
 
 ### Data and security (confirmed 13 Nov 2026)
 
@@ -85,19 +121,27 @@ Last updated: 14 Nov 2026. This is the source of truth for the project. When a d
 - **Data design** (built in migration 1, `supabase/migrations/20261113120000_initial_schema.sql`, 13 Nov 2026):
   - `profiles`: name, email (a copy of the login email, kept in sync), main Bundesland, route, plan (free/paid), is_admin, created date. Created automatically when a user is invited.
   - `routes`: permanent short code, Spanish name, sort order, archived. Starts empty; Ivan will give the route names later.
-  - `followed_states`: user_id, Bundesland, for news
+  - `followed_states`: user_id, Bundesland, for news. **Removed in migration 2 (15 Nov decision).**
   - `checklist_items`: permanent automatic ID (what progress uses), optional unique readable code (like `by-kp-010`, for humans and spreadsheet imports), Bundesland, route, title, text, sort order, archived
   - `progress`: user_id, item_id, done_at (set by the database)
   - `news_posts`: title, body (plain text), Bundesland (empty = all states), publish date, published, paid_only (ticked by default)
   - Bundesländer are stored as the map's 16 short codes (`by`, `nw`, `th`…); the database refuses anything else.
   - Adding tables or columns later is normal. Restructuring is cheap until real clients have data.
-- **Who can do what** (confirmed 13 Nov 2026, enforced by grants and RLS, proven by `supabase/tests/rls_check.sql`):
+- **Migration 2** (planned 15 Nov 2026):
+  - removes `followed_states`
+  - lets a client set `main_state` once, while it is still empty
+  - news: only posts for the client's state, or for all states if the client has chosen a state; a client with no state sees no news at all
+  - adds `community_posts`: author, author name (made by the database), body (plain text), created date. Posts are deleted together with the author's account.
+  - extends `rls_check.sql` to cover all of this
+  - the state chat may later reuse `community_posts` with an added Bundesland column; decide when it's built
+- **Who can do what** (confirmed 13 Nov 2026, updated 15 Nov 2026, enforced by grants and RLS, proven by `supabase/tests/rls_check.sql`):
+  - The 15 Nov changes take effect when migration 2 is applied; until then the database follows the 13 Nov rules.
   - Logged-out visitors can read nothing.
-  - Clients read and change only their own rows. On their profile they can change only their name.
-  - Main Bundesland, route, plan and is_admin are changed only by admins.
-  - Clients choose their own followed states.
+  - Clients read and change only their own rows. On their profile they can change their name, and set their Bundesland once while it is empty.
+  - Route, plan, is_admin, and the Bundesland once set, are changed only by admins.
   - **Paid unlocks the checklist:** only paid users and admins can read checklist items, and only they can tick them.
-  - News: free users only see posts with `paid_only = false`. Clients only see published posts whose date has come. Posts for "all states" are shown to everyone who passes the paid_only rule. The website, not the database, filters news by followed states.
+  - News: free users only see posts with `paid_only = false`. Clients only see published posts whose date has come, for their own Bundesland or for all states. A client with no Bundesland sees no news at all.
+  - **Community board:** only paid users and admins read and write. Clients delete their own posts; admins delete any post. Nobody edits posts in the first version.
   - The client ticks their own items; admins can only view progress.
   - Only admins write routes, checklist items and news. Checklist items and routes are never deleted, not even by admins (retire them with `archived = true`).
   - Admin overview "last activity" = the client's most recent tick.
@@ -106,6 +150,8 @@ Last updated: 14 Nov 2026. This is the source of truth for the project. When a d
   - To retire an item, set `archived = true` instead of deleting it.
   - This is the hardest decision to reverse once clients have saved progress.
 - **Row Level Security (RLS) is on for every table.** RLS is the set of database rules that decide who can read or change each row. It's required by the stack, because the website talks to the database directly with a public key.
+- **Any rule that limits what a user may see** (their state, paid features) must be enforced by RLS, never only by the website.
+- **Text written by users is always shown as plain text,** never as HTML.
 - **The secret (service-role) key never goes into the website code.**
 - **Supabase project settings** (13 Nov 2026):
   - project `mnl-client-area`, Frankfurt, Free plan
@@ -126,23 +172,26 @@ Last updated: 14 Nov 2026. This is the source of truth for the project. When a d
 
 **Deliverables:**
 1. A new site that keeps the company email working
-2. Accounts with free and paid profiles
+2. Accounts with paid profiles (free stays possible in the data, unused for now)
 3. The checklist always in its latest version
 4. Progress saved to the account, the same on every device
 5. An admin screen showing every client's progress
-6. News per Bundesland (part of the 2026 prototype)
+6. News for the client's one Bundesland
+7. The community board for all members (added 15 Nov 2026)
 
 **Checklist content:** 6 of the 16 Bundesländer, 4 routes each. The cousin is researching the other 10, which isn't urgent.
 
 **Out of the first version:**
 - payment inside the site (clients pay through an external link; an admin switches the plan to paid by hand)
-- file uploads (users will never upload files)
-- messaging
+- file uploads (users will never upload files, not even in the community)
+- private messages between members
 - automatic account creation on payment
+- legal texts (the law firm's job)
 
 **Later:**
-- a chat between members of the same state
+- Next, as soon as the board is done: the chat per Bundesland (moves past the prototype if time runs short)
 - possibly a calendar and alerts
+- features for free users, if a use for them appears
 
 ## Open decisions (suggested default in brackets)
 
@@ -152,19 +201,30 @@ Last updated: 14 Nov 2026. This is the source of truth for the project. When a d
   - The plain-HTML mock-up now lives in `design-mockup/`.
   - The React + Vite + TypeScript version is merged into `main` (pull request #3) and live on Cloudflare Pages. GitHub Pages is turned off.
 
-- **What a news post can include:** the fields are decided (see Data design). Still open: links inside the text (suggested: the site turns web addresses into links safely); no comments, likes or photos.
+- **What a news post can include:** the fields are decided (see Data design). Still open: links inside the text (suggested: the site turns web addresses into links safely); no comments, likes or photos. The same safe link rule would apply to community posts too.
+- **Replies to community posts** (none in the prototype; replies can be added later)
+- **Maximum length of a community post** (2,000 characters)
 - **Alerts** (none in the first version)
 - **Calendar** (deferred)
 - **Students and doctors already working in Germany** (treat them as another route)
-- **Data retention for lifetime accounts** (keep while active; delete on request; after 3 years without login, warn by email and delete 30 days later; confirm with a lawyer)
-- **Legal texts:**
-  - Impressum
-  - Datenschutzerklärung in Spanish and German, from a paid generator
-  - data processing agreements (AVVs) filed with Supabase, Cloudflare, Brevo and IONOS
-  - terms of sale (AGB) for the lifetime package, from a lawyer or a paid generator
 - **Accounts** for GitHub, Supabase, Cloudflare and Brevo, all under the company email.
   - The company email now exists (13 Nov 2026).
   - Done (13 Nov 2026):
     - a company GitHub account owns a GitHub organization, with Ivan's personal account as a second owner, and the repository has been transferred into it
     - Cloudflare Pages has been recreated in a company Cloudflare account, and the old project in Ivan's personal account is deleted
   - Supabase and Brevo were created with the company email (13 to 14 Nov 2026).
+
+## For the law firm
+
+The owner will hire a law firm for all legal work (decided 15 Nov 2026). Ivan and Claude don't write or choose these texts.
+
+- Impressum
+- Datenschutzerklärung (Spanish and German)
+- data processing agreements (AVVs) with Supabase, Cloudflare, Brevo and IONOS
+- terms of sale (AGB) for the lifetime package
+- **Data retention for lifetime accounts.** Current suggestion, as a starting point: keep while active; delete on request; after 3 years without login, warn by email and delete 30 days later.
+- **Community:**
+  - rules for members
+  - how a post is reported and removed
+  - showing "María G." names to other members
+- **Timing** (suggested by Claude, not yet confirmed): done before the first real client gets an invite.
