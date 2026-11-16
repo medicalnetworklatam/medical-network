@@ -17,10 +17,16 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
    git never commits.
 
    When they're missing, `supabase` is null: the public pages still work and
-   the login screens say the configuration is missing. */
+   the login screens say the configuration is missing.
+
+   detectSessionInUrl: false means the library never logs the browser in from
+   login codes in the page address (like #access_token=...). People only log
+   in through our forms. Invite and reset links don't need it: they carry a
+   one-time code (token_hash) that NuevaContrasena.tsx only uses when the
+   person presses "Guardar contraseña". */
 
 const url = import.meta.env.VITE_SUPABASE_URL as string | undefined
 const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined
 
 export const supabase: SupabaseClient | null =
-  url && key ? createClient(url, key) : null
+  url && key ? createClient(url, key, { auth: { detectSessionInUrl: false } }) : null

@@ -1,17 +1,19 @@
 -- =============================================================================
--- RLS check: proves the access rules from migrations 1 and 2 work.
+-- RLS check: proves the access rules from migrations 1, 2 and 3 work.
 -- =============================================================================
 -- Paste this whole file into Supabase's SQL Editor and press "Run".
 -- Run it after every migration, and again after any change to policies or
 -- grants. It is safe to run as often as you like.
 --
 -- What it does:
---   1. Creates 4 fake logins (client A, client B, client C, an admin), test
+--   1. Checks a few safety nets on the whole database (RLS on every table,
+--      nothing for logged-out visitors, and so on).
+--   2. Creates 4 fake logins (client A, client B, client C, an admin), test
 --      routes, test checklist items and test news posts. Everything it
 --      creates is marked "rls-test" so it can be found and removed.
---   2. Pretends to be each of them in turn, the same way the website would be
+--   3. Pretends to be each of them in turn, the same way the website would be
 --      after a login, and checks what they can and can't see or change.
---   3. Deletes everything it created.
+--   4. Deletes everything it created.
 --
 -- Result:
 --   - Success: the result panel shows "ALL RLS TESTS PASSED".
@@ -34,6 +36,9 @@ declare
   -- test content
   item_active    uuid;
   item_archived  uuid;
+  item_other_state  uuid;   -- for Thüringen, on client B's route
+  item_other_route  uuid;   -- for Bayern, on another route
+  test_items     uuid[];    -- the four test items above
   n_free         uuid;   -- published, for Bayern, free for everyone
   n_paid         uuid;   -- published, for Bayern, paid_only (by default)
   n_draft        uuid;   -- not published
@@ -50,6 +55,7 @@ declare
   cnt    bigint;
   txt    text;
   fn     text;
+  rel    text;
   ok     int := 0;       -- passed checks
 begin
   -- ---------------------------------------------------------------------------
@@ -108,8 +114,92 @@ begin
   end if;
   ok := ok + 1;
 
+  -- CHECK: logged-in users may run private.my_route(), which the checklist
+  -- rule needs (the loop above already proves logged-out visitors can't)
+  if not has_function_privilege('authenticated', 'private.my_route()', 'EXECUTE') then
+    raise exception 'FAIL: logged-in users may not run private.my_route(), which the checklist rule needs';
+  end if;
+  ok := ok + 1;
+
+  -- ---------------------------------------------------------------------------
+  -- Safety nets on the whole database (not only the test rows)
+  -- ---------------------------------------------------------------------------
+  -- CHECK: every table in public has Row Level Security switched on
+  for rel in
+    select c.oid::regclass::text from pg_class c
+     where c.relnamespace = 'public'::regnamespace
+       and c.relkind in ('r', 'p')            -- tables and partitioned tables
+       and not c.relrowsecurity
+  loop
+    raise exception 'FAIL: the table % has Row Level Security switched off', rel;
+  end loop;
+  ok := ok + 1;
+
+  -- CHECK: logged-out visitors have no rights at all on any table or view in
+  -- public, not even on single columns
+  for rel in
+    select c.oid::regclass::text from pg_class c
+     where c.relnamespace = 'public'::regnamespace
+       and c.relkind in ('r', 'p', 'v', 'm', 'f')
+       and (has_table_privilege('anon', c.oid,
+              'SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER')
+            or has_any_column_privilege('anon', c.oid,
+              'SELECT, INSERT, UPDATE, REFERENCES'))
+  loop
+    raise exception 'FAIL: logged-out visitors have rights on %', rel;
+  end loop;
+  ok := ok + 1;
+
+  -- CHECK: every SECURITY DEFINER function in our schemas (public, private)
+  -- has a fixed search_path, so nobody can trick it with a look-alike table
+  for fn in
+    select p.oid::regprocedure::text from pg_proc p
+     where p.pronamespace in ('public'::regnamespace, 'private'::regnamespace)
+       and p.prosecdef
+       and not exists (select 1 from unnest(coalesce(p.proconfig, '{}')) as cfg
+                        where cfg like 'search_path=%')
+  loop
+    raise exception 'FAIL: the SECURITY DEFINER function % has no fixed search_path', fn;
+  end loop;
+  ok := ok + 1;
+
+  -- CHECK: there are no views in public (a view can skip the RLS rules of the
+  -- tables it reads)
+  for rel in
+    select c.oid::regclass::text from pg_class c
+     where c.relnamespace = 'public'::regnamespace
+       and c.relkind in ('v', 'm')
+  loop
+    raise exception 'FAIL: public has the view %', rel;
+  end loop;
+  ok := ok + 1;
+
+  -- CHECK: nobody may change is_admin through the website, but admins can
+  -- still change the columns the admin screens send
+  if has_column_privilege('authenticated', 'public.profiles', 'is_admin', 'UPDATE')
+  or has_column_privilege('anon', 'public.profiles', 'is_admin', 'UPDATE') then
+    raise exception 'FAIL: the website has the right to change is_admin';
+  end if;
+  if not (has_column_privilege('authenticated', 'public.profiles', 'main_state', 'UPDATE')
+      and has_column_privilege('authenticated', 'public.profiles', 'route', 'UPDATE')
+      and has_column_privilege('authenticated', 'public.profiles', 'plan', 'UPDATE')
+      and has_column_privilege('authenticated', 'public.profiles', 'first_name', 'UPDATE')
+      and has_column_privilege('authenticated', 'public.profiles', 'last_names', 'UPDATE')) then
+    raise exception 'FAIL: the website lost the right to change main_state, route, plan or the names';
+  end if;
+  ok := ok + 1;
+
   -- You can make someone an admin from the SQL Editor
   update public.profiles set is_admin = true where id = adm;
+
+  -- CHECK: the SQL Editor (you, postgres) can give and take away is_admin
+  select count(*) into cnt from public.profiles where id = adm and is_admin;
+  if cnt <> 1 then raise exception 'FAIL: the SQL Editor could not make the admin an admin'; end if;
+  update public.profiles set is_admin = true  where id = c;
+  update public.profiles set is_admin = false where id = c;
+  select count(*) into cnt from public.profiles where id = c and not is_admin;
+  if cnt <> 1 then raise exception 'FAIL: the SQL Editor could not take away is_admin'; end if;
+  ok := ok + 1;
 
   -- Test content (also created by you, so the checks below don't depend on it)
   insert into public.routes (code, name) values ('rls-test-route', 'Ruta de prueba');
@@ -119,6 +209,14 @@ begin
   insert into public.checklist_items (code, state, route, title, archived)
     values ('rls-test-002', 'by', 'rls-test-route', 'Prueba archivada', true)
     returning id into item_archived;
+  insert into public.routes (code, name) values ('rls-test-route-otra', 'Otra ruta de prueba');
+  insert into public.checklist_items (code, state, route, title)
+    values ('rls-test-004', 'th', 'rls-test-route', 'Prueba de otro estado')
+    returning id into item_other_state;
+  insert into public.checklist_items (code, state, route, title)
+    values ('rls-test-005', 'by', 'rls-test-route-otra', 'Prueba de otra ruta')
+    returning id into item_other_route;
+  test_items := array[item_active, item_archived, item_other_state, item_other_route];
   insert into public.news_posts (title, state, published, paid_only)
     values ('[rls-test] gratis', 'by', true, false) returning id into n_free;
   insert into public.news_posts (title, state, published, paid_only)
@@ -354,6 +452,28 @@ begin
   if cnt <> 0 then raise exception 'FAIL: paid client B can read an archived checklist item'; end if;
   ok := ok + 1;
 
+  -- CHECK: B (paid, Bayern, rls-test-route) reads only their own item: not
+  -- Thüringen's item, and not the item for another route
+  select count(*) into cnt from public.checklist_items where id = any (test_items);
+  if cnt <> 1 then raise exception 'FAIL: paid client B reads % test checklist items instead of only their own', cnt; end if;
+  select count(*) into cnt from public.checklist_items where id = item_other_state;
+  if cnt <> 0 then raise exception 'FAIL: paid client B can read another state''s checklist item'; end if;
+  select count(*) into cnt from public.checklist_items where id = item_other_route;
+  if cnt <> 0 then raise exception 'FAIL: paid client B can read another route''s checklist item'; end if;
+  ok := ok + 1;
+
+  -- CHECK: B cannot tick another state's item or another route's item
+  begin
+    insert into public.progress (user_id, item_id) values (b, item_other_state);
+    raise exception 'FAIL: client B ticked another state''s checklist item';
+  exception when insufficient_privilege then ok := ok + 1;
+  end;
+  begin
+    insert into public.progress (user_id, item_id) values (b, item_other_route);
+    raise exception 'FAIL: client B ticked another route''s checklist item';
+  exception when insufficient_privilege then ok := ok + 1;
+  end;
+
   -- CHECK: B cannot send their own tick date
   begin
     insert into public.progress (user_id, item_id, done_at)
@@ -521,6 +641,53 @@ begin
   if rc <> 1 then raise exception 'FAIL: client C could not delete their own post'; end if;
   ok := ok + 1;
 
+  -- CHECK: C (paid, no state, no route) reads no checklist item and can't
+  -- tick one
+  select count(*) into cnt from public.checklist_items where id = any (test_items);
+  if cnt <> 0 then raise exception 'FAIL: client C, with no state and no route, reads % checklist items', cnt; end if;
+  begin
+    insert into public.progress (user_id, item_id) values (c, item_active);
+    raise exception 'FAIL: client C, with no state and no route, ticked an item';
+  exception when insufficient_privilege then ok := ok + 1;
+  end;
+
+  -- CHECK: C chooses Bayern, but still has no route: still no items, no ticks
+  update public.profiles set main_state = 'by' where id = c;
+  select count(*) into cnt from public.checklist_items where id = any (test_items);
+  if cnt <> 0 then raise exception 'FAIL: client C, with a state but no route, reads % checklist items', cnt; end if;
+  begin
+    insert into public.progress (user_id, item_id) values (c, item_active);
+    raise exception 'FAIL: client C, with a state but no route, ticked an item';
+  exception when insufficient_privilege then ok := ok + 1;
+  end;
+
+  -- In the SQL Editor: C gets a route, and their state is cleared
+  reset role;
+  update public.profiles set main_state = null, route = 'rls-test-route' where id = c;
+  set local role authenticated;
+
+  -- CHECK: C, with a route but no state: still no items, no ticks
+  select count(*) into cnt from public.checklist_items where id = any (test_items);
+  if cnt <> 0 then raise exception 'FAIL: client C, with a route but no state, reads % checklist items', cnt; end if;
+  begin
+    insert into public.progress (user_id, item_id) values (c, item_active);
+    raise exception 'FAIL: client C, with a route but no state, ticked an item';
+  exception when insufficient_privilege then ok := ok + 1;
+  end;
+
+  -- In the SQL Editor: C gets Bayern again, so now has a state and a route
+  reset role;
+  update public.profiles set main_state = 'by' where id = c;
+  set local role authenticated;
+
+  -- CHECK: with both, C reads and ticks exactly their own item
+  select count(*) into cnt from public.checklist_items where id = any (test_items);
+  if cnt <> 1 then raise exception 'FAIL: client C, with a state and a route, reads % test checklist items instead of 1', cnt; end if;
+  insert into public.progress (user_id, item_id) values (c, item_active);
+  get diagnostics rc = row_count;
+  if rc <> 1 then raise exception 'FAIL: client C, with a state and a route, could not tick their own item'; end if;
+  ok := ok + 1;
+
   -- ===========================================================================
   -- As CLIENT A again: B's private data
   -- ===========================================================================
@@ -583,6 +750,13 @@ begin
   exception when insufficient_privilege then ok := ok + 1;
   end;
 
+  -- CHECK: a logged-out visitor can't run private.my_route()
+  begin
+    perform private.my_route();
+    raise exception 'FAIL: a logged-out visitor can run private.my_route()';
+  exception when insufficient_privilege then ok := ok + 1;
+  end;
+
   -- ===========================================================================
   -- As the ADMIN again: reads everything, still can't break the hard rules
   -- ===========================================================================
@@ -613,6 +787,25 @@ begin
   select count(*) into cnt from public.news_posts where id = any (all_news);
   if cnt <> 6 then raise exception 'FAIL: admin cannot read all news posts'; end if;
   ok := ok + 1;
+
+  -- CHECK: admin (who has no state or route) still reads every state's and
+  -- every route's items
+  select count(*) into cnt from public.checklist_items where id = any (test_items);
+  if cnt <> 4 then raise exception 'FAIL: admin reads % test checklist items instead of 4', cnt; end if;
+  ok := ok + 1;
+
+  -- CHECK: even an admin cannot make a client an admin, or remove their own
+  -- admin role, through the website
+  begin
+    update public.profiles set is_admin = true where id = b;
+    raise exception 'FAIL: admin made client B an admin through the website';
+  exception when insufficient_privilege then ok := ok + 1;
+  end;
+  begin
+    update public.profiles set is_admin = false where id = adm;
+    raise exception 'FAIL: admin removed their own admin role through the website';
+  exception when insufficient_privilege then ok := ok + 1;
+  end;
 
   -- CHECK: admin can edit a checklist item and a news post
   update public.checklist_items set body = 'Texto' where id = item_active;

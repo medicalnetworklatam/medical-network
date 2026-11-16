@@ -83,7 +83,7 @@ Out of scope:
   - `npm run build`: checks the TypeScript types, then makes the final website files in `dist/`. Cloudflare Pages runs this on every push.
   - `npm run preview`: serves the built `dist/` folder at http://localhost:4173, to check what will go online.
   - `npm run lint`: runs oxlint, which warns about common code mistakes.
-  - Tests: `npm test` checks the admin sums and German time (`tests/adminLogic.test.ts`, no database needed); no other website tests yet. Database: `supabase/tests/rls_check.sql`, run by Ivan in Supabase's SQL Editor (see `supabase/README.md`).
+  - Tests: `npm test` checks the admin sums and German time (`tests/adminLogic.test.ts`, no database needed) and the safe "return to the page they wanted" address after login (`tests/safePath.test.ts`); it fails if either file fails. No other website tests yet. Database: `supabase/tests/rls_check.sql`, run by Ivan in Supabase's SQL Editor (see `supabase/README.md`).
 - Cloudflare Pages settings: build command `npm run build`, output folder `dist`.
 - Where things are:
   - `src/main.tsx` starts the app and lists the pages.

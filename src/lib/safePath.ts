@@ -28,5 +28,10 @@ export function safeInternalPath(value: unknown): string | null {
   // Going "back" to a login screen would be a loop
   if (LOGIN_PAGES.includes(url.pathname)) return null
 
-  return url.pathname + url.search + url.hash
+  // Last check, on the final result: tidying "/./" or "/../" can turn an
+  // address like "/.//other.site" into "//other.site", which a browser
+  // reads as another website. Refuse anything that comes out like that.
+  const result = url.pathname + url.search + url.hash
+  if (result.startsWith('//')) return null
+  return result
 }
