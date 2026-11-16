@@ -1,0 +1,42 @@
+# Security headers for Cloudflare Pages.
+#
+# A "header" is an extra line the server sends with every file. These tell
+# the browser what the site is allowed to do, so that a mistake in the code
+# (or text someone managed to sneak in) can't load scripts from elsewhere,
+# send data to another server, or be shown inside another site.
+#
+# The build copies this file to dist/_headers, and Cloudflare Pages reads it
+# there. "/*" means every address of the site. It only works on Cloudflare:
+# `npm run dev` and `npm run preview` don't send these headers.
+#
+# Content-Security-Policy, part by part ('self' = our own site only):
+#   default-src 'self'      anything not listed below: our own site only
+#   script-src 'self'       scripts: only our own files. No inline scripts, no eval.
+#   style-src 'self'        styles: only our own CSS file. No <style> blocks and
+#                           no style="..." attributes. (React setting a style
+#                           from code is still fine.)
+#   img-src 'self' data:    images: our own files, plus images written inside
+#                           the CSS ("data:"), used by the arrow of the admin
+#                           dropdown lists (src/pages/Admin.module.css)
+#   font-src 'self'         fonts: only our own files (no Google Fonts)
+#   connect-src ...         data requests: our own site and the Supabase project
+#   object-src 'none'       no plug-ins
+#   base-uri 'self'         the page can't be told to load its files from elsewhere
+#   form-action 'self'      forms can only send to our own site
+#   frame-ancestors 'none'  no other site may show this one inside a frame
+#
+# WHEN THE SITE STARTS USING A NEW OUTSIDE ADDRESS (a script, font, image or
+# API on another server), ADD IT HERE, or the browser blocks it. Examples:
+#   - a live Supabase connection (the future state chat) also needs
+#     wss://hxqtyvwlzjobpniirixv.supabase.co in connect-src
+#   - a different Supabase project needs its own address in connect-src
+#
+# X-Frame-Options says the same as frame-ancestors, for older browsers.
+# No Strict-Transport-Security (HSTS) yet: that comes with the custom domain.
+
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://hxqtyvwlzjobpniirixv.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
