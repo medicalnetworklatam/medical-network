@@ -93,6 +93,7 @@ Out of scope:
   - `src/lib/supabase.ts`: the one connection to Supabase. `src/lib/auth.ts` and `AuthProvider.tsx` share who is logged in; `src/pages/RequireLogin.tsx` guards the pages that need a login, and sends users without a first name to `/perfil` first.
   - `src/pages/Admin*.tsx` and `RequireAdmin.tsx`: the admin screens (`/admin`, `/admin/clientes/<id>`, `/admin/novedades`), drawn only when the loaded profile is an admin. They never offer `is_admin`, and each save sends only the one column it changes.
   - `src/lib/adminData.ts` and `berlinTime.ts`: the admin reads (in pages of 1,000 rows, ordered by primary key), progress %, last activity, and German-time conversion. Their pure functions are tested by `tests/adminLogic.test.ts`; never put test rows in the live database.
+  - `public/_headers`: the security headers Cloudflare Pages sends with every page (Content-Security-Policy and others). When the site starts using a new outside address (script, font, image or API), add it there, or the browser blocks it.
   - `supabase/templates/`: the Spanish login emails and the guide to Supabase's login settings.
   - `supabase/`: database migrations (SQL files Ivan pastes into the SQL Editor), the RLS test and a guide. Never edit a migration that's already applied; add a new one.
 - Check every visual change at phone width (375px), iPad landscape and desktop.
