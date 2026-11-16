@@ -1,0 +1,665 @@
+/* Admin pages: client overview, one client's screen, news form.
+   Same look as the community board (Comunidad.module.css): white cards,
+   pale teal borders, pill buttons. */
+
+.page {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.container {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0 24px 60px;
+}
+/* The client table needs more room */
+.container.is-wide { max-width: 1160px; }
+
+/* ---------- Header: back to Novedades, "Cerrar sesión" ---------- */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px 0 8px;
+}
+
+/* Same look as the "Cerrar sesión" pill (SessionButton.module.css) */
+.pill,
+.tab {
+  height: 48px;
+  padding: 0 22px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #FFFFFF;
+  border: 1px solid #CAE8E6;
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #121413;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+.pill:hover,
+.tab:hover { border-color: #489E85; }
+.pill:focus-visible,
+.tab:focus-visible { outline: 3px solid #489E85; outline-offset: 2px; }
+
+/* ---------- The two admin sections ---------- */
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 0 0;
+}
+/* The section you are in: bright green, like a selected item */
+.tab[aria-current="page"] {
+  background: #7CDC92;
+  border-color: #7CDC92;
+}
+
+/* ---------- Main ---------- */
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.page-title {
+  margin: 0;
+  padding: 20px 0 4px;
+  font-family: 'Anton', sans-serif;
+  font-weight: 400;
+  font-size: 88px;
+  line-height: 1;
+  text-align: center;
+  text-wrap: balance;
+}
+
+/* Small section titles: Figtree 13px, bold, spaced capitals */
+.section-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* "← Todos los clientes" */
+.back { margin: 0; }
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #2F7A64;
+}
+.back-link:hover { color: #121413; }
+.back-link:focus-visible { outline: 3px solid #489E85; outline-offset: 2px; border-radius: 6px; }
+
+/* Loading / empty / errors: one white box */
+.message {
+  margin: 0;
+  background: #FFFFFF;
+  border: 1px solid #CAE8E6;
+  border-radius: 16px;
+  padding: 24px 28px;
+  font-size: 17px;
+  line-height: 1.45;
+  color: #3D4A46;
+  text-align: center;
+}
+.message p { margin: 0; }
+.message p + .message-btn { margin-top: 16px; }
+.message.is-error { background: #FDECEA; border-color: #FDECEA; color: #B42318; font-weight: 600; }
+
+/* Small explanations */
+.note {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #3D4A46;
+  overflow-wrap: anywhere;
+}
+
+.error,
+.notice {
+  margin: 0;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 15px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.error { background: #FDECEA; color: #B42318; font-weight: 600; }
+.notice { background: #CAE8E6; color: #121413; }
+
+/* ---------- Cards ---------- */
+.card {
+  background: #FFFFFF;
+  border: 1px solid #CAE8E6;
+  border-radius: 16px;
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 2px;
+}
+.card > .list-head { padding: 0; }
+
+/* ---------- Buttons ---------- */
+/* Black pill, like the buttons on Novedades */
+.primary-btn,
+.message-btn {
+  min-height: 48px;
+  padding: 0 28px;
+  border: 0;
+  border-radius: 999px;
+  background: #121413;
+  color: #CAE8E6;
+  font-family: 'Figtree Variable', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+.primary-btn:hover:not(:disabled),
+.message-btn:hover:not(:disabled) { background: #2F7A64; color: #FFFFFF; }
+.primary-btn:focus-visible,
+.message-btn:focus-visible { outline: 3px solid #489E85; outline-offset: 3px; }
+.primary-btn:disabled,
+.message-btn:disabled { background: #CAE8E6; color: #3D4A46; cursor: default; }
+
+/* White pill: "Actualizar", "Cambiar", "Cancelar", "Editar" */
+.small-btn {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid #CAE8E6;
+  border-radius: 999px;
+  background: #FFFFFF;
+  color: #121413;
+  font-family: 'Figtree Variable', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color 160ms ease;
+}
+.small-btn:hover:not(:disabled) { border-color: #489E85; }
+.small-btn:focus-visible { outline: 3px solid #489E85; outline-offset: 2px; }
+.small-btn:disabled { color: #3D4A46; cursor: default; }
+
+/* ---------- Client overview: the table ---------- */
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 8px;   /* room between the rows */
+  margin: -8px 0;
+}
+.table th {
+  padding: 4px 16px;
+  text-align: left;
+  vertical-align: bottom;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+/* Each row is one white, rounded strip */
+.table td {
+  padding: 10px 16px;
+  background: #FFFFFF;
+  border-top: 1px solid #CAE8E6;
+  border-bottom: 1px solid #CAE8E6;
+  font-size: 16px;
+  line-height: 1.35;
+  vertical-align: middle;
+}
+/* Names and routes break inside a word only when a word is wider than its
+   column; plan, progress and dates stay on one line */
+.table .name-cell,
+.table .wrap-cell { overflow-wrap: break-word; }
+.table .nowrap-cell { white-space: nowrap; }
+.table th:first-child { width: 24%; }
+.table td:first-child { border-left: 1px solid #CAE8E6; border-radius: 16px 0 0 16px; }
+.table td:last-child { border-right: 1px solid #CAE8E6; border-radius: 0 16px 16px 0; }
+
+/* The name opens the client's screen */
+.client-link {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 44px;
+  font-weight: 700;
+  color: #2F7A64;
+  text-decoration: none;
+}
+.client-name { text-decoration: underline; }
+.client-link:hover { color: #121413; }
+.client-link:focus-visible { outline: 3px solid #489E85; outline-offset: 2px; border-radius: 6px; }
+
+/* Only for clients without a name yet */
+.email {
+  display: block;
+  font-size: 13px;
+  font-weight: 400;
+  color: #3D4A46;
+  overflow-wrap: anywhere;
+}
+
+/* "Sin estado", "Sin ruta" */
+.none { color: #3D4A46; }
+
+/* Dates and percentages: digits of equal width, so columns line up */
+.nowrap-cell { font-variant-numeric: tabular-nums; }
+
+/* "Gratis" */
+.tag {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: #CAE8E6;
+  font-size: 14px;
+  font-weight: 700;
+  color: #121413;
+}
+
+/* ---------- One client's screen ---------- */
+.client-title {
+  margin: 0;
+  min-width: 0;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+.client-title .email { margin-top: 4px; font-size: 15px; }
+
+/* One thing to change: Estado, Ruta or Plan */
+.setting {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 16px;
+  border-top: 1px solid #CAE8E6;
+}
+.setting-label {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+.setting-value {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.4;
+  color: #3D4A46;
+  overflow-wrap: anywhere;
+}
+.setting-value strong { color: #121413; }
+.setting-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.setting-row .select { flex: 1 1 auto; }
+
+/* The question asked inside the page before a change is saved */
+.confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px;
+  background: #EEF9F5;
+  border-radius: 12px;
+}
+.confirm-text {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.confirm-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* The checklist, read-only */
+.checklist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.check-item {
+  display: flex;
+  gap: 14px;
+  padding: 14px 0;
+  border-top: 1px solid #CAE8E6;
+}
+/* A drawn tick box (not a real one: nothing here can be changed) */
+.check-mark {
+  flex: 0 0 26px;
+  width: 26px;
+  height: 26px;
+  border: 2px solid #489E85;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+  color: #121413;
+}
+.is-done .check-mark { background: #7CDC92; border-color: #7CDC92; }
+.check-body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.check-title,
+.check-text,
+.check-status { margin: 0; overflow-wrap: anywhere; }
+.check-title { font-size: 16px; font-weight: 700; line-height: 1.35; }
+.check-text { font-size: 15px; line-height: 1.5; white-space: pre-wrap; }
+.check-status { font-size: 14px; color: #3D4A46; }
+.is-done .check-status { color: #2F7A64; font-weight: 600; }
+
+/* ---------- Form fields (news form, and the lists on a client's screen) ---------- */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.field {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.label {
+  padding: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+legend.label { margin-bottom: 8px; }
+.sub-label {
+  font-size: 14px;
+  color: #3D4A46;
+}
+.hint {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: #3D4A46;
+}
+
+.input,
+.select,
+.textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 0 16px;
+  background: #FFFFFF;
+  border: 1px solid #CAE8E6;
+  border-radius: 12px;
+  font-family: 'Figtree Variable', sans-serif;
+  font-size: 16px; /* 16px or more: iPhones don't zoom in when typing */
+  color: #121413;
+}
+.input,
+.select { height: 52px; }
+.textarea {
+  min-height: 160px;
+  padding: 14px 16px;
+  line-height: 1.5;
+  resize: vertical;
+}
+.input:hover:not(:disabled),
+.select:hover:not(:disabled),
+.textarea:hover { border-color: #489E85; }
+.input:focus-visible,
+.select:focus-visible,
+.textarea:focus-visible { outline: 2px solid #489E85; outline-offset: 2px; }
+.input[aria-invalid="true"] { border-color: #B42318; }
+.select:disabled { color: #3D4A46; }
+
+/* Our own arrow on the lists, so they look the same on every device */
+.select {
+  -webkit-appearance: none;
+  appearance: none;
+  padding-right: 44px;
+  text-overflow: ellipsis;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9' fill='none' stroke='%23121413' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1.5l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  cursor: pointer;
+}
+.select:disabled { cursor: default; }
+
+/* Date and time: on iPhone/iPad these fields otherwise ignore their width
+   and centre their text */
+.input[type="date"],
+.input[type="time"] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  line-height: 50px;
+  text-align: left;
+}
+.input::-webkit-date-and-time-value { text-align: left; }
+
+.date-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* A tick box with its explanation */
+.check {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-height: 44px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.35;
+  cursor: pointer;
+}
+.check input {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  accent-color: #489E85;
+  cursor: pointer;
+}
+.check input:focus-visible { outline: 3px solid #489E85; outline-offset: 2px; }
+.check-hint {
+  display: block;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.45;
+  color: #3D4A46;
+}
+
+.form-btns {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ---------- News list ---------- */
+.post {
+  background: #FFFFFF;
+  border: 1px solid #CAE8E6;
+  border-radius: 16px;
+  padding: 20px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+/* The post that is in the form right now */
+.post.is-editing { border-color: #489E85; box-shadow: 0 0 0 1px #489E85; }
+
+.post-meta {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  font-size: 14px;
+  color: #3D4A46;
+  font-variant-numeric: tabular-nums;
+}
+
+/* "Borrador", "Programada", "Publicada" */
+.status {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #121413;
+  white-space: nowrap;
+}
+.status.is-draft { background: #FFFFFF; box-shadow: inset 0 0 0 1px #3D4A46; }
+.status.is-scheduled { background: #CAE8E6; }
+.status.is-published { background: #7CDC92; }
+
+/* News is plain text: keep its line breaks, and let very long words or web
+   addresses wrap instead of overflowing the card */
+.post-title,
+.post-text {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.post-title { font-size: 20px; font-weight: 700; line-height: 1.25; }
+.post-text { font-size: 16px; line-height: 1.5; }
+
+.post-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Screen-reader message areas (aria-live) must always be there, but while
+   empty they shouldn't add the flex gap above them */
+.form > .live:empty { margin-top: -18px; }
+.setting > .live:empty { margin-top: -10px; }
+
+/* ---------- Narrow screens: every client becomes a card ---------- */
+/* (Six columns need about 900px; an iPad held upright gets the cards too) */
+@media (max-width: 900px) {
+  .table,
+  .table tbody,
+  .table tr,
+  .table td { display: block; }
+  .table { margin: 0; }
+  /* The column titles are still read by screen readers */
+  .table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+  .table tr {
+    padding: 12px 20px 14px;
+    background: #FFFFFF;
+    border: 1px solid #CAE8E6;
+    border-radius: 16px;
+  }
+  .table tr + tr { margin-top: 12px; }
+  .table td,
+  .table td:first-child,
+  .table td:last-child {
+    padding: 6px 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+  /* "Estado ......... Bayern" */
+  .table td[data-label] {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    text-align: right;
+    border-top: 1px solid #EEF9F5;
+  }
+  .table .nowrap-cell { white-space: normal; }
+  .table td[data-label]::before {
+    content: attr(data-label);
+    flex: 0 0 auto;
+    font-size: 14px;
+    color: #3D4A46;
+    text-align: left;
+  }
+  .client-link { font-size: 18px; }
+}
+
+/* ---------- Phone ---------- */
+@media (max-width: 700px) {
+  .container { padding: 0 16px 40px; }
+  .header { padding-top: 14px; }
+  .pill { padding: 0 18px; }
+  .tabs { padding-top: 8px; }
+  .tab { padding: 0 18px; }
+  .main { gap: 16px; }
+  .page-title { padding-top: 12px; font-size: 64px; }
+  .card { padding: 18px 20px; }
+  .post { padding: 18px 20px; }
+  .post-text { font-size: 15px; }
+  .client-title { font-size: 22px; }
+  .setting-row { flex-wrap: wrap; }
+  .setting-row .select { flex-basis: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pill,
+  .tab,
+  .primary-btn,
+  .message-btn,
+  .small-btn { transition: none; }
+}

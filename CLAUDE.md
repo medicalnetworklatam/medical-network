@@ -83,7 +83,7 @@ Out of scope:
   - `npm run build`: checks the TypeScript types, then makes the final website files in `dist/`. Cloudflare Pages runs this on every push.
   - `npm run preview`: serves the built `dist/` folder at http://localhost:4173, to check what will go online.
   - `npm run lint`: runs oxlint, which warns about common code mistakes.
-  - Tests: no website tests yet. Database: `supabase/tests/rls_check.sql`, run by Ivan in Supabase's SQL Editor (see `supabase/README.md`).
+  - Tests: `npm test` checks the admin sums and German time (`tests/adminLogic.test.ts`, no database needed); no other website tests yet. Database: `supabase/tests/rls_check.sql`, run by Ivan in Supabase's SQL Editor (see `supabase/README.md`).
 - Cloudflare Pages settings: build command `npm run build`, output folder `dist`.
 - Where things are:
   - `src/main.tsx` starts the app and lists the pages.
@@ -91,6 +91,8 @@ Out of scope:
   - `src/estados/`: map shapes, city search data and map animations.
   - `src/lib/profile.ts` and `ProfileProvider.tsx`: the logged-in user's own profile (name, state, plan, admin), loaded once after login and shared with every page.
   - `src/lib/supabase.ts`: the one connection to Supabase. `src/lib/auth.ts` and `AuthProvider.tsx` share who is logged in; `src/pages/RequireLogin.tsx` guards the pages that need a login, and sends users without a first name to `/perfil` first.
+  - `src/pages/Admin*.tsx` and `RequireAdmin.tsx`: the admin screens (`/admin`, `/admin/clientes/<id>`, `/admin/novedades`), drawn only when the loaded profile is an admin. They never offer `is_admin`, and each save sends only the one column it changes.
+  - `src/lib/adminData.ts` and `berlinTime.ts`: the admin reads (in pages of 1,000 rows, ordered by primary key), progress %, last activity, and German-time conversion. Their pure functions are tested by `tests/adminLogic.test.ts`; never put test rows in the live database.
   - `supabase/templates/`: the Spanish login emails and the guide to Supabase's login settings.
   - `supabase/`: database migrations (SQL files Ivan pastes into the SQL Editor), the RLS test and a guide. Never edit a migration that's already applied; add a new one.
 - Check every visual change at phone width (375px), iPad landscape and desktop.

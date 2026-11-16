@@ -19,6 +19,10 @@ import RecuperarContrasena from './pages/RecuperarContrasena.tsx'
 import NuevaContrasena from './pages/NuevaContrasena.tsx'
 import Perfil from './pages/Perfil.tsx'
 import Comunidad from './pages/Comunidad.tsx'
+import RequireAdmin from './pages/RequireAdmin.tsx'
+import AdminClientes from './pages/AdminClientes.tsx'
+import AdminCliente from './pages/AdminCliente.tsx'
+import AdminNovedades from './pages/AdminNovedades.tsx'
 
 // The state picker used to keep the chosen states in this browser only
 // ("mn_estados"). The state is now saved to the account: remove the old copy.
@@ -47,6 +51,13 @@ createRoot(document.getElementById('root')!).render(
               <Route path="/estados" element={<Estados />} />
               <Route path="/novedades" element={<Novedades />} />
               <Route path="/comunidad" element={<Comunidad />} />
+
+              {/* Admins only: everyone else is sent to /novedades */}
+              <Route element={<RequireAdmin />}>
+                <Route path="/admin" element={<AdminClientes />} />
+                <Route path="/admin/clientes/:id" element={<AdminCliente />} />
+                <Route path="/admin/novedades" element={<AdminNovedades />} />
+              </Route>
             </Route>
 
             {/* Unknown addresses show the home page */}

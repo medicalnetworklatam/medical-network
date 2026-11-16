@@ -36,6 +36,14 @@ const CloseIcon = ({ className }: { className?: string }) => (
     <path d="M6 6l12 12M18 6L6 18" />
   </svg>
 )
+const AdminIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M4 6h10M18 6h2M4 12h2M10 12h10M4 18h10M18 18h2" />
+    <circle cx="16" cy="6" r="2" />
+    <circle cx="8" cy="12" r="2" />
+    <circle cx="16" cy="18" r="2" />
+  </svg>
+)
 const ChatIcon = ({ className }: { className?: string }) => (
   <svg className={className} width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.4A8 8 0 1 1 21 12z" />
@@ -164,6 +172,15 @@ export default function Novedades() {
               <ChatIcon />
               Comunidad
             </Link>
+
+            {/* Admins only. Hiding the link is not the protection: the admin
+                pages check again, and the database decides (RLS). */}
+            {profile?.is_admin === true && (
+              <Link className={styles.adminLink} to="/admin">
+                <AdminIcon />
+                Administración
+              </Link>
+            )}
 
             {/* Calendar: preview only */}
             <section className={styles.calendar} aria-labelledby="cal-heading">

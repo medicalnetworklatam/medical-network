@@ -126,8 +126,10 @@
   text-transform: uppercase;
 }
 
-/* Link to the community board (same pill as "Cerrar sesión" on green) */
-.community-link {
+/* Link to the community board (same pill as "Cerrar sesión" on green),
+   and under it, for admins only, the link to the admin area */
+.community-link,
+.admin-link {
   align-self: flex-start;
   margin-top: 34px;
   height: 48px;
@@ -145,10 +147,15 @@
   white-space: nowrap;
   transition: border-color 160ms ease;
 }
-.community-link:hover { border-color: #121413; }
-.community-link:focus-visible { outline: 3px solid #EEF9F5; outline-offset: 2px; }
-/* the link already makes the room under the header */
-.community-link + .calendar { margin-top: 0; }
+.community-link:hover,
+.admin-link:hover { border-color: #121413; }
+.community-link:focus-visible,
+.admin-link:focus-visible { outline: 3px solid #EEF9F5; outline-offset: 2px; }
+/* the second pill sits close under the first */
+.admin-link { margin-top: -14px; }
+/* the links already make the room under the header */
+.community-link + .calendar,
+.admin-link + .calendar { margin-top: 0; }
 
 /* Calendar */
 .calendar {
@@ -701,5 +708,6 @@
   .messages,
   .chat-form,
   .message-btn,
-  .community-link { transition: none; }
+  .community-link,
+  .admin-link { transition: none; }
 }

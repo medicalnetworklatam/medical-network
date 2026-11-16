@@ -1,6 +1,6 @@
 # MNL client area: decisions log
 
-Last updated: 15 Nov 2026. This is the source of truth for the project. When a decision changes, update this file in the Claude project knowledge and in the code repository.
+Last updated: 16 Nov 2026. This is the source of truth for the project. When a decision changes, update this file in the Claude project knowledge and in the code repository.
 
 ## Context
 
@@ -14,6 +14,10 @@ Last updated: 15 Nov 2026. This is the source of truth for the project. When a d
   - about 25 accounts in the first 12 months
   - Spanish only, web only
 - **Admins:** Ivan and his cousin.
+
+## Changes on 16 Nov 2026
+
+- Admin screens scope decided (see "Admin screens"): the news form creates, edits, unpublishes and schedules posts; an admin can clear a client's state; the route is set on the same client screen; no history of admin changes in the prototype.
 
 ## Changes on 15 Nov 2026
 
@@ -132,6 +136,33 @@ Last updated: 15 Nov 2026. This is the source of truth for the project. When a d
   - The form's counter ("0 / 2000") follows the database's rule exactly: it removes only spaces, tabs, carriage returns and line breaks at both ends, and counts an emoji as one character. "Publicar" is disabled when the text is empty, over 2,000 characters, or while sending. The page sends only the body.
   - "Eliminar" is shown on the user's own posts, and on every post for admins. It asks for confirmation inside the post ("¿Eliminar esta publicación?" with "Sí, eliminar" and "Cancelar"), not with the browser's own pop-up, so every word stays in Spanish.
 
+### Admin screens (decided 16 Nov 2026)
+
+- **Who sees them:** admins only. The website hides the admin pages from everyone else, but the database rules (RLS) are what actually protect the data.
+- **No database change expected.** Migrations 1 and 2 already let admins read every profile, progress and checklist item, write news, and change a client's plan, route and state (checked 16 Nov 2026). If the build turns out to need one, it comes as migration 3 with new checks in `rls_check.sql`.
+- **News form:**
+  - create, edit, unpublish (untick "published") and schedule (a publish date in the future)
+  - the publish date is entered and shown in German time (Europe/Berlin), like the news dates clients see
+  - keeps the "all states" option and the paid-only box (ticked by default)
+  - no deleting posts from the form in the prototype; unpublish instead
+  - title and body are plain text, shown as plain text
+- **Client overview:**
+  - one row per account that isn't an admin, free accounts marked as free; the `+prueba` test account shows until it's deleted before launch
+  - columns: name ("first_name last_names"), Bundesland, route, plan, progress %, last activity (the client's most recent tick)
+  - a client who hasn't done the name step shows "Sin nombre" with their email in small text
+  - progress % = ticked items ÷ non-archived items for the client's current Bundesland and route; "—" when the client has no state, no route, or there are no items yet
+  - last activity is shown in German time (Europe/Berlin)
+- **One client's screen:**
+  - their checklist, read-only
+  - change the Bundesland, including back to "no state". After clearing, the client can choose once more on the map. Progress for the old state stays saved but isn't shown.
+  - set the route; while the routes table is empty it shows "Sin rutas todavía"
+  - the route can be set back to "Sin ruta" to undo a mistake
+  - switch the plan between free and paid (back to free is there to undo mistakes)
+  - every change asks for confirmation inside the page, in Spanish, never with the browser's own pop-up
+- **Never offered in the website:** changing `is_admin`. The database would let an admin do it, so the website must not offer it. Admins are made by hand in Supabase (see `supabase/README.md`).
+- **No history** of who changed what in the prototype.
+- **No test rows in the live database.** There is only one Supabase project. Routes and checklist items are never deleted and route codes are permanent, so the progress calculation is tested in code instead (16 Nov 2026).
+
 ### Data and security (confirmed 13 Nov 2026)
 
 - **Login emails go through Brevo's free plan** ("for now"), connected to Supabase as custom SMTP (the standard way of sending email). Supabase's built-in sender is for testing only.
@@ -195,9 +226,7 @@ Last updated: 15 Nov 2026. This is the source of truth for the project. When a d
   - The admin account is web@medicalnetworklatam.com (shared for now). Suggested: separate admin logins for Ivan and his cousin before real clients arrive.
 - **Database changes are written as SQL files** in `supabase/migrations/` in the repository. Ivan applies them by pasting them into Supabase's SQL Editor, so no Supabase keys are ever given to Claude Code.
 - **Two-factor login for admins:** not needed for now (Ivan's decision, 13 Nov 2026). Suggested to revisit before the first real client's data goes in.
-- **Admin client overview:**
-  - one row per client: name (shown as "first_name last_names"), Bundesland, plan, progress %, last activity
-  - opening a client shows their checklist read-only
+- **Admin client overview:** see "Admin screens (decided 16 Nov 2026)", which adds the route column and the rules for progress %.
 
 ## First version scope
 
