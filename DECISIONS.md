@@ -1,6 +1,6 @@
 # MNL client area: decisions log
 
-Last updated: 16 Nov 2026. This is the source of truth for the project. When a decision changes, update this file in the Claude project knowledge and in the code repository.
+Last updated: 17 Nov 2026. This is the source of truth for the project. When a decision changes, update this file in the Claude project knowledge and in the code repository.
 
 ## Context
 
@@ -18,6 +18,12 @@ Last updated: 16 Nov 2026. This is the source of truth for the project. When a d
 ## Changes on 16 Nov 2026
 
 - Admin screens scope decided (see "Admin screens"): the news form creates, edits, unpublishes and schedules posts; an admin can clear a client's state; the route is set on the same client screen; no history of admin changes in the prototype.
+- **Checklist limited to the client's own Bundesland and route** (option A, Ivan's decision after a security review). A client with no state or no route sees no checklist items. Enforced by the database in migration 3, not by the website. Reversible with one small migration.
+- **`is_admin` can no longer be changed through the website**, not even by an admin (migration 3). An admin is made only in Supabase's SQL Editor, by user ID.
+- **Security headers** on every page (`public/_headers`, PR #13): a strict Content-Security-Policy (only our own site and the Supabase project; no inline scripts or styles), plus X-Content-Type-Options, X-Frame-Options, Referrer-Policy and Permissions-Policy. HSTS comes with the custom domain. Any new outside address (for example the state chat's live connection) must be added to `_headers`.
+- **Security review of 16 Nov** (details in the project doc `docs/security-review-2026-11-16.md`, kept out of the public repository): H1, M1, M2, L1 and L6 fixed in PRs #12 and #13; migration 3 applied on 16 Nov 2026, rls_check.sql showed ALL RLS TESTS PASSED (93 checks).
+- **Supabase settings checked by hand (16–17 Nov):** sign-ups and anonymous sign-ins off, confirm email and secure email change on, secure password change turned on (password reset tested afterwards), only `public` and `graphql_public` exposed, no tables in realtime, RLS on every table, no rights for logged-out visitors.
+- **Security Advisor warnings accepted for now:** 24-hour email links (chosen so invites don't expire overnight); leaked password protection (Pro plan only, turned on when switching to Pro). Supabase's own `public.rls_auto_enable()` gets its execute rights removed in the next small migration.
 
 ## Changes on 15 Nov 2026
 
@@ -200,6 +206,8 @@ Last updated: 16 Nov 2026. This is the source of truth for the project. When a d
   - Clients read and change only their own rows. On their profile they can change their first name and last names, and set their Bundesland once while it is empty.
   - Route, plan, is_admin, and the Bundesland once set, are changed only by admins.
   - **Paid unlocks the checklist:** only paid users and admins can read checklist items, and only they can tick them.
+  - **Checklist by state and route** (decided 16 Nov 2026, migration 3): a paid client reads and ticks only non-archived items for their own Bundesland and their own route. No state or no route = no items. Admins read all.
+  - **`is_admin`** (decided 16 Nov 2026, migration 3): not writable through the website by anyone, admins included. Changed only in the SQL Editor, by user ID.
   - News: free users only see posts with `paid_only = false`. Clients only see published posts whose date has come, for their own Bundesland or for all states. A client with no Bundesland sees no news at all.
   - **Community board:** only paid users and admins read and write. Clients delete their own posts; admins delete any post. Nobody edits posts in the first version. A client with no Bundesland still sees the board.
   - The client ticks their own items; admins can only view progress.
@@ -223,6 +231,8 @@ Last updated: 16 Nov 2026. This is the source of truth for the project. When a d
   - No GitHub link in Supabase; changes are applied by hand.
   - Migration 1 was applied on 14 Nov 2026. rls_check.sql showed ALL RLS TESTS PASSED.
   - Migration 2 was applied on 15 Nov 2026. rls_check.sql showed ALL RLS TESTS PASSED.
+  - Migration 3 (`20261116120000_checklist_own_state_route.sql`, checklist by state and route, `is_admin` only in the SQL Editor) was applied on 16 Nov 2026. rls_check.sql showed ALL RLS TESTS PASSED (93 checks).
+  - Before the first real client: switch to Pro and turn on leaked password protection; remove the preview and localhost redirect URLs or move testing to a separate project; delete old preview deployments (14 on 17 Nov 2026).
   - The admin account is web@medicalnetworklatam.com (shared for now). Suggested: separate admin logins for Ivan and his cousin before real clients arrive.
 - **Database changes are written as SQL files** in `supabase/migrations/` in the repository. Ivan applies them by pasting them into Supabase's SQL Editor, so no Supabase keys are ever given to Claude Code.
 - **Two-factor login for admins:** not needed for now (Ivan's decision, 13 Nov 2026). Suggested to revisit before the first real client's data goes in.
