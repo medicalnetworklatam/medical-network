@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "test": "node tests/adminLogic.test.ts",
+    "test": "node tests/adminLogic.test.ts && node tests/safePath.test.ts",
     "preview": "vite preview"
   },
   "dependencies": {
