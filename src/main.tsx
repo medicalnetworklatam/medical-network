@@ -7,6 +7,9 @@ import { BrowserRouter, Route, Routes } from 'react-router'
 import '@fontsource/anton'
 import '@fontsource-variable/figtree'
 import './styles/global.css'
+// The new look's fonts and colour tokens, for redesigned screens (home page)
+import './styles/redesign.css'
+import { applySavedPalette } from './lib/palette.ts'
 
 import AuthProvider from './lib/AuthProvider.tsx'
 import ProfileProvider from './lib/ProfileProvider.tsx'
@@ -32,6 +35,10 @@ try {
 } catch {
   /* storage blocked (e.g. private mode): nothing to remove */
 }
+
+// TEMPORARY (until the palette is chosen): show the palette last picked with
+// the home page's "Menú" button, on every page (src/lib/palette.ts)
+applySavedPalette()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

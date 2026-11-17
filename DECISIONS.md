@@ -28,6 +28,7 @@ These replace the morning's "look and feel" bullet below where they differ.
 - **Colours on redesigned screens:** every colour comes from three values (`--paper`, `--ink`, `--accent-rgb`). The palette isn't chosen yet. Until it is, the home page's menu button keeps cycling the five candidate palettes (Negativo, Bello, Impasto, MNL actual, Flatline), the choice is remembered in the browser, and it applies to every redesigned screen. Once a palette is chosen, it becomes the default and the switcher is removed. This must happen before the test with friendly clients.
 - **Design rules** (from `design-hero/DESIGN-RULES.md`): no photo is ever cut off by the edge of the screen where it is meant to be seen, and grids of cells fit on one screen (long ones are split into several screens).
 - **Rejected directions** (don't go back to them): ruled "expediente" cards with D-DIN Condensed + Figtree; rounded white cards with petrol blue and numbered circles.
+- **Home page header:** logged-out visitors see "Entrar" and "Menú". Logged-in visitors also see a "Mi área" link to Novedades, next to "Cerrar sesión", so they aren't stuck on the home page while "Menú" cycles the palettes.
 
 ## Changes on 17 Nov 2026
 

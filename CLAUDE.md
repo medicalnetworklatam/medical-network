@@ -52,7 +52,26 @@ Out of scope:
 - automatic account creation on payment
 - legal texts (handled by a law firm)
 
-## Look & feel (carry over from the mock-up, keep consistent)
+## Look & feel
+During the redesign, two looks exist side by side (DECISIONS.md, "Changes on 17 Nov 2026 (evening)"): the **new look** on redesigned screens, the **old look** on all the others until each one is redesigned. A screen uses one look, never a mix. Redesigned so far: the home page (`/`). Next: Novedades.
+
+### New look (redesigned screens)
+- **Read first:** `design-hero/HERO-NOTES.md` (the look, the motion, the home page section by section) and `design-hero/DESIGN-RULES.md` (hard rules). `design-hero/` is Ivan's plain-HTML prototype, kept as a reference only: don't edit it or build on it.
+- **Colours:** only the tokens in `src/styles/redesign.css`, never a hard-coded colour.
+  - Three values make every palette: `--paper` (dark hero background), `--ink` (hero words, circles, light section backgrounds), `--accent-rgb` (text and lines on light sections, inverted cells, see-through words over photos).
+  - Derived from them: `--accent`, `--tint`, `--rule`.
+  - The palette isn't chosen yet. **Temporary:** the home page's "Menú" button cycles the five candidates (`src/lib/palette.ts`, `src/pages/home/PaletteMenu.tsx`), set as `data-palette` on `<html>` and remembered in the browser, so it applies to every redesigned screen. Once one is chosen, it becomes the `:root` default and the switcher is removed.
+- **Fonts** (self-hosted, open licence; files and licences in `src/assets/fonts/`):
+  - **Albert Sans** (`--font`) for the big headlines, standing in for Aaux Next (commercial, needs a web licence first; its `@font-face` block is commented out in `redesign.css`)
+  - **Space Grotesk** (`--font-grotesk`) for everything else
+- **Ruled cells:** cells split by thin 1px lines (`--rule`), square corners, a small spaced uppercase label over a big bold lowercase title that ends with a full stop ("mi / historia.", "las 3 / fases."). Inverted cells ("después", "resultado") swap the colours.
+- **Design rules:** no photo is ever cut off by the edge of the screen at the scroll point where it's meant to be seen (crop photos to frames, let frames resize); grids of cells fit on one screen (split long ones into several screens).
+- **Motion** is tied to the scroll, reverses cleanly when scrolling up, and respects `prefers-reduced-motion`.
+- **Rejected directions** (never go back to them): ruled "expediente" cards with D-DIN Condensed + Figtree; rounded white cards with petrol blue and numbered circles.
+- **CSS that can't leak:** the site loads every page's CSS at once. A page's `.module.css` never targets `html`, `body`, `*` or `:root`; body-level rules go under a class the page adds to `<body>` while it's open (see `Home.tsx`). `redesign.css` holds only custom properties and `@font-face` rules.
+- `:focus-visible` outlines use the tokens (a ring in `--ink` inside the dark chips).
+
+### Old look (screens not redesigned yet, carried over from the mock-up)
 - **Colours:**
   - page `#EEF9F5`, text `#121413`
   - green `#489E85` (borders, sidebar), bright green `#7CDC92` (selected)
@@ -62,9 +81,12 @@ Out of scope:
   - **Anton** only for the big uppercase page titles
   - **Figtree** for everything else
   - Small section titles: Figtree 13px, weight 700, uppercase, `letter-spacing: 0.1em`
-- **Shapes:** rounded corners (12–20px), pill buttons, hidden scrollbars, `:focus-visible` outlines in `#489E85`.
-- **Responsive:** phone layout at `max-width: 700px`, designed for iPad landscape and desktop too. Tap targets at least 44px.
-- **Language:** all text users see is in **Spanish**, and state names are in **German** (Bayern, Nordrhein-Westfalen, Thüringen…). Content in `[corchetes]` in the mock-up is placeholder text.
+- **Shapes:** rounded corners (12–20px), pill buttons, `:focus-visible` outlines in `#489E85`.
+- Both state maps stay exactly as they are.
+
+### Both looks
+- **Responsive:** phone layout at `max-width: 700px`, designed for iPad landscape and desktop too. Tap targets at least 44px. Hidden scrollbars.
+- **Language:** all text users see is in **Spanish**, and state names are in **German** (Bayern, Nordrhein-Westfalen, Thüringen…). Other German terms stay German too (Approbation, Hospitationen…), marked with `lang="de"`. Content in `[corchetes]` in the mock-up is placeholder text.
 - **Accessibility:** keep the roles and ARIA labels, keyboard support (Tab, Space/Enter, arrow keys in lists), and `aria-live` announcements in Spanish. Respect `prefers-reduced-motion`.
 
 ## The mock-up and the state map
@@ -91,6 +113,8 @@ Out of scope:
   - `src/pages/`: one `.tsx` file per page, plus its own `.module.css`.
   - `src/pages/PostBoard.tsx`: the list and form shared by the community board (`Comunidad.tsx`, posts with an empty state) and the state chat (`Chat.tsx`, one state's messages, refreshed every 20 seconds). Both use the styles in `Comunidad.module.css`.
   - `src/estados/`: map shapes, city search data and map animations.
+  - `src/pages/Home.tsx` and `src/pages/home/`: the home page (new look). Its scroll motion is in `src/pages/home/` (`fit.ts`, `reveal.ts`, `push.ts`, `phases.ts`, `story.ts`, one per prototype script). Each one runs only while the page is open and removes its listeners and animation frames when it's left. They find elements by the CSS module's class names, so a class used only by them must still be listed in `Home.module.css`.
+  - `src/styles/redesign.css`: fonts and colour tokens for the new look. `src/lib/palette.ts`: the temporary palette switcher.
   - `src/lib/profile.ts` and `ProfileProvider.tsx`: the logged-in user's own profile (name, state, plan, admin), loaded once after login and shared with every page.
   - `src/lib/supabase.ts`: the one connection to Supabase. `src/lib/auth.ts` and `AuthProvider.tsx` share who is logged in; `src/pages/RequireLogin.tsx` guards the pages that need a login, and sends users without a first name to `/perfil` first.
   - `src/pages/Admin*.tsx` and `RequireAdmin.tsx`: the admin screens (`/admin`, `/admin/clientes/<id>`, `/admin/novedades`), drawn only when the loaded profile is an admin. They never offer `is_admin`, and each save sends only the one column it changes.

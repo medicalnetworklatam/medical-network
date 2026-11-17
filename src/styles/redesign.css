@@ -1,0 +1,121 @@
+/* ------------------------------------------------------------------
+   The new look, shared by every REDESIGNED screen (the home page now,
+   Novedades next). Screens that aren't redesigned yet keep the old look
+   (global.css + their own module) and never use anything from this file.
+
+   Only custom properties and fonts live here: nothing in this file
+   targets an element, so it can't change the look of the other pages.
+   (The site loads every page's CSS at once.)
+
+   From the prototype in design-hero/ (styles.css). Notes in
+   design-hero/HERO-NOTES.md, rules in design-hero/DESIGN-RULES.md.
+------------------------------------------------------------------- */
+
+/* ------------------------------------------------------------------
+   Fonts: self-hosted only (project rule: never load from Google).
+   The files and their licences (SIL Open Font License) are in
+   src/assets/fonts/. Browsers only download a font when a page uses it.
+
+   Aaux Next is a commercial face (Positype). Once you have the web
+   licence, drop the .woff2 files in src/assets/fonts/ and uncomment
+   this block:
+
+   @font-face {
+     font-family: "aaux-next";
+     src: url("../assets/fonts/aaux-next-light.woff2") format("woff2");
+     font-weight: 300;
+     font-display: swap;
+   }
+   @font-face {
+     font-family: "aaux-next";
+     src: url("../assets/fonts/aaux-next-regular.woff2") format("woff2");
+     font-weight: 400;
+     font-display: swap;
+   }
+
+   Until then, Albert Sans (OFL, also self-hosted) stands in.
+------------------------------------------------------------------- */
+@font-face {
+  font-family: "MNL Fallback";
+  src: url("../assets/fonts/albert-sans-latin-300-normal.woff2") format("woff2");
+  font-weight: 300;
+  font-display: swap;
+}
+@font-face {
+  font-family: "MNL Fallback";
+  src: url("../assets/fonts/albert-sans-latin-400-normal.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+/* Space Grotesk (OFL), self-hosted: everything in the ruled-cell sections */
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("../assets/fonts/space-grotesk-latin-400-normal.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("../assets/fonts/space-grotesk-latin-700-normal.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+
+/* ------------------------------------------------------------------
+   Tokens. Never hard-code a colour on a redesigned screen: use these.
+------------------------------------------------------------------- */
+:root {
+  /* Three colours make every palette:
+       --paper       background of the dark heroes
+       --ink         words on the heroes, the circle, the pale sections
+       --accent-rgb  text and lines in the pale sections, the "después"
+                     cell, and (see-through) the words crossing a photo
+     Default "Negativo": the photographic negative of the first pass. */
+  --paper: #101118;
+  --ink: #e1eaec;
+  --accent-rgb: 71 51 56;  /* #473338 */
+
+  --accent: rgb(var(--accent-rgb));
+  --tint: rgb(var(--accent-rgb) / 0.82);   /* words where they cross a photo */
+  --rule: rgb(var(--accent-rgb) / 0.4);    /* thin cell lines */
+
+  --font: "aaux-next", "MNL Fallback", system-ui, sans-serif;
+  --font-grotesk: "Space Grotesk", "MNL Fallback", system-ui, sans-serif;
+
+  /* Where the home page's first photo sits inside the word block (top
+     right bottom left). The tinted copy of the words is clipped with the
+     same numbers, so the two always line up. */
+  --media-inset: 17% 17% 19% 17%;
+
+  --gutter: clamp(16px, 2.6vw, 40px);
+}
+@media (max-width: 700px) {
+  :root { --media-inset: 14% 8% 16% 8%; }
+}
+
+/* TEMPORARY: the five candidate palettes, until the owner chooses one
+   (DECISIONS.md, 17 Nov 2026 evening). The home page's "Menú" button
+   cycles them (src/lib/palette.ts sets data-palette on <html>). Once one
+   is chosen: make it the :root default above, delete the others, and
+   delete src/lib/palette.ts and src/pages/home/PaletteMenu.tsx.
+   Exact colours sampled from the reference images. */
+:root[data-palette="bello"] {      /* mijobello.com: sage and oxblood */
+  --paper: #6a0c06;
+  --ink: #b2c7ab;
+  --accent-rgb: 106 12 6;           /* #6a0c06 */
+}
+:root[data-palette="impasto"] {    /* impastofornoantico.com: espresso and flour */
+  --paper: #312426;
+  --ink: #efefe7;
+  --accent-rgb: 49 36 38;           /* #312426 */
+}
+:root[data-palette="mnl"] {        /* the current MNL site: mint, black and green */
+  --paper: #121413;
+  --ink: #eef9f5;
+  --accent-rgb: 72 158 133;         /* #489e85 */
+}
+:root[data-palette="flatline"] {   /* flatlineagency.com: black on cream */
+  --paper: #050505;
+  --ink: #f3f0e9;
+  --accent-rgb: 5 5 5;              /* #050505 */
+}

@@ -43,3 +43,31 @@
 @media (prefers-reduced-motion: reduce) {
   .pill { transition: none; }
 }
+
+/* The new look, on redesigned screens (the home page): a square chip in
+   the palette's colours, like the home page's "Menú" and "Mi área"
+   (Home.module.css, .chip): keep the two in step. Last in this file, so
+   it wins over the pill rules above. */
+.pill.redesign {
+  height: auto;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 clamp(17px, 1.25vw, 22px) / 1 var(--font);
+}
+.pill.redesign:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: .2em;
+}
+.pill.redesign:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -6px;
+}
+.pill.redesign:disabled { color: var(--ink); opacity: .6; }
+@media (max-width: 700px) {
+  .pill.redesign { padding: 8px 12px; }
+}

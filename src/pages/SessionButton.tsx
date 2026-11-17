@@ -4,12 +4,21 @@ import { supabase } from '../lib/supabase.ts'
 import { useAuth } from '../lib/auth.ts'
 import styles from './SessionButton.module.css'
 
-/** The "Entrar" / "Cerrar sesión" pill. `onGreen` = inside the green sidebar. */
-export default function SessionButton({ onGreen = false }: { onGreen?: boolean }) {
+/** The "Entrar" / "Cerrar sesión" pill. `onGreen` = inside the green sidebar.
+    `redesign` = the new look, on redesigned screens (the home page); it only
+    changes the look, never what the button does. */
+export default function SessionButton({
+  onGreen = false,
+  redesign = false,
+}: {
+  onGreen?: boolean
+  redesign?: boolean
+}) {
   const { session, loading } = useAuth()
   const [busy, setBusy] = useState(false)
   const [justSignedOut, setJustSignedOut] = useState(false)
-  const className = styles.pill + (onGreen ? ' ' + styles.onGreen : '')
+  const className =
+    styles.pill + (onGreen ? ' ' + styles.onGreen : '') + (redesign ? ' ' + styles.redesign : '')
 
   async function signOut() {
     if (!supabase) return
