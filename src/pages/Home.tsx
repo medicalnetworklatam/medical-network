@@ -1,54 +1,344 @@
+import { useLayoutEffect, useRef, type ReactNode } from 'react'
 import { Link } from 'react-router'
-import MenuIcon from './MenuIcon.tsx'
 import SessionButton from './SessionButton.tsx'
+import PaletteMenu from './home/PaletteMenu.tsx'
+import { useFit } from './home/fit.ts'
+import { useReveal } from './home/reveal.ts'
+import { usePush } from './home/push.ts'
+import { usePhases } from './home/phases.ts'
+import { useStory } from './home/story.ts'
+import { useAuth } from '../lib/auth.ts'
 import { usePageTitle } from '../lib/usePageTitle.ts'
+import heroHouse from '../assets/hero-house.jpg'
+import lagoon from '../assets/lagoon.jpg'
+import ejecucion from '../assets/ejecucion.jpg'
+import antes from '../assets/antes.webp'
+import hoy from '../assets/hoy.jpg'
 import styles from './Home.module.css'
 
-/** Home page (from design-mockup/index.html) */
+/* Home page (/), from Ivan's prototype in design-hero/ (index.html).
+   Same text, same order, same scroll motion; notes in
+   design-hero/HERO-NOTES.md, rules in design-hero/DESIGN-RULES.md.
+
+   The motion hooks (src/pages/home/) are the prototype's scripts. They run
+   only while this page is open, in this order, and remove everything they
+   added when it is left. */
 export default function Home() {
   usePageTitle('Medical Network')
 
+  const rootRef = useRef<HTMLDivElement>(null)
+
+  // The page's own background, colour and font on <body>, only while it is open
+  useLayoutEffect(() => {
+    document.body.classList.add(styles.pageBody)
+    return () => document.body.classList.remove(styles.pageBody)
+  }, [])
+
+  useFit(rootRef)
+  useReveal(rootRef)
+  usePush(rootRef)
+  usePhases(rootRef)
+  useStory(rootRef)
+
   return (
-    <div className={styles.page}>
-      <div className={styles.container}>
+    <div ref={rootRef}>
+      <HomeHeader />
 
-        <header className={styles.siteHeader}>
-          <p className={styles.brand}>Medical Network</p>
-          <div className={styles.headerActions}>
-            <SessionButton />
-            <Link className={styles.menuBtn} to="/estados" aria-label="Abrir menú">
-              <MenuIcon />
-            </Link>
-          </div>
-        </header>
+      <main>
+        {/* The track is taller than the screen. While you scroll through it the
+            hero and the next section both stay pinned, and a growing circle
+            reveals the next section on top of the hero (reveal.ts). */}
+        <div className={styles.heroTrack}>
+          <section className={styles.hero} aria-label="Portada">
+            <div className={styles.heroStage}>
+              {/* 1. the words in ink, underneath everything */}
+              <h1 className={styles.heroWords}>
+                <Line>La burocracia</Line>
+                <Line>alemana</Line>
+                <Line>es un laberinto</Line>
+              </h1>
 
-        <main>
-          <div className={styles.container}>
-            <section className={styles.hero}>
-              <div className={styles.heroText}>
-                <h1 className={styles.heroTitle}>
-                  <span className={`${styles.line} ${styles.line1}`}>Ser médico ya es difícil,</span>
-                  <span className={`${styles.line} ${styles.line2}`}>No te preocupes</span>
-                  <span className={`${styles.line} ${styles.line3}`}>por la burocracia</span>
-                </h1>
+              {/* 2. the photo (later: the video) sits on top of the words */}
+              <figure className={styles.heroMedia}>
+                <img src={heroHouse} alt="" width={2000} height={1341} />
+              </figure>
+
+              {/* 3. the same words again, tinted, cut to the photo's box */}
+              <div className={`${styles.heroWords} ${styles.heroWordsOver}`} aria-hidden="true">
+                <Line>La burocracia</Line>
+                <Line>alemana</Line>
+                <Line>es un laberinto</Line>
               </div>
-              <div className={styles.chart} aria-hidden="true">
-                <div className={`${styles.bar} ${styles.bar1}`}></div>
-                <div className={`${styles.bar} ${styles.bar2}`}></div>
-                <div className={`${styles.bar} ${styles.bar3}`}></div>
-                <div className={`${styles.bar} ${styles.bar4}`}></div>
+            </div>
+          </section>
+
+          {/* Revealed through the circle (reveal.ts), then scrolls on normally. */}
+          <section className={styles.intro} aria-labelledby="intro-title">
+            <div className={styles.introHead}>
+              <p className={styles.introEyebrow}>yo soy tu</p>
+              <h2 className={styles.introTitle} id="intro-title">ruta.</h2>
+            </div>
+
+            <div className={styles.introText}>
+              <div className={styles.introCopy}>
+                <p>Un camino claro para médicos hispanohablantes que quieren homologar
+                su título y ejercer medicina en Alemania.</p>
+                <p>Aprende qué hacer, en qué orden y cuáles son tus objetivos durante
+                el proceso, con acompañamiento directo mientras avanzas.</p>
               </div>
-            </section>
+            </div>
 
-            <section className={styles.cards}>
-              <div className={`${styles.card} ${styles.cardMain}`}><p>[Main content block]</p></div>
-              <div className={`${styles.card} ${styles.cardBox1}`}><p>[Box 1]</p></div>
-              <div className={`${styles.card} ${styles.cardBox2}`}><p>[Box 2]</p></div>
-            </section>
+            <figure className={styles.introMedia}>
+              <img src={heroHouse} alt="" width={2000} height={1341} loading="lazy" />
+            </figure>
+          </section>
+
+          {/* scroll distance spent growing the circle */}
+          <div className={styles.heroTrackGrow} aria-hidden="true"></div>
+        </div>
+
+        {/* Mi historia: one pinned screen. Under the head, the two layouts sit
+            in the same space; as you scroll, "now" (hoy, después) fades in on
+            top of "then" (bio, mis inicios, antes), from a faint blur to fully
+            clear (story.ts). */}
+        <section className={styles.story} aria-labelledby="story-title">
+          <div className={styles.storyPin}>
+            <div className={styles.storyHead}>
+              <p className={styles.label}>mi</p>
+              <h2 className={styles.display} id="story-title">historia.</h2>
+            </div>
+
+            <div className={styles.storyStack}>
+              <div className={`${styles.storyBody} ${styles.storyBodyThen}`}>
+                <div className={`${styles.storyShift} ${styles.storyShiftThen}`}>
+                  <p className={styles.label}>antes</p>
+                  <p>No tenía idea de por dónde empezar ni qué hacer.</p>
+                </div>
+
+                <div className={styles.storyBio}>
+                  <p>Soy Ivan Bruckner Calahorrano, médico ecuatoriano. Me gradué en 2015
+                  y ese mismo año llegué a Alemania. En 2017 obtuve la <span lang="de">Approbation</span>, hice
+                  mi especialidad y hoy trabajo como médico especialista en un hospital
+                  alemán.</p>
+                </div>
+
+                <figure className={styles.storyPhoto}>
+                  <div className={styles.storyFrame}>
+                    <img
+                      className={styles.photoAntes}
+                      src={antes}
+                      alt="Ivan de joven, con una camiseta a rayas verdes"
+                      width={914}
+                      height={816}
+                      loading="lazy"
+                    />
+                  </div>
+                  <figcaption>Mis inicios</figcaption>
+                </figure>
+              </div>
+
+              <div className={`${styles.storyBody} ${styles.storyBodyNow}`}>
+                <figure className={styles.storyPhoto}>
+                  <div className={styles.storyFrame}>
+                    <img
+                      src={hoy}
+                      alt="Ivan hoy, en quirófano con gorro y mascarilla"
+                      width={564}
+                      height={776}
+                      loading="lazy"
+                    />
+                  </div>
+                  <figcaption>Hoy, especialista</figcaption>
+                </figure>
+
+                <div className={`${styles.storyShift} ${styles.storyShiftNow}`}>
+                  <p className={styles.label}>después</p>
+                  <p>Un plan claro y estructurado para enfrentar la burocracia alemana y
+                  ejecutar el proceso de homologación.</p>
+                </div>
+              </div>
+            </div>
           </div>
-        </main>
+        </section>
 
-      </div>
+        {/* Second hero and the phases, pinned while you scroll through the
+            spacers at the end.
+            1. push.ts: the first sentence starts alone in the middle; the second
+               rises from below and pushes it up until they sit together.
+            2. phases.ts: the phases' cells rise from below one at a time and
+               settle in place over the hero: the title cell, then phase 01, 02
+               and 03. Each new phase takes the focus; the earlier ones shrink.
+               At the end a circle closes on them and leaves the closing slide. */}
+        <div className={styles.pushTrack}>
+          <section
+            className={`${styles.hero} ${styles.heroTwo}`}
+            aria-label="Yo también empecé confundido. Por eso creé la Ruta Approbation"
+          >
+            <div className={`${styles.heroStage} ${styles.heroStageA}`} data-fit-h="0.5">
+              <h2 className={styles.heroWords}>
+                <Line>Yo también</Line>
+                <Line>empecé confundido</Line>
+              </h2>
+            </div>
+            <div className={`${styles.heroStage} ${styles.heroStageB}`} data-fit-h="0.5">
+              <p className={styles.heroWords}>
+                <Line>Por eso creé</Line>
+                <Line>la ruta <span lang="de">Approbation</span></Line>
+              </p>
+            </div>
+          </section>
+
+          {/* The three phases: one row per phase, cells split by thin lines. */}
+          <section className={styles.phases} aria-labelledby="phases-title">
+            <div className={styles.phasesHead}>
+              <p className={styles.label}>las 3</p>
+              <h2 className={styles.display} id="phases-title">fases.</h2>
+            </div>
+
+            {/* Each phase: number | title + intro | checklist + resultado | photo */}
+            <ol className={styles.phasesList}>
+              <li className={styles.phase}>
+                <span className={styles.phaseNum}>01</span>
+                <div className={styles.phaseMain}>
+                  <h3 className={styles.phaseTitle}>planificación</h3>
+                  <p className={styles.phaseIntro}>Empezamos por lo importante: tu objetivo. Defino
+                  contigo la ruta exacta que debes seguir y en qué orden, para que dejes
+                  de adivinar. Tú decides tus prioridades, incluido cómo vas a aprender
+                  alemán.</p>
+                </div>
+                <div className={styles.phaseDetail}>
+                  <div className={styles.phaseResult}>
+                    <p className={styles.label}>resultado</p>
+                    <p>Sabes exactamente qué hacer primero y cuál es tu siguiente paso.</p>
+                  </div>
+                </div>
+                <figure className={styles.phaseMedia}>
+                  <img src={lagoon} alt="" width={1600} height={1081} loading="lazy" />
+                </figure>
+              </li>
+              <li className={styles.phase}>
+                <span className={styles.phaseNum}>02</span>
+                <div className={styles.phaseMain}>
+                  <h3 className={styles.phaseTitle}>documentación</h3>
+                  <p className={styles.phaseIntro}>Tú reúnes tus documentos, pero no vas a ciegas: yo
+                  te digo exactamente cuáles necesitas y los reviso contigo antes de que
+                  avances. Mientras tanto, avanzamos en paralelo:</p>
+                </div>
+                <div className={styles.phaseDetail}>
+                  <ul className={styles.phaseItems}>
+                    <li>Reunir la documentación necesaria, con mi guía</li>
+                    <li>Aprender alemán</li>
+                    <li>Te ayudo a elegir tu escuela de idiomas</li>
+                    <li>Te ayudo a planificar tu estadía en Alemania</li>
+                    <li>Preparamos juntos los siguientes pasos</li>
+                  </ul>
+                  <div className={styles.phaseResult}>
+                    <p className={styles.label}>resultado</p>
+                    <p>Tu documentación avanza bien hecha, sin perder meses, y tú preparas
+                    tu llegada con mi ayuda en cada paso.</p>
+                  </div>
+                </div>
+                <figure className={styles.phaseMedia}>
+                  <img src={heroHouse} alt="" width={2000} height={1341} loading="lazy" />
+                </figure>
+              </li>
+              <li className={styles.phase}>
+                <span className={styles.phaseNum}>03</span>
+                <div className={styles.phaseMain}>
+                  <h3 className={styles.phaseTitle}>ejecución</h3>
+                  <p className={styles.phaseIntro}>Ya en Alemania, tú ejecutas cada paso y yo estoy a
+                  tu lado para que no te frenes ni te pierdas:</p>
+                </div>
+                <div className={styles.phaseDetail}>
+                  <ul className={styles.phaseItems}>
+                    <li>Cursar alemán intensivo</li>
+                    <li>Presentar tu solicitud de homologación, con mi guía</li>
+                    <li>Te ayudo a conseguir <span lang="de">Hospitationen</span>, cuando sea posible</li>
+                    <li>Te oriento sobre un posible <span lang="de">Nebenjob</span> para amortiguar gastos, según tu situación</li>
+                  </ul>
+                  <div className={styles.phaseResult}>
+                    <p className={styles.label}>resultado</p>
+                    <p>Tú das cada paso con un plan claro, y yo te acompaño mientras avanzas
+                    en tu homologación.</p>
+                  </div>
+                </div>
+                <figure className={styles.phaseMedia}>
+                  <img
+                    className={styles.photoEjecucion}
+                    src={ejecucion}
+                    alt=""
+                    width={858}
+                    height={929}
+                    loading="lazy"
+                  />
+                </figure>
+              </li>
+            </ol>
+          </section>
+
+          {/* Closing call to action, in the heroes' font: light background, dark
+              letters. The headline is justified by fit.ts like the heroes. It is
+              pinned behind the phases (hidden until they fill the screen); at the
+              end a circle closes on the phases and leaves it (phases.ts). */}
+          <section className={styles.cta} aria-labelledby="cta-title">
+            <div className={styles.ctaInner}>
+              <div className={styles.heroStage} data-fit-h="0.55">
+                <h2 className={styles.heroWords} id="cta-title">
+                  <Line>Tu homologación</Line>
+                  <Line>necesita</Line>
+                  <Line>una ruta</Line>
+                </h2>
+              </div>
+              <p className={styles.ctaPrice}>Pago único 3.500 €</p>
+              <a
+                className={styles.ctaBtn}
+                href="https://calendly.com/ivan-ab89/ruta-approbation"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Aplicar a Ruta <span lang="de">Approbation</span>
+              </a>
+              <p className={styles.ctaSign}>Nos vemos en Alemania</p>
+            </div>
+          </section>
+
+          {/* scroll distance spent pushing, then bringing in the phases */}
+          <div className={styles.pushTrackPush} aria-hidden="true"></div>
+          <div className={styles.pushTrackPhases} aria-hidden="true"></div>
+          {/* extra scroll when the open phase is taller than the screen (phases.ts) */}
+          <div className={styles.pushTrackMore} aria-hidden="true"></div>
+          {/* scroll spent closing the circle on the phases */}
+          <div className={styles.pushTrackClose} aria-hidden="true"></div>
+        </div>
+      </main>
     </div>
+  )
+}
+
+/** One line of a justified headline. fit.ts sizes it and places the inner
+    span on the letters' ink. */
+function Line({ children }: { children: ReactNode }) {
+  return (
+    <span className={styles.line}>
+      <span className={styles.lineInk}>{children}</span>
+    </span>
+  )
+}
+
+/** Fixed header: "Mi área" (logged in only), "Entrar" / "Cerrar sesión",
+    and "Menú" (for now, the palette switcher). Its own component, so a login
+    change redraws only the header, never the page under the motion hooks. */
+function HomeHeader() {
+  const { session, loading } = useAuth()
+  return (
+    <header className={styles.siteHeader}>
+      <div className={styles.headerActions}>
+        {!loading && session ? (
+          <Link className={styles.chip} to="/novedades">Mi área</Link>
+        ) : null}
+        <SessionButton redesign />
+      </div>
+      <PaletteMenu />
+    </header>
   )
 }
