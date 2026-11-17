@@ -15,6 +15,11 @@ Last updated: 17 Nov 2026. This is the source of truth for the project. When a d
   - Spanish only, web only
 - **Admins:** Ivan and his cousin.
 
+## Changes on 17 Nov 2026
+
+- **Look and feel is unfinished and gets its own phase.** The current look is the first mock-up carried into React. The design pass happens after the main features work and before the test with friendly clients, starting from real brand material from the owner, so the site doesn't look generic or AI-made. Until then, new screens reuse the existing styles so the redesign changes styles, not structure.
+- **State chat scope decided** (see "State chat"): same table as the board with a Bundesland field, refresh every 20 seconds, paid members only, admins can read and post in any state, "Equipo MNL" label on admin posts, a posting speed limit. Built in migration 4.
+
 ## Changes on 16 Nov 2026
 
 - Admin screens scope decided (see "Admin screens"): the news form creates, edits, unpublishes and schedules posts; an admin can clear a client's state; the route is set on the same client screen; no history of admin changes in the prototype.
@@ -30,7 +35,7 @@ Last updated: 17 Nov 2026. This is the source of truth for the project. When a d
 - **Legal work goes to a law firm** hired by the owner. Ivan and Claude don't write or choose legal texts (see "For the law firm").
 - **One state per user.** This replaces the 13 Nov "follow several states" decision (see "States per user").
 - **Community board** for all members, now part of the prototype (see "Community").
-- **Chat per Bundesland:** confirmed, but it waits until the board is done. If time runs short, it moves past the prototype.
+- **Chat per Bundesland:** confirmed, but it waits until the board is done. If time runs short, it moves past the prototype. (Decided and built on 17 Nov 2026: see "State chat".)
 - **Free users:** no real use right now. The `free` plan stays in the database; nothing new is designed for free users.
 - **Names are split** into first name (nombre/s) and last names (apellidos), replacing the single full name. Most members have two surnames, so a single field gives the wrong initial in "María G." (see "Community").
 
@@ -48,9 +53,9 @@ Last updated: 17 Nov 2026. This is the source of truth for the project. When a d
   - Chosen because the first version is app-like: about 10 screens that depend on data.
 - **Chat and calendar:**
   - The calendar is a non-working preview.
-  - The state chat is a non-working preview until it is built (after the community board).
+  - The state chat is a working page, `/chat` (see "State chat"). The chat preview on Novedades is now a link to it.
 - **States per user** (confirmed 15 Nov 2026, replaces 13 Nov):
-  - Each user has exactly one Bundesland (`profiles.main_state`). It decides their checklist, their news and, later, their state chat.
+  - Each user has exactly one Bundesland (`profiles.main_state`). It decides their checklist, their news and their state chat (see "State chat").
   - A client only ever sees one state's news.
   - The client picks it once on the state map. After that, only an admin can change it. This stops one payment from unlocking all 16 states.
   - **No state chosen = no news:**
@@ -122,7 +127,7 @@ Last updated: 17 Nov 2026. This is the source of truth for the project. When a d
   - Built in the prototype.
 - **State chat:**
   - One per Bundesland. Members see only their own state's chat.
-  - It waits until the board is done.
+  - Decided and built after the board: see "State chat (decided 17 Nov 2026)" below.
 - **Author name:**
   - Produced by the database from the profile, when the post is written. A client can't type a different name, and a later name change doesn't change old posts.
   - Rule: first word of `first_name` + " " + first letter of `last_names` in uppercase + "." ("José" + "Pérez García" → "José P."; "María Fernanda" + "García López" → "María G.").
@@ -141,6 +146,18 @@ Last updated: 17 Nov 2026. This is the source of truth for the project. When a d
   - Each post shows the author name, the date and time in the reader's own time zone (news dates stay in German time), and the body as plain text with its line breaks. No automatic links.
   - The form's counter ("0 / 2000") follows the database's rule exactly: it removes only spaces, tabs, carriage returns and line breaks at both ends, and counts an emoji as one character. "Publicar" is disabled when the text is empty, over 2,000 characters, or while sending. The page sends only the body.
   - "Eliminar" is shown on the user's own posts, and on every post for admins. It asks for confirmation inside the post ("¿Eliminar esta publicación?" with "Sí, eliminar" and "Cancelar"), not with the browser's own pop-up, so every word stays in Spanish.
+
+### State chat (decided 17 Nov 2026)
+
+- **Storage:** the same table as the board (`community_posts`), with a new Bundesland field. Empty = the general board; a state code = that state's chat. Same rules for names, length, deleting and moderation.
+- **Who:** paid members see only their own state's chat. A paid member with no state sees "Elige tu estado" with a link to the map. Free members get no access to the state chat (same message as on the board). The database enforces all of this.
+- **Admins:** a state picker to read any state's chat and post in it.
+- **"Equipo MNL":** the database marks posts written by an admin, on the board and in the chats, so members can't pass themselves off as staff (security review L4).
+- **Speed limit:** at most 5 posts a minute and 100 a day per member, board and chats together, enforced by the database (security review L5). Admins are exempt.
+- **Live updates:** no real-time connection. The page refreshes by itself every 20 seconds while it is open and visible, plus an "Actualizar" button. Real-time can be added later (it would need the table in Supabase's realtime list and a new address in `_headers`).
+- **Page:** `/chat`, login only. The chat preview on Novedades becomes a link to it.
+- **Messages:** plain text, 1 to 2,000 characters, members delete their own, admins delete any, no editing.
+- **Migration 4** also removes execute rights on Supabase's `public.rls_auto_enable()` from the website's roles.
 
 ### Admin screens (decided 16 Nov 2026)
 
@@ -185,7 +202,7 @@ Last updated: 17 Nov 2026. This is the source of truth for the project. When a d
     - Migration 2 replaced the single `full_name` with `first_name` and `last_names`. An existing `full_name` was moved into `first_name`.
   - `routes`: permanent short code, Spanish name, sort order, archived. Starts empty; Ivan will give the route names later.
   - `followed_states`: user_id, Bundesland, for news. **Removed in migration 2 (15 Nov decision).**
-  - `community_posts` (migration 2): id, author_id (deleted together with the author's account), author_name, body (plain text, 1 to 2,000 characters, trimmed), created date. The website sends only the body; the database sets everything else. Listed newest first.
+  - `community_posts` (migration 2): id, author_id (deleted together with the author's account), author_name, body (plain text, 1 to 2,000 characters, trimmed), created date. The website sends only the body; the database sets everything else. Listed newest first. Migration 4 adds `state` (the Bundesland; empty = the board, sent by the website for chat messages) and `is_staff` ("Equipo MNL", set by the database): see "State chat".
   - `checklist_items`: permanent automatic ID (what progress uses), optional unique readable code (like `by-kp-010`, for humans and spreadsheet imports), Bundesland, route, title, text, sort order, archived
   - `progress`: user_id, item_id, done_at (set by the database)
   - `news_posts`: title, body (plain text), Bundesland (empty = all states), publish date, published, paid_only (ticked by default)
@@ -199,7 +216,7 @@ Last updated: 17 Nov 2026. This is the source of truth for the project. When a d
   - adds `community_posts`: author, author name (made by the database), body (plain text), created date. Posts are deleted together with the author's account.
   - new functions get no access for anyone by default; only logged-in users may run `my_state()`, and nobody may call trigger functions directly
   - extends `rls_check.sql` to cover all of this (75 checks; all passed on a local Postgres 16 with a small stand-in for Supabase's login parts, before handing over)
-  - the state chat may later reuse `community_posts` with an added Bundesland column; decide when it's built
+  - the state chat reuses `community_posts` with an added Bundesland column (decided 17 Nov 2026, built in migration 4: see "State chat")
 - **Who can do what** (confirmed 13 Nov 2026, updated 15 Nov 2026, enforced by grants and RLS, proven by `supabase/tests/rls_check.sql`):
   - The 15 Nov changes are in force since migration 2 was applied (15 Nov 2026).
   - Logged-out visitors can read nothing.
@@ -248,6 +265,7 @@ Last updated: 17 Nov 2026. This is the source of truth for the project. When a d
 5. An admin screen showing every client's progress
 6. News for the client's one Bundesland
 7. The community board for all members (added 15 Nov 2026)
+8. The chat per Bundesland (added 17 Nov 2026, see "State chat")
 
 **Checklist content:** 6 of the 16 Bundesländer, 4 routes each. The cousin is researching the other 10, which isn't urgent.
 
@@ -259,7 +277,7 @@ Last updated: 17 Nov 2026. This is the source of truth for the project. When a d
 - legal texts (the law firm's job)
 
 **Later:**
-- Next, as soon as the board is done: the chat per Bundesland (moves past the prototype if time runs short)
+- real-time updates in the chat per Bundesland (the chat itself is built: see "State chat")
 - possibly a calendar and alerts
 - features for free users, if a use for them appears
 
