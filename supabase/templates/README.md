@@ -13,6 +13,20 @@ name on the page.
 |---|---|---|
 | `invite.html` | **Invite user** | `Tu invitación a Medical Network` |
 | `reset-password.html` | **Reset password** | `Crea una contraseña nueva para Medical Network` |
+| `confirm-signup.html` | **Confirm sign up** | `El registro en Medical Network no está abierto` |
+| `magic-link.html` | **Magic link** | `Inicia sesión en Medical Network con tu contraseña` |
+| `change-email.html` | **Change email address** | `Confirma el cambio de correo en Medical Network` |
+| `reauthentication.html` | **Reauthentication** | `Tu código de confirmación de Medical Network` |
+| `password-changed.html` | **Password changed** (notification) | `Tu contraseña de Medical Network ha cambiado` |
+| `email-changed.html` | **Email address changed** (notification) | `El correo de tu cuenta de Medical Network ha cambiado` |
+| `phone-changed.html` | **Phone number changed** (notification) | `El teléfono de tu cuenta de Medical Network ha cambiado` |
+| `identity-linked.html` | **Identity linked** (notification) | `Nuevo método de acceso en tu cuenta de Medical Network` |
+| `identity-unlinked.html` | **Identity unlinked** (notification) | `Método de acceso eliminado de tu cuenta de Medical Network` |
+| `mfa-added.html` | **MFA method added** (notification) | `Nueva verificación en dos pasos en Medical Network` |
+| `mfa-removed.html` | **MFA method removed** (notification) | `Verificación en dos pasos eliminada en Medical Network` |
+
+Copy each subject exactly, accents included (á, é, í, ó, ú, ñ). All files are
+saved as UTF-8, so the accents also arrive correctly in the email body.
 
 ---
 
@@ -114,6 +128,52 @@ templates can't be changed.
 4. **Save.**
 5. Do the same for **Reset password** with `reset-password.html` and the
    subject `Crea una contraseña nueva para Medical Network`.
+
+**The other four templates, same tab, same way** (subjects in the table at
+the top of this file):
+
+6. **Confirm sign up** → `confirm-signup.html`. Sign-ups are off, so this
+   should never be sent. It only says that sign-up is closed, with no link.
+7. **Magic link** → `magic-link.html`. We don't offer login by email link.
+   The email has no working link: it tells the person to log in with email
+   and password at `/iniciar-sesion`.
+8. **Change email address** → `change-email.html`. This one keeps Supabase's
+   real confirmation link. With "Secure email change" on, Supabase sends it
+   to both the old and the new address, and the change happens only after
+   both are confirmed.
+9. **Reauthentication** → `reauthentication.html`. It shows a one-time code
+   (`{{ .Token }}`) instead of a link.
+
+Note on **Change email address**: unlike our invite and reset links, this
+is Supabase's standard link, which is used up the moment it's opened. If an
+email scanner (Outlook, for example) opens it first, the person gets an
+"expired link" error and has to ask for the change again.
+
+**Security notifications.** These are info-only emails Supabase sends
+*after* something changed. Each has its own on/off switch.
+
+**Authentication → Emails → Security notifications** (if you can't find it,
+search the dashboard for "Security notifications"; it may be a tab next to
+**Templates**):
+
+10. Open **Password changed**, switch it **ON**, paste `password-changed.html`,
+    set the subject from the table, **Save**.
+11. Do the same for **Email address changed** with `email-changed.html`,
+    switched **ON**.
+12. For **Phone number changed**, **Identity linked**, **Identity unlinked**,
+    **MFA method added** and **MFA method removed**: paste the matching file
+    and subject and **Save**, but leave the switch **OFF**.
+
+Why: with the first two ON, a client learns at once if someone else changed
+their password or login email, and can write to web@medicalnetworklatam.com.
+We don't use phone numbers, other login methods (identities, like Google) or
+two-step verification (MFA), so the other five would never have anything to
+report. They're pasted anyway so that, if one is ever turned on, it's in
+Spanish.
+
+None of the notifications contain a link. They name
+web@medicalnetworklatam.com as plain text (some email apps still make it
+clickable on their own; that's fine, it only opens a new email).
 
 The parts in `{{ … }}` are filled in by Supabase when it sends the email.
 Keep them exactly as they are.
