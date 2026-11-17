@@ -39,14 +39,15 @@ In scope:
 - the client's checklist for their main state (always the latest version, progress saved to the account)
 - news for the client's one Bundesland, published through an admin form
 - a community board (text posts from all members)
+- a chat per Bundesland at `/chat` (the board's table and code with a state field; refreshes every 20 seconds, no real-time connection; see "State chat" in DECISIONS.md)
 - an admin overview of every client's progress
 
-The calendar and the state chat appear as **non-working previews only**.
+The calendar appears as a **non-working preview only**.
 
 Out of scope:
 - payment inside the site
 - file uploads
-- a working state chat (next, after the board)
+- a real-time connection for the state chat
 - private messages between members
 - automatic account creation on payment
 - legal texts (handled by a law firm)
@@ -88,6 +89,7 @@ Out of scope:
 - Where things are:
   - `src/main.tsx` starts the app and lists the pages.
   - `src/pages/`: one `.tsx` file per page, plus its own `.module.css`.
+  - `src/pages/PostBoard.tsx`: the list and form shared by the community board (`Comunidad.tsx`, posts with an empty state) and the state chat (`Chat.tsx`, one state's messages, refreshed every 20 seconds). Both use the styles in `Comunidad.module.css`.
   - `src/estados/`: map shapes, city search data and map animations.
   - `src/lib/profile.ts` and `ProfileProvider.tsx`: the logged-in user's own profile (name, state, plan, admin), loaded once after login and shared with every page.
   - `src/lib/supabase.ts`: the one connection to Supabase. `src/lib/auth.ts` and `AuthProvider.tsx` share who is logged in; `src/pages/RequireLogin.tsx` guards the pages that need a login, and sends users without a first name to `/perfil` first.

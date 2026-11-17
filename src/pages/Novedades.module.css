@@ -1,4 +1,4 @@
-/* State page styles (news, calendar and chat previews), from
+/* State page styles (news, calendar preview, link to the chat), from
    design-mockup/novedades.html. */
 
 /* ---------- Layout ---------- */
@@ -127,8 +127,10 @@
 }
 
 /* Link to the community board (same pill as "Cerrar sesión" on green),
-   and under it, for admins only, the link to the admin area */
+   under it the link to the state's chat and, for admins only, the link to
+   the admin area */
 .community-link,
+.chat-link,
 .admin-link {
   align-self: flex-start;
   margin-top: 34px;
@@ -148,13 +150,27 @@
   transition: border-color 160ms ease;
 }
 .community-link:hover,
+.chat-link:hover,
 .admin-link:hover { border-color: #121413; }
 .community-link:focus-visible,
+.chat-link:focus-visible,
 .admin-link:focus-visible { outline: 3px solid #EEF9F5; outline-offset: 2px; }
-/* the second pill sits close under the first */
+/* the next pills sit close under the first */
+.chat-link,
 .admin-link { margin-top: -14px; }
+/* "Chat de Mecklenburg-Vorpommern": a long state name wraps inside the pill */
+.chat-link {
+  height: auto;
+  min-height: 48px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  white-space: normal;
+  line-height: 1.25;
+}
+.chat-link svg { flex: 0 0 auto; }
 /* the links already make the room under the header */
 .community-link + .calendar,
+.chat-link + .calendar,
 .admin-link + .calendar { margin-top: 0; }
 
 /* Calendar */
@@ -362,190 +378,9 @@
 .message-btn:hover { background: #2F7A64; color: #FFFFFF; }
 .message-btn:focus-visible { outline: 3px solid #489E85; outline-offset: 3px; }
 
-/* ---------- Right: chat ---------- */
-.chat {
-  flex: 0 1 340px;
-  min-width: 280px;
-  height: 100%;
-  min-height: 0;
-  padding: 16px 16px 20px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.chat-head {
-  flex: 0 0 auto;
-  background: #CAE8E6;
-  border-radius: 16px;
-  padding: 18px 20px;
-}
-/* Small "CHAT" label with the state's name underneath */
-.chat-head h2 {
-  margin: 0;
-  font-family: 'Figtree Variable', sans-serif;
-  font-weight: 700;
-  font-size: 13px;
-  line-height: 1.2;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  text-align: center;
-  color: #2F7A64;
-}
-.chat-name {
-  display: block;
-  margin-top: 2px;
-  font-size: 22px;
-  font-weight: 600;
-  letter-spacing: -0.2px;
-  text-transform: none;
-  color: #121413;
-  overflow-wrap: anywhere;
-}
-
-.messages {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  background: #CAE8E6;
-  border-radius: 16px;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-/* Pushes the stack to the bottom while still allowing scroll-up */
-.messages > :first-child { margin-top: auto; }
-
-.msg {
-  margin: 0;
-  align-self: flex-start;
-  max-width: 80%;
-  background: #FFFFFF;
-  border-radius: 14px;
-  padding: 12px 14px;
-  font-size: 15px;
-  line-height: 1.4;
-  overflow-wrap: anywhere;
-}
-.msg.sent { align-self: flex-end; }
-
-.chat-form {
-  flex: 0 0 auto;
-  margin: 0;
-  /* keeps its hidden screen-reader label inside the column: without this
-     the label sat below the screen and made the whole page scrollable */
-  position: relative;
-}
-
-.chat-input {
-  width: 100%;
-  height: 48px;
-  padding: 0 16px;
-  background: #FFFFFF;
-  border: 0;
-  border-radius: 12px;
-  font-family: 'Figtree Variable', sans-serif;
-  font-size: 15px;
-  color: #121413;
-}
-.chat-input::placeholder { color: #3D4A46; }
-.chat-input:focus-visible { outline: 2px solid #489E85; outline-offset: 2px; }
-
 /* ---------- Responsive ---------- */
-@media (max-width: 1100px) {
-  .workspace {
-    flex-wrap: wrap;
-    align-content: flex-start;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-  }
-  .main {
-    flex: 1 1 100%;
-    height: auto;
-    overflow: visible;
-  }
-  .chat {
-    flex: 1 1 100%;
-    min-width: 0;
-    height: auto;
-    padding: 0 40px 40px;
-  }
-  .messages {
-    flex: 0 0 auto;
-    min-height: 360px;
-  }
-}
-
-/* Desktop: the ✕ at the top left slides the chat out to the right,
-   leaving a strip on screen (like the left column); the chat icon in
-   the strip brings it back */
-.chat-toggle { display: none; }
-
-@media (min-width: 1101px) {
-  .workspace { overflow: hidden; }
-  .chat {
-    position: relative;
-    transition: margin-right 340ms cubic-bezier(0.2, 0.8, 0.2, 1);
-  }
-  .chat.is-collapsed { margin-right: -264px; } /* 340px column, 76px strip stays */
-
-  /* The strip: one pale teal column behind the header */
-  .chat::before {
-    content: "";
-    position: absolute;
-    top: 16px;
-    bottom: 20px;
-    left: 0;
-    right: 16px;
-    background: #CAE8E6;
-    border-radius: 16px;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 220ms ease;
-  }
-  .chat.is-collapsed::before { opacity: 1; }
-
-  /* same room on both sides of the button, so the title stays centred */
-  .chat-head { position: relative; padding-left: 60px; padding-right: 60px; }
-  .chat-head h2,
-  .messages,
-  .chat-form { transition: opacity 220ms ease, visibility 220ms; }
-  .chat.is-collapsed .chat-head h2,
-  .chat.is-collapsed .messages,
-  .chat.is-collapsed .chat-form {
-    opacity: 0;
-    visibility: hidden;
-  }
-
-  .chat-toggle {
-    position: absolute;
-    top: 50%;
-    left: 16px;
-    transform: translateY(-50%);
-    width: 44px;
-    height: 44px;
-    padding: 0;
-    border: 0;
-    border-radius: 12px;
-    background: transparent;
-    color: #121413;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-  }
-  .chat-toggle:hover { background: rgba(72, 158, 133, 0.2); }
-  .chat-toggle:focus-visible { outline: 3px solid #489E85; outline-offset: 2px; }
-  .chat-toggle .icon-open,
-  .chat.is-collapsed .chat-toggle .icon-close { display: none; }
-  .chat.is-collapsed .chat-toggle .icon-open { display: block; }
-}
-
-/* Phone-only controls (hidden on larger screens) */
-.chat-fab,
-.chat-close { display: none; }
+/* Phone-only link to the chat (hidden on larger screens) */
+.chat-fab { display: none; }
 
 @media (max-width: 700px) {
   .layout {
@@ -616,7 +451,7 @@
   .card h3 { font-size: 20px; }
   .card-text { font-size: 15px; }
 
-  /* Floating "Chat Berlin" button */
+  /* Floating "Chat de Berlin" link */
   .chat-fab {
     position: fixed;
     right: 20px;
@@ -635,7 +470,7 @@
     font-family: 'Figtree Variable', sans-serif;
     font-size: 16px;
     font-weight: 600;
-    cursor: pointer;
+    text-decoration: none;
   }
   /* very long state names end in "…" instead of leaving the screen */
   .chat-fab-label {
@@ -646,55 +481,6 @@
   }
   .chat-fab svg { flex: 0 0 auto; }
   .chat-fab:focus-visible { outline: 3px solid #489E85; outline-offset: 3px; }
-
-  /* Chat: full screen, parked below the screen until the button is
-     tapped, then slides up (same motion as the menu) */
-  .chat {
-    position: fixed;
-    inset: 0;
-    z-index: 5;
-    height: auto;
-    min-width: 0;
-    padding: 16px 20px 20px;
-    background: #EEF9F5;
-    transform: translateY(100%);
-    visibility: hidden;
-    transition: transform 340ms cubic-bezier(0.2, 0.8, 0.2, 1),
-                visibility 340ms;
-  }
-  .chat.is-open {
-    transform: none;
-    visibility: visible;
-    /* visible at once when opening, so the ✕ can take focus */
-    transition: transform 340ms cubic-bezier(0.2, 0.8, 0.2, 1),
-                visibility 0s;
-  }
-  .chat .messages {
-    flex: 1 1 auto;
-    min-height: 0;
-  }
-  /* same room on both sides of the ✕, so the title stays centred */
-  .chat-head { position: relative; padding-left: 60px; padding-right: 60px; }
-  .chat-close {
-    position: absolute;
-    top: 50%;
-    right: 10px;
-    transform: translateY(-50%);
-    width: 44px;
-    height: 44px;
-    padding: 0;
-    border: 0;
-    border-radius: 12px;
-    background: transparent;
-    color: #121413;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-  }
-  .chat-close:focus-visible { outline: 3px solid #489E85; outline-offset: 2px; }
-  :global(body.chat-open) { overflow: hidden; }
-  :global(body.chat-open) .chat-fab { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -702,12 +488,8 @@
   .sidebar-header,
   .profile,
   .sidebar-body,
-  .chat,
-  .chat::before,
-  .chat-head h2,
-  .messages,
-  .chat-form,
   .message-btn,
   .community-link,
+  .chat-link,
   .admin-link { transition: none; }
 }

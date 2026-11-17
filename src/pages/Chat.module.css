@@ -1,0 +1,36 @@
+/* State chat page. Almost everything comes from the board's styles
+   (Comunidad.module.css); the admin's list of states uses the admin screens'
+   field styles (Admin.module.css). Only the few extras are here. */
+
+/* Long state names ("Mecklenburg-Vorpommern") wrap instead of leaving the
+   screen */
+.title { overflow-wrap: anywhere; }
+@media (max-width: 700px) {
+  /* a little smaller on narrow phones, so the longest names ("Niedersachsen",
+     "Mecklenburg-") still fit on one line and break at the hyphen */
+  .title { font-size: min(64px, 13.5vw); }
+}
+
+/* "Elige tu estado": a sentence with a button under it, like the same box
+   on Novedades */
+.choose p { margin: 0 0 16px; }
+.choose-link {
+  min-height: 48px;
+  padding: 0 28px;
+  border-radius: 999px;
+  background: #121413;
+  color: #CAE8E6;
+  font-size: 16px;
+  font-weight: 700;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+.choose-link:hover { background: #2F7A64; color: #FFFFFF; }
+.choose-link:focus-visible { outline: 3px solid #489E85; outline-offset: 3px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .choose-link { transition: none; }
+}
