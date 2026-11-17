@@ -8,15 +8,51 @@ interface Post {
   id: string
   author_id: string
   author_name: string
+  /** True when the author was an admin when they posted ("Equipo MNL").
+      Set by the database only (migration 4). */
+  is_staff: boolean
   body: string
   /** Exactly as the database sent it (with microseconds). Used as-is for
       "Ver más", never turned into a JavaScript Date and back. */
   created_at: string
 }
 
-const COLUMNS = 'id, author_id, author_name, body, created_at'
+const COLUMNS = 'id, author_id, author_name, is_staff, body, created_at'
 const PAGE = 30   // posts per page
 const MAX = 2000  // the database allows 1 to 2,000 characters
+const REFRESH_MS = 20_000  // chat: look for new messages every 20 seconds
+const NEWER_MAX = 100      // chat: most new messages taken in one refresh
+
+/* The words that differ between the board ("publicación") and a state's
+   chat ("mensaje"). Everything else is the same code. */
+const BOARD_TEXTS = {
+  formTitle: 'Nueva publicación',
+  intro: 'Comparte tu experiencia con los trámites. Solo texto. Los demás miembros verán tu nombre como',
+  label: 'Tu publicación',
+  listTitle: 'Publicaciones',
+  loading: 'Cargando publicaciones…',
+  empty: 'Todavía no hay publicaciones. Comparte la primera.',
+  loadError: 'No se pudieron cargar las publicaciones.',
+  notAllowed: 'No tienes permiso para publicar en la comunidad. Si crees que es un error, contáctanos.',
+  badLength: 'La publicación debe tener entre 1 y 2000 caracteres.',
+  published: 'Publicación publicada.',
+  deleted: 'Publicación eliminada.',
+  confirmDelete: '¿Eliminar esta publicación?',
+}
+const CHAT_TEXTS: typeof BOARD_TEXTS = {
+  formTitle: 'Nuevo mensaje',
+  intro: 'Escribe a los miembros de este estado. Solo texto. Verán tu nombre como',
+  label: 'Tu mensaje',
+  listTitle: 'Mensajes',
+  loading: 'Cargando mensajes…',
+  empty: 'Todavía no hay mensajes. Escribe el primero.',
+  loadError: 'No se pudieron cargar los mensajes.',
+  notAllowed: 'No tienes permiso para escribir en este chat. Si crees que es un error, contáctanos.',
+  badLength: 'El mensaje debe tener entre 1 y 2000 caracteres.',
+  published: 'Mensaje publicado.',
+  deleted: 'Mensaje eliminado.',
+  confirmDelete: '¿Eliminar este mensaje?',
+}
 
 /** Removes spaces, tabs, carriage returns and line breaks at both ends,
     exactly like the database does (btrim(body, E' \t\r\n')). Not .trim(),
@@ -38,20 +74,38 @@ function formatDateTime(iso: string): string {
   return DATE_TIME.format(new Date(iso)).replace('.', '')
 }
 
-/** Spanish message when the database refuses a new post */
-function publishErrorMessage(error: unknown): string {
+/** Spanish message when the database refuses a new post. (The speed limit
+    has its own message in dataErrorMessage.) */
+function publishErrorMessage(error: unknown, t: typeof BOARD_TEXTS): string {
   const code = (error as { code?: string } | null)?.code
-  if (code === NOT_ALLOWED) {
-    return 'No tienes permiso para publicar en la comunidad. Si crees que es un error, contáctanos.'
-  }
-  if (code === CHECK_FAILED) return 'La publicación debe tener entre 1 y 2000 caracteres.'
+  if (code === NOT_ALLOWED) return t.notAllowed
+  if (code === CHECK_FAILED) return t.badLength
   return dataErrorMessage(error)
 }
 
-/** The list and the form of the community board, for paid members and
-    admins only. Moved here from Comunidad.tsx so the chat page can use the
-    same code. Its styles are in Comunidad.module.css. */
-export default function PostBoard({ userId, isAdmin, shownName }: { userId: string; isAdmin: boolean; shownName: string }) {
+type ListResult = { rows: Post[] } | { error: string }
+
+/** The list and the form, for paid members and admins only. Used by the
+    community board (Comunidad.tsx) and by a state's chat (Chat.tsx). Its
+    styles are in Comunidad.module.css.
+
+    `state` says which posts: null = the general board, a state code ("by",
+    "th"…) = that state's chat. The database (RLS) decides what a user may
+    really read and post; this only asks for the right posts.
+
+    A chat also looks for new messages by itself every 20 seconds.
+
+    The page gives it a `key` (user, and state), so a different user or
+    state always gets a new PostBoard that starts from nothing. */
+export default function PostBoard({ userId, isAdmin, shownName, state = null }: {
+  userId: string
+  isAdmin: boolean
+  shownName: string
+  state?: string | null
+}) {
+  const isChat = state !== null
+  const t = isChat ? CHAT_TEXTS : BOARD_TEXTS
+
   /* ---------- List ---------- */
   const [posts, setPosts] = useState<Post[] | null>(null)  // null = not loaded yet
   const [hasMore, setHasMore] = useState(false)
@@ -66,10 +120,42 @@ export default function PostBoard({ userId, isAdmin, shownName }: { userId: stri
     return () => { mounted.current = false }
   }, [])
 
-  /** Asks for one page of posts, newest first. With `after`, only posts
-      older than that one ("keyset paging": by created_at, then id for posts
-      with the very same time). One extra post tells us if more exist. */
-  async function fetchPage(after: Post | null): Promise<{ rows: Post[] } | { error: string }> {
+  /* The same facts as `posts` and `listBusy`, readable at once by code that
+     runs later (the chat's timer), which would otherwise see old values */
+  const postsRef = useRef<Post[] | null>(null)
+  const busyRef = useRef(true)
+  function show(list: Post[]) {
+    postsRef.current = list
+    setPosts(list)
+  }
+  function setBusy(busy: 'first' | 'more' | null) {
+    busyRef.current = busy !== null
+    setListBusy(busy)
+  }
+
+  /* Chat only (see "new messages every 20 seconds" below) */
+  // The newest message a list request brought. The refresh asks only for
+  // messages newer than this one. (Not simply the first one shown: right
+  // after publishing, that is the user's own new message, and messages
+  // others wrote just before it would be skipped.)
+  const newestListed = useRef<Post | null>(null)
+  // The refresh that is running now, if any
+  const refreshing = useRef<Promise<void> | null>(null)
+  // A refresh was wanted while another list request was running
+  const refreshWanted = useRef(false)
+
+  /* Short Spanish messages for screen readers ("Publicación eliminada.") */
+  const [announcement, setAnnouncement] = useState('')
+
+  /** Asks for posts of this board or chat, newest first.
+      - `older`: only posts older than that one ("Ver más")
+      - `newer`: only posts newer than that one (the chat's refresh)
+      Both compare by created_at, then by id for posts with the very same
+      time ("keyset paging"), so no post is skipped or shown twice. Asking
+      for one more than needed tells us if more exist. */
+  async function fetchRows(
+    from: { older: Post } | { newer: Post } | null, limit: number,
+  ): Promise<ListResult> {
     if (!supabase) return { error: dataErrorMessage(null) }
     try {
       let query = supabase
@@ -77,12 +163,17 @@ export default function PostBoard({ userId, isAdmin, shownName }: { userId: stri
         .select(COLUMNS)
         .order('created_at', { ascending: false })
         .order('id', { ascending: false })
-        .limit(PAGE + 1)
-      if (after) {
+        .limit(limit)
+      // The board: posts with an empty state only, or chat messages would
+      // appear on it. A chat: that state's messages only.
+      query = state === null ? query.is('state', null) : query.eq('state', state)
+      if (from) {
+        const post = 'older' in from ? from.older : from.newer
+        const op = 'older' in from ? 'lt' : 'gt'
         // created_at goes in exactly as the database sent it, in quotes
         // (it contains "." and ":", which PostgREST would read as syntax)
-        const t = '"' + after.created_at + '"'
-        query = query.or(`created_at.lt.${t},and(created_at.eq.${t},id.lt.${after.id})`)
+        const time = '"' + post.created_at + '"'
+        query = query.or(`created_at.${op}.${time},and(created_at.eq.${time},id.${op}.${post.id})`)
       }
       const { data, error } = await query.returns<Post[]>()
       return error ? { error: dataErrorMessage(error) } : { rows: data ?? [] }
@@ -93,54 +184,156 @@ export default function PostBoard({ userId, isAdmin, shownName }: { userId: stri
 
   /** Shows the answer to a request for the newest posts, unless a newer
       request was made since (or the page was closed) */
-  function showFirst(mine: number, result: { rows: Post[] } | { error: string }) {
+  function showFirst(mine: number, result: ListResult) {
     if (!mounted.current || mine !== requestNo.current) return
-    setListBusy(null)
+    setBusy(null)
     if ('error' in result) {
       setListError(result.error) // the posts already shown stay
-      return
+    } else {
+      setListError('')
+      show(result.rows.slice(0, PAGE))
+      setHasMore(result.rows.length > PAGE)
+      newestListed.current = result.rows[0] ?? null
     }
-    setListError('')
-    setPosts(result.rows.slice(0, PAGE))
-    setHasMore(result.rows.length > PAGE)
+    afterRequest()
   }
 
-  /** The newest posts again: after publishing, and with "Actualizar" */
-  function loadFirst() {
+  /** The newest posts again: when the page opens, with "Actualizar", and on
+      the board after publishing. This is also how a post that someone
+      deleted disappears from the list. */
+  async function loadFirst() {
     const mine = ++requestNo.current
-    setListBusy('first')
-    void fetchPage(null).then((result) => showFirst(mine, result))
+    setBusy('first')
+    await refreshing.current // never two list requests at once
+    if (!mounted.current || mine !== requestNo.current) return
+    showFirst(mine, await fetchRows(null, PAGE + 1))
   }
 
   async function loadMore() {
-    const last = posts?.[posts.length - 1]
-    if (!last || listBusy) return
+    if (busyRef.current || !postsRef.current?.length) return
     const mine = ++requestNo.current
-    setListBusy('more')
-    const result = await fetchPage(last)
+    setBusy('more')
+    await refreshing.current // never two list requests at once
     if (!mounted.current || mine !== requestNo.current) return
-    setListBusy(null)
+    const shown = postsRef.current ?? []
+    const last = shown[shown.length - 1]
+    // (the list can have become empty while waiting, if its posts were deleted)
+    const result: ListResult = last ? await fetchRows({ older: last }, PAGE + 1) : { rows: [] }
+    if (!mounted.current || mine !== requestNo.current) return
+    setBusy(null)
+    if ('error' in result) {
+      setListError(result.error)
+    } else {
+      setListError('')
+      const list = postsRef.current ?? []
+      const known = new Set(list.map((p) => p.id))
+      show([...list, ...result.rows.slice(0, PAGE).filter((p) => !known.has(p.id))])
+      setHasMore(result.rows.length > PAGE)
+    }
+    afterRequest()
+  }
+
+  /* ---------- Chat only: new messages every 20 seconds ---------- */
+
+  /** Asks once for the messages newer than the newest one listed and puts
+      them on top */
+  async function fetchNewer() {
+    const newest = newestListed.current
+    const result = newest
+      ? await fetchRows({ newer: newest }, NEWER_MAX + 1)
+      : await fetchRows(null, PAGE + 1) // nothing listed yet: the newest messages
+    if (!mounted.current) return
     if ('error' in result) {
       setListError(result.error)
       return
     }
     setListError('')
-    setPosts((list) => {
-      const known = new Set((list ?? []).map((p) => p.id))
-      return [...(list ?? []), ...result.rows.slice(0, PAGE).filter((p) => !known.has(p.id))]
-    })
-    setHasMore(result.rows.length > PAGE)
+    const rows = result.rows
+    if (rows.length === 0) {
+      if (!newest) show([])
+      return
+    }
+    newestListed.current = rows[0]
+    if (!newest || rows.length > NEWER_MAX) {
+      // Nothing was listed yet, or more new messages than one refresh
+      // takes: start again from the newest ones
+      show(rows.slice(0, PAGE))
+      setHasMore(rows.length > PAGE)
+      return
+    }
+    // New messages on top, each one only once
+    const list = postsRef.current ?? []
+    const known = new Set(list.map((p) => p.id))
+    const got = new Set(rows.map((p) => p.id))
+    show([...rows, ...list.filter((p) => !got.has(p.id))])
+    const others = rows.filter((p) => !known.has(p.id) && p.author_id !== userId).length
+    if (others > 0) {
+      setAnnouncement(others === 1 ? '1 mensaje nuevo.' : others + ' mensajes nuevos.')
+    }
   }
 
-  // When the page opens (listBusy already starts as 'first'). Runs once:
-  // a different user gets a new Board (key={userId}).
+  /** The chat's refresh. Does nothing while any list request is running:
+      never two at once. If another refresh is asked for while this one runs
+      (after publishing), it asks once more when it has finished. */
+  function refreshNewer() {
+    if (!isChat || !mounted.current || busyRef.current || refreshing.current) return
+    const run = async () => {
+      do {
+        refreshWanted.current = false
+        await fetchNewer()
+      } while (refreshWanted.current && mounted.current && !busyRef.current)
+    }
+    refreshing.current = run().finally(() => { refreshing.current = null })
+  }
+
+  /** Starts the refresh that had to wait for another list request. Runs
+      when a list request has finished, and after publishing in a chat. */
+  function afterRequest() {
+    if (refreshWanted.current && !busyRef.current) refreshNewer()
+  }
+
+  /* Code that is set up once (when the page opens, the timer) reaches the
+     newest versions of these two through this */
+  const latest = useRef({ loadFirst, refreshNewer })
   useEffect(() => {
-    const mine = ++requestNo.current
-    void fetchPage(null).then((result) => showFirst(mine, result))
+    latest.current = { loadFirst, refreshNewer }
+  })
+
+  // When the page opens (listBusy already starts as 'first'). Runs once:
+  // a different user or state gets a new PostBoard (see `key` above).
+  useEffect(() => {
+    void latest.current.loadFirst()
   }, [])
 
-  /* Short Spanish messages for screen readers ("Publicación eliminada.") */
-  const [announcement, setAnnouncement] = useState('')
+  // The timer only runs while the page is open AND visible. When the tab
+  // comes back into view it looks at once and starts counting again; leaving
+  // the page stops it.
+  useEffect(() => {
+    if (!isChat) return
+    let timer: number | undefined
+    function stop() {
+      if (timer !== undefined) window.clearInterval(timer)
+      timer = undefined
+    }
+    function start() {
+      stop()
+      timer = window.setInterval(() => latest.current.refreshNewer(), REFRESH_MS)
+    }
+    function onVisibility() {
+      if (document.visibilityState === 'visible') {
+        latest.current.refreshNewer()
+        start()
+      } else {
+        stop()
+      }
+    }
+    if (document.visibilityState === 'visible') start()
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      stop()
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
+  }, [isChat])
 
   /* ---------- Form ---------- */
   const [draft, setDraft] = useState('')
@@ -159,25 +352,33 @@ export default function PostBoard({ userId, isAdmin, shownName }: { userId: stri
     setFormError('')
     setAnnouncement('')
     try {
-      // Only the body: the database sets the author, the name and the date
+      // Only the body, and the state in a chat: the database sets the
+      // author, the name, the date and the "Equipo MNL" mark
       const { data, error } = await supabase
         .from('community_posts')
-        .insert({ body })
+        .insert(state === null ? { body } : { body, state })
         .select(COLUMNS)
         .single<Post>()
       if (!mounted.current) return
       if (error || !data) {
-        setFormError(publishErrorMessage(error)) // the text stays in the box
+        setFormError(publishErrorMessage(error, t)) // the text stays in the box
         textRef.current?.focus()
         return
       }
       setDraft('')
-      setPosts((list) => [data, ...(list ?? []).filter((p) => p.id !== data.id)])
-      setAnnouncement('Publicación publicada.')
-      loadFirst()
+      show([data, ...(postsRef.current ?? []).filter((p) => p.id !== data.id)])
+      setAnnouncement(t.published)
+      if (isChat) {
+        // Only what is newer than the newest message listed (as soon as no
+        // other list request is running)
+        refreshWanted.current = true
+        afterRequest()
+      } else {
+        void loadFirst()
+      }
     } catch (err) {
       if (!mounted.current) return
-      setFormError(publishErrorMessage(err))
+      setFormError(publishErrorMessage(err, t))
       textRef.current?.focus()
     } finally {
       if (mounted.current) setSending(false)
@@ -218,8 +419,8 @@ export default function PostBoard({ userId, isAdmin, shownName }: { userId: stri
       return
     }
     setConfirmingId(null)
-    setPosts((list) => (list ?? []).filter((p) => p.id !== post.id))
-    setAnnouncement('Publicación eliminada.')
+    show((postsRef.current ?? []).filter((p) => p.id !== post.id))
+    setAnnouncement(t.deleted)
     listHeadingRef.current?.focus()
   }
 
@@ -229,13 +430,10 @@ export default function PostBoard({ userId, isAdmin, shownName }: { userId: stri
 
       {/* Form */}
       <section className={styles.card} aria-labelledby="new-post-heading">
-        <h2 className={styles.sectionTitle} id="new-post-heading">Nueva publicación</h2>
-        <p className={styles.intro}>
-          Comparte tu experiencia con los trámites. Solo texto. Los demás miembros verán tu nombre
-          como «{shownName}».
-        </p>
+        <h2 className={styles.sectionTitle} id="new-post-heading">{t.formTitle}</h2>
+        <p className={styles.intro}>{t.intro} «{shownName}».</p>
         <form className={styles.form} onSubmit={onPublish} noValidate>
-          <label className="sr-only" htmlFor="post-body">Tu publicación</label>
+          <label className="sr-only" htmlFor="post-body">{t.label}</label>
           <textarea
             ref={textRef} id="post-body" className={styles.textarea}
             rows={5} value={draft}
@@ -265,11 +463,11 @@ export default function PostBoard({ userId, isAdmin, shownName }: { userId: stri
       <section className={styles.list} aria-labelledby="posts-heading" aria-busy={listBusy !== null}>
         <div className={styles.listHead}>
           <h2 className={styles.sectionTitle} id="posts-heading" ref={listHeadingRef} tabIndex={-1}>
-            Publicaciones
+            {t.listTitle}
           </h2>
           <button
             type="button" className={styles.smallBtn}
-            onClick={loadFirst} disabled={listBusy !== null}
+            onClick={() => void loadFirst()} disabled={listBusy !== null}
           >
             {listBusy === 'first' && posts ? 'Actualizando…' : 'Actualizar'}
           </button>
@@ -277,19 +475,20 @@ export default function PostBoard({ userId, isAdmin, shownName }: { userId: stri
 
         {listError && (
           <div className={styles.message + ' ' + styles.isError} role="alert">
-            <p>No se pudieron cargar las publicaciones. {listError}</p>
+            <p>{t.loadError} {listError}</p>
           </div>
         )}
 
         {!posts ? (
-          listBusy && <p className={styles.message} role="status">Cargando publicaciones…</p>
+          listBusy && <p className={styles.message} role="status">{t.loading}</p>
         ) : posts.length === 0 ? (
-          <p className={styles.message}>Todavía no hay publicaciones. Comparte la primera.</p>
+          <p className={styles.message}>{t.empty}</p>
         ) : (
           posts.map((post) => (
             <PostCard
               key={post.id}
               post={post}
+              confirmText={t.confirmDelete}
               canDelete={isAdmin || post.author_id === userId}
               confirming={confirmingId === post.id}
               deleting={deletingId === post.id}
@@ -316,8 +515,9 @@ export default function PostBoard({ userId, isAdmin, shownName }: { userId: stri
 
 /** One post. The body is plain text (never HTML, no automatic links); CSS
     keeps its line breaks. */
-function PostCard({ post, canDelete, confirming, deleting, error, onAsk, onCancel, onConfirm }: {
+function PostCard({ post, confirmText, canDelete, confirming, deleting, error, onAsk, onCancel, onConfirm }: {
   post: Post
+  confirmText: string
   canDelete: boolean
   confirming: boolean
   deleting: boolean
@@ -345,6 +545,8 @@ function PostCard({ post, canDelete, confirming, deleting, error, onAsk, onCance
     <article className={styles.post}>
       <p className={styles.postMeta}>
         <span className={styles.postAuthor}>{post.author_name}</span>
+        {/* Marked by the database on posts written by an admin */}
+        {post.is_staff && <span className={styles.staffBadge}>Equipo MNL</span>}
         <time className={styles.postDate} dateTime={post.created_at}>{formatDateTime(post.created_at)}</time>
       </p>
       <p className={styles.postText}>{post.body}</p>
@@ -352,7 +554,7 @@ function PostCard({ post, canDelete, confirming, deleting, error, onAsk, onCance
       {canDelete && (
         confirming ? (
           <div className={styles.confirm} role="group" aria-label="Confirmar eliminación" onKeyDown={onKeyDown}>
-            <p className={styles.confirmText}>¿Eliminar esta publicación?</p>
+            <p className={styles.confirmText}>{confirmText}</p>
             <div className={styles.confirmBtns}>
               <button type="button" className={styles.dangerBtn} onClick={onConfirm} disabled={deleting}>
                 {deleting ? 'Eliminando…' : 'Sí, eliminar'}

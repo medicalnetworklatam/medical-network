@@ -19,6 +19,7 @@ import RecuperarContrasena from './pages/RecuperarContrasena.tsx'
 import NuevaContrasena from './pages/NuevaContrasena.tsx'
 import Perfil from './pages/Perfil.tsx'
 import Comunidad from './pages/Comunidad.tsx'
+import Chat from './pages/Chat.tsx'
 import RequireAdmin from './pages/RequireAdmin.tsx'
 import AdminClientes from './pages/AdminClientes.tsx'
 import AdminCliente from './pages/AdminCliente.tsx'
@@ -51,6 +52,7 @@ createRoot(document.getElementById('root')!).render(
               <Route path="/estados" element={<Estados />} />
               <Route path="/novedades" element={<Novedades />} />
               <Route path="/comunidad" element={<Comunidad />} />
+              <Route path="/chat" element={<Chat />} />
 
               {/* Admins only: everyone else is sent to /novedades */}
               <Route element={<RequireAdmin />}>

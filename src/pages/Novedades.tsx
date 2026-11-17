@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import MenuIcon from './MenuIcon.tsx'
 import SessionButton from './SessionButton.tsx'
@@ -31,11 +31,6 @@ type NewsResult =
   | { key: string; ok: true; posts: NewsPost[] }
   | { key: string; ok: false; error: string }
 
-const CloseIcon = ({ className }: { className?: string }) => (
-  <svg className={className} width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
-    <path d="M6 6l12 12M18 6L6 18" />
-  </svg>
-)
 const AdminIcon = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M4 6h10M18 6h2M4 12h2M10 12h10M4 18h10M18 18h2" />
@@ -44,14 +39,15 @@ const AdminIcon = () => (
     <circle cx="16" cy="18" r="2" />
   </svg>
 )
-const ChatIcon = ({ className }: { className?: string }) => (
-  <svg className={className} width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+const ChatIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.4A8 8 0 1 1 21 12z" />
   </svg>
 )
 
-/** The user's state page: the news for their one Bundesland, and calendar
-    and chat as previews only (from design-mockup/novedades.html) */
+/** The user's state page: the news for their one Bundesland, links to the
+    community board and to the state's chat (/chat), and the calendar as a
+    preview only (from design-mockup/novedades.html) */
 export default function Novedades() {
   const { profile } = useProfile()
   const firstName = profile?.first_name?.trim().split(/\s+/)[0] ?? ''
@@ -100,46 +96,8 @@ export default function Novedades() {
     () => window.matchMedia('(max-width: 700px)').matches,
   )
 
-  /* Phone: floating button opens the chat full screen, ✕ / Escape closes it */
-  const [chatOpen, setChatOpen] = useState(false)
-  const fabRef = useRef<HTMLButtonElement>(null)
-  const chatCloseRef = useRef<HTMLButtonElement>(null)
-  const chatOpenChanged = useRef(false)
-
-  function openChat(open: boolean) {
-    chatOpenChanged.current = true
-    setChatOpen(open)
-  }
-  useEffect(() => {
-    document.body.classList.toggle('chat-open', chatOpen)
-    if (chatOpenChanged.current) {
-      if (chatOpen) chatCloseRef.current?.focus(); else fabRef.current?.focus()
-    }
-    if (!chatOpen) return
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') openChat(false) }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [chatOpen])
-  useEffect(() => () => document.body.classList.remove('chat-open'), [])
-
-  /* Desktop: ✕ slides the chat out to the right, the chat icon brings it back */
-  const [chatCollapsed, setChatCollapsed] = useState(false)
-
-  /* Chat preview: Enter adds a sent bubble (nothing is sent or saved) */
-  const [sent, setSent] = useState<string[]>([])
-  const [draft, setDraft] = useState('')
-  const messagesRef = useRef<HTMLDivElement>(null)
-  function onSend(e: FormEvent) {
-    e.preventDefault()
-    const text = draft.trim()
-    if (!text) return
-    setSent((list) => [...list, text])
-    setDraft('')
-  }
-  useEffect(() => {
-    const box = messagesRef.current
-    if (box && sent.length) box.scrollTop = box.scrollHeight
-  }, [sent])
+  /* The link to the state's chat: "Chat de Bayern", or just "Chat" */
+  const chatLabel = name ? <>Chat de <span lang="de">{name}</span></> : 'Chat'
 
   return (
     <>
@@ -171,6 +129,10 @@ export default function Novedades() {
             <Link className={styles.communityLink} to="/comunidad">
               <ChatIcon />
               Comunidad
+            </Link>
+            <Link className={styles.chatLink} to="/chat">
+              <ChatIcon />
+              <span>{chatLabel}</span>
             </Link>
 
             {/* Admins only. Hiding the link is not the protection: the admin
@@ -246,61 +208,14 @@ export default function Novedades() {
             )}
           </main>
 
-          {/* Right: chat (preview only) */}
-          <aside
-            id="chat"
-            className={styles.chat + (chatOpen ? ' ' + styles.isOpen : '') + (chatCollapsed ? ' ' + styles.isCollapsed : '')}
-            aria-label={('Chat ' + name).trim()}
-          >
-            <div className={styles.chatHead}>
-              {/* Desktop only: hides / shows the chat */}
-              <button
-                type="button" className={styles.chatToggle}
-                aria-expanded={!chatCollapsed} aria-controls="messages"
-                aria-label={chatCollapsed ? 'Mostrar chat' : 'Ocultar chat'}
-                onClick={() => setChatCollapsed((c) => !c)}
-              >
-                <CloseIcon className={styles.iconClose} />
-                <ChatIcon className={styles.iconOpen} />
-              </button>
-              <h2>Chat <span className={styles.chatName}>{name}</span></h2>
-              <button type="button" className={styles.chatClose} ref={chatCloseRef} aria-label="Cerrar chat" onClick={() => openChat(false)}>
-                <CloseIcon />
-              </button>
-            </div>
-
-            <div className={styles.messages} id="messages" role="log" ref={messagesRef}>
-              <p className={styles.msg + ' ' + styles.sent}>[Mensaje enviado]</p>
-              <p className={styles.msg}>[Mensaje recibido]</p>
-              <p className={styles.msg}>[Mensaje recibido más largo, en varias líneas]</p>
-              <p className={styles.msg}>[Mensaje recibido]</p>
-              <p className={styles.msg + ' ' + styles.sent}>[Mensaje enviado]</p>
-              {sent.map((text, i) => (
-                <p key={i} className={styles.msg + ' ' + styles.sent}>{text}</p>
-              ))}
-            </div>
-
-            <form className={styles.chatForm} autoComplete="off" onSubmit={onSend}>
-              <label className="sr-only" htmlFor="chat-input">Escribe un mensaje</label>
-              <input
-                className={styles.chatInput} id="chat-input" type="text" placeholder="Escribe un mensaje"
-                value={draft} onChange={(e) => setDraft(e.target.value)}
-              />
-            </form>
-          </aside>
-
         </div>
       </div>
 
-      {/* Phone only: opens the chat full screen */}
-      <button
-        type="button" className={styles.chatFab} ref={fabRef}
-        aria-controls="chat" aria-expanded={chatOpen}
-        onClick={() => openChat(true)}
-      >
+      {/* Phone only: floating link to the state's chat */}
+      <Link className={styles.chatFab} to="/chat">
         <ChatIcon />
-        <span className={styles.chatFabLabel}>{('Chat ' + name).trim()}</span>
-      </button>
+        <span className={styles.chatFabLabel}>{chatLabel}</span>
+      </Link>
     </>
   )
 }

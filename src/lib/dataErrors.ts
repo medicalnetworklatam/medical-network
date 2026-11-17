@@ -17,6 +17,10 @@ export const NOT_ALLOWED = '42501'
     community post that is empty or longer than 2,000 characters */
 export const CHECK_FAILED = '23514'
 
+/** Our own code (migration 4): the posting speed limit was reached, at most
+    5 posts a minute and 100 in 24 hours, on the board and in the chats */
+export const TOO_MANY_POSTS = 'PT429'
+
 interface DbError {
   code?: string
   message?: string
@@ -28,6 +32,9 @@ export function dataErrorMessage(error: unknown): string {
   if (!e.code && /^(TypeError|FetchError|AbortError)\b/.test(e.message ?? '')) return NO_CONNECTION
   if (e.code === 'PGRST301' || e.code === 'PGRST303') {
     return 'Tu sesión ha caducado. Vuelve a iniciar sesión.'
+  }
+  if (e.code === TOO_MANY_POSTS) {
+    return 'Has publicado demasiado en poco tiempo. Espera un momento y vuelve a intentarlo.'
   }
   return 'Algo salió mal. Inténtalo de nuevo en unos minutos.'
 }
