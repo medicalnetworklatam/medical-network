@@ -15,6 +15,20 @@ Last updated: 17 Nov 2026. This is the source of truth for the project. When a d
   - Spanish only, web only
 - **Admins:** Ivan and his cousin.
 
+## Changes on 17 Nov 2026 (evening): the redesign starts
+
+These replace the morning's "look and feel" bullet below where they differ.
+
+- **The redesign starts now,** before the checklist screen, so that screen is built in the new look instead of being restyled later. Ivan decides the look.
+- **The new home page** is Ivan's own plain-HTML prototype, kept in the repository in `design-hero/` (notes in `design-hero/HERO-NOTES.md`, rules in `design-hero/DESIGN-RULES.md`). It replaces the current home page (`/`), ported into React with the same text, order and scroll motion.
+- **New layouts are allowed** on redesigned screens. This replaces "the redesign changes styles, not structure". What each screen does, and every rule in this log, stays the same.
+- **Order:** the home page first, then Novedades. All other screens keep the old look for now, and both state maps stay exactly as they are.
+- **Novedades:** new layout, with the left column redesigned from scratch. It keeps everything it has today: profile link and first name, Comunidad, "Chat de <Bundesland>", Administración (admins only), the calendar preview (still non-working), "Cerrar sesión", and the floating chat button on phones.
+- **Fonts on redesigned screens:** Albert Sans for the big headlines, standing in for Aaux Next, a commercial font that isn't licensed yet (it needs a web licence before it can be used). Space Grotesk is used for everything else. Both are open-licence fonts and self-hosted. Figtree and Anton stay on screens that aren't redesigned yet.
+- **Colours on redesigned screens:** every colour comes from three values (`--paper`, `--ink`, `--accent-rgb`). The palette isn't chosen yet. Until it is, the home page's menu button keeps cycling the five candidate palettes (Negativo, Bello, Impasto, MNL actual, Flatline), the choice is remembered in the browser, and it applies to every redesigned screen. Once a palette is chosen, it becomes the default and the switcher is removed. This must happen before the test with friendly clients.
+- **Design rules** (from `design-hero/DESIGN-RULES.md`): no photo is ever cut off by the edge of the screen where it is meant to be seen, and grids of cells fit on one screen (long ones are split into several screens).
+- **Rejected directions** (don't go back to them): ruled "expediente" cards with D-DIN Condensed + Figtree; rounded white cards with petrol blue and numbered circles.
+
 ## Changes on 17 Nov 2026
 
 - **Look and feel is unfinished and gets its own phase.** The current look is the first mock-up carried into React. The design pass happens after the main features work and before the test with friendly clients, starting from real brand material from the owner, so the site doesn't look generic or AI-made. Until then, new screens reuse the existing styles so the redesign changes styles, not structure.
@@ -28,7 +42,7 @@ Last updated: 17 Nov 2026. This is the source of truth for the project. When a d
 - **Security headers** on every page (`public/_headers`, PR #13): a strict Content-Security-Policy (only our own site and the Supabase project; no inline scripts or styles), plus X-Content-Type-Options, X-Frame-Options, Referrer-Policy and Permissions-Policy. HSTS comes with the custom domain. Any new outside address (for example the state chat's live connection) must be added to `_headers`.
 - **Security review of 16 Nov** (details in the project doc `docs/security-review-2026-11-16.md`, kept out of the public repository): H1, M1, M2, L1 and L6 fixed in PRs #12 and #13; migration 3 applied on 16 Nov 2026, rls_check.sql showed ALL RLS TESTS PASSED (93 checks).
 - **Supabase settings checked by hand (16–17 Nov):** sign-ups and anonymous sign-ins off, confirm email and secure email change on, secure password change turned on (password reset tested afterwards), only `public` and `graphql_public` exposed, no tables in realtime, RLS on every table, no rights for logged-out visitors.
-- **Security Advisor warnings accepted for now:** 24-hour email links (chosen so invites don't expire overnight); leaked password protection (Pro plan only, turned on when switching to Pro). Supabase's own `public.rls_auto_enable()` gets its execute rights removed in the next small migration.
+- **Security Advisor warnings accepted for now:** 24-hour email links (chosen so invites don't expire overnight); leaked password protection (Pro plan only, turned on when switching to Pro). Supabase's own `public.rls_auto_enable()` gets its execute rights removed in the next small migration (done in migration 4, 17 Nov 2026).
 
 ## Changes on 15 Nov 2026
 
@@ -73,6 +87,7 @@ Last updated: 17 Nov 2026. This is the source of truth for the project. When a d
 - **Website code is written in TypeScript** (confirmed 13 Nov 2026), JavaScript with type labels that catch mistakes before the site is built.
 - **Fonts are self-hosted** (confirmed 13 Nov 2026). The font files are served from our own site, never from Google's servers (a GDPR risk in Germany).
   - **Figtree** for all text, except **Anton** for the big uppercase page titles. The mock-up's home page used Archivo for body text; that is dropped.
+  - Redesigned screens use Albert Sans and Space Grotesk instead (17 Nov 2026 evening, see above).
 - **State names are shown in German** (confirmed 13 Nov 2026): Bayern, Nordrhein-Westfalen, Thüringen… All other text users see is in Spanish.
 - **Domain and email stay at IONOS for the first version.**
   - Add only one CNAME record, a pointer such as `app.` or `www.`, aimed at Cloudflare Pages.
@@ -157,6 +172,7 @@ Last updated: 17 Nov 2026. This is the source of truth for the project. When a d
 - **Live updates:** no real-time connection. The page refreshes by itself every 20 seconds while it is open and visible, plus an "Actualizar" button. Real-time can be added later (it would need the table in Supabase's realtime list and a new address in `_headers`).
 - **Page:** `/chat`, login only. The chat preview on Novedades becomes a link to it.
 - **Messages:** plain text, 1 to 2,000 characters, members delete their own, admins delete any, no editing.
+- **Build details** (decided 17 Nov 2026, from the build plan): Novedades loses the fake chat column and gets a "Chat de <Bundesland>" link in the green column; the phone's floating chat button links to `/chat`. Messages are newest first like the board (where new messages go is a look-and-feel question for later). "Actualizar" reloads the newest 30, so deleted messages disappear. The speed limit counts posts that still exist, counting all of a member's own posts regardless of what they can see now. Old admin posts were marked "Equipo MNL" too. Known gap, accepted: two posts in the same chat within milliseconds can be missed by another member's automatic refresh until "Actualizar".
 - **Migration 4** also removes execute rights on Supabase's `public.rls_auto_enable()` from the website's roles.
 
 ### Admin screens (decided 16 Nov 2026)
@@ -249,6 +265,7 @@ Last updated: 17 Nov 2026. This is the source of truth for the project. When a d
   - Migration 1 was applied on 14 Nov 2026. rls_check.sql showed ALL RLS TESTS PASSED.
   - Migration 2 was applied on 15 Nov 2026. rls_check.sql showed ALL RLS TESTS PASSED.
   - Migration 3 (`20261116120000_checklist_own_state_route.sql`, checklist by state and route, `is_admin` only in the SQL Editor) was applied on 16 Nov 2026. rls_check.sql showed ALL RLS TESTS PASSED (93 checks).
+  - Migration 4 (`20261117120000_state_chat.sql`, chat per Bundesland, "Equipo MNL", speed limit, `rls_auto_enable()` rights removed) was applied on 17 Nov 2026. The automatic-RLS check passed and rls_check.sql showed ALL RLS TESTS PASSED (124 checks). PR #16 merged.
   - Before the first real client: switch to Pro and turn on leaked password protection; remove the preview and localhost redirect URLs or move testing to a separate project; delete old preview deployments (14 on 17 Nov 2026).
   - The admin account is web@medicalnetworklatam.com (shared for now). Suggested: separate admin logins for Ivan and his cousin before real clients arrive.
 - **Database changes are written as SQL files** in `supabase/migrations/` in the repository. Ivan applies them by pasting them into Supabase's SQL Editor, so no Supabase keys are ever given to Claude Code.
@@ -287,6 +304,7 @@ Last updated: 17 Nov 2026. This is the source of truth for the project. When a d
   - The repository is public and owned by the company's GitHub organization.
   - Ivan's decision (13 Nov 2026): it stays public for now.
   - The plain-HTML mock-up now lives in `design-mockup/`.
+  - The new home page prototype lives in `design-hero/` (17 Nov 2026). Everything in it is public, photos included.
   - The React + Vite + TypeScript version is merged into `main` (pull request #3) and live on Cloudflare Pages. GitHub Pages is turned off.
 
 - **What a news post can include:** the fields are decided (see Data design). Still open: links inside the text (suggested: the site turns web addresses into links safely); no comments, likes or photos. The same safe link rule would apply to community posts too.

@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MNL — Inicio</title>
+  <link rel="preload" href="fonts/albert-sans-latin-300-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="styles.css">
+  <noscript><style>.intro { clip-path: none; }</style></noscript>
+</head>
+<body>
+
+  <header class="site-header">
+    <!-- For now the menu button switches between colour palettes, to compare
+         them on the real page (palette.js). The note under it names the one shown. -->
+    <div class="menu">
+      <button class="menu-btn" type="button" aria-describedby="palette-note" title="Cambiar paleta de colores">
+        <span>Menú</span>
+        <span class="menu-btn__icon" aria-hidden="true"></span>
+      </button>
+      <p class="palette-note" id="palette-note" aria-live="polite"></p>
+    </div>
+  </header>
+
+  <main>
+    <!-- The track is taller than the screen. While you scroll through it the
+         hero and the next section both stay pinned, and a growing circle
+         reveals the next section on top of the hero. -->
+    <div class="hero-track">
+    <section class="hero" aria-label="Portada">
+      <div class="hero__stage">
+        <!-- 1. the words in ink, underneath everything -->
+        <h1 class="hero__words">
+          <span class="line">La burocracia</span>
+          <span class="line">alemana</span>
+          <span class="line">es un laberinto</span>
+        </h1>
+
+        <!-- 2. the photo (later: the video) sits on top of the words -->
+        <figure class="hero__media">
+          <img src="assets/hero-house.jpg" alt="" width="2000" height="1341">
+        </figure>
+
+        <!-- 3. the same words again, tinted, cut to the photo's box -->
+        <div class="hero__words hero__words--over" aria-hidden="true">
+          <span class="line">La burocracia</span>
+          <span class="line">alemana</span>
+          <span class="line">es un laberinto</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Revealed through the circle (reveal.js), then scrolls on normally. -->
+    <section class="intro" aria-labelledby="intro-title">
+      <div class="intro__head">
+        <p class="intro__eyebrow">yo soy tu</p>
+        <h2 class="intro__title" id="intro-title">ruta.</h2>
+      </div>
+
+      <div class="intro__text">
+        <div class="intro__copy">
+          <p>Un camino claro para médicos hispanohablantes que quieren homologar
+          su título y ejercer medicina en Alemania.</p>
+          <p>Aprende qué hacer, en qué orden y cuáles son tus objetivos durante
+          el proceso, con acompañamiento directo mientras avanzas.</p>
+        </div>
+      </div>
+
+      <figure class="intro__media">
+        <img src="assets/hero-house.jpg" alt="" width="2000" height="1341" loading="lazy">
+      </figure>
+    </section>
+
+    <!-- scroll distance spent growing the circle -->
+    <div class="hero-track__grow" aria-hidden="true"></div>
+    </div>
+
+    <!-- Mi historia: one pinned screen. Under the head, the two layouts sit
+         in the same space; as you scroll, "now" (hoy, después) fades in on
+         top of "then" (bio, mis inicios, antes), from a faint blur to fully
+         clear (story.js). The page always rests on one or the other. -->
+    <section class="story" aria-labelledby="story-title">
+      <div class="story__pin">
+      <div class="story__head">
+        <p class="label">mi</p>
+        <h2 class="display" id="story-title">historia.</h2>
+      </div>
+
+      <div class="story__stack">
+      <div class="story__body story__body--then">
+        <div class="story__shift story__shift--then">
+          <p class="label">antes</p>
+          <p>No tenía idea de por dónde empezar ni qué hacer.</p>
+        </div>
+
+        <div class="story__bio">
+          <p>Soy Ivan Bruckner Calahorrano, médico ecuatoriano. Me gradué en 2015
+          y ese mismo año llegué a Alemania. En 2017 obtuve la Approbation, hice
+          mi especialidad y hoy trabajo como médico especialista en un hospital
+          alemán.</p>
+        </div>
+
+        <figure class="story__photo">
+          <div class="story__frame">
+            <img src="assets/antes.webp" alt="Ivan de joven, con una camiseta a rayas verdes" width="914" height="816" loading="lazy" style="object-position: 58% 38%">
+          </div>
+          <figcaption>Mis inicios</figcaption>
+        </figure>
+      </div>
+
+      <div class="story__body story__body--now">
+        <figure class="story__photo">
+          <div class="story__frame">
+            <img src="assets/hoy.jpg" alt="Ivan hoy, en quirófano con gorro y mascarilla" width="564" height="776" loading="lazy">
+          </div>
+          <figcaption>Hoy, especialista</figcaption>
+        </figure>
+
+        <div class="story__shift story__shift--now">
+          <p class="label">después</p>
+          <p>Un plan claro y estructurado para enfrentar la burocracia alemana y
+          ejecutar el proceso de homologación.</p>
+        </div>
+      </div>
+      </div>
+      </div>
+    </section>
+
+    <!-- Second hero and the phases, pinned while you scroll through the two
+         spacers at the end.
+         1. push.js: the first sentence starts alone in the middle; the second
+            rises from below and pushes it up until they sit together.
+         2. phases.js: the phases' cells rise from below one at a time and
+            settle in place over the hero: the title cell, then phase 01, 02
+            and 03. Each new phase takes the focus; the earlier ones shrink.
+            The page glides to the nearest step when you stop scrolling.
+         Without JS the spacers are hidden and the phases simply follow. -->
+    <div class="push-track">
+    <section class="hero hero--two" aria-label="Yo también empecé confundido. Por eso creé la Ruta Approbation">
+      <div class="hero__stage hero__stage--a" data-fit-h="0.5">
+        <h2 class="hero__words">
+          <span class="line">Yo también</span>
+          <span class="line">empecé confundido</span>
+        </h2>
+      </div>
+      <div class="hero__stage hero__stage--b" data-fit-h="0.5">
+        <p class="hero__words">
+          <span class="line">Por eso creé</span>
+          <span class="line">la ruta Approbation</span>
+        </p>
+      </div>
+    </section>
+
+    <!-- The three phases: one row per phase, cells split by thin lines. -->
+    <section class="phases" aria-labelledby="phases-title">
+      <div class="phases__head">
+        <p class="label">las 3</p>
+        <h2 class="display" id="phases-title">fases.</h2>
+      </div>
+
+      <!-- Each phase: number | title + intro | checklist + resultado | photo -->
+      <ol class="phases__list">
+        <li class="phase">
+          <span class="phase__num">01</span>
+          <div class="phase__main">
+            <h3 class="phase__title">planificación</h3>
+            <p class="phase__intro">Empezamos por lo importante: tu objetivo. Defino
+            contigo la ruta exacta que debes seguir y en qué orden, para que dejes
+            de adivinar. Tú decides tus prioridades, incluido cómo vas a aprender
+            alemán.</p>
+          </div>
+          <div class="phase__detail">
+            <div class="phase__result">
+              <p class="label">resultado</p>
+              <p>Sabes exactamente qué hacer primero y cuál es tu siguiente paso.</p>
+            </div>
+          </div>
+          <figure class="phase__media">
+            <img src="assets/lagoon.jpg" alt="" width="1600" height="1081" loading="lazy">
+          </figure>
+        </li>
+        <li class="phase">
+          <span class="phase__num">02</span>
+          <div class="phase__main">
+            <h3 class="phase__title">documentación</h3>
+            <p class="phase__intro">Tú reúnes tus documentos, pero no vas a ciegas: yo
+            te digo exactamente cuáles necesitas y los reviso contigo antes de que
+            avances. Mientras tanto, avanzamos en paralelo:</p>
+          </div>
+          <div class="phase__detail">
+            <ul class="phase__items">
+              <li>Reunir la documentación necesaria, con mi guía</li>
+              <li>Aprender alemán</li>
+              <li>Te ayudo a elegir tu escuela de idiomas</li>
+              <li>Te ayudo a planificar tu estadía en Alemania</li>
+              <li>Preparamos juntos los siguientes pasos</li>
+            </ul>
+            <div class="phase__result">
+              <p class="label">resultado</p>
+              <p>Tu documentación avanza bien hecha, sin perder meses, y tú preparas
+              tu llegada con mi ayuda en cada paso.</p>
+            </div>
+          </div>
+          <figure class="phase__media">
+            <img src="assets/hero-house.jpg" alt="" width="2000" height="1341" loading="lazy">
+          </figure>
+        </li>
+        <li class="phase">
+          <span class="phase__num">03</span>
+          <div class="phase__main">
+            <h3 class="phase__title">ejecución</h3>
+            <p class="phase__intro">Ya en Alemania, tú ejecutas cada paso y yo estoy a
+            tu lado para que no te frenes ni te pierdas:</p>
+          </div>
+          <div class="phase__detail">
+            <ul class="phase__items">
+              <li>Cursar alemán intensivo</li>
+              <li>Presentar tu solicitud de homologación, con mi guía</li>
+              <li>Te ayudo a conseguir Hospitationen, cuando sea posible</li>
+              <li>Te oriento sobre un posible Nebenjob para amortiguar gastos, según tu situación</li>
+            </ul>
+            <div class="phase__result">
+              <p class="label">resultado</p>
+              <p>Tú das cada paso con un plan claro, y yo te acompaño mientras avanzas
+              en tu homologación.</p>
+            </div>
+          </div>
+          <figure class="phase__media">
+            <img src="assets/ejecucion.jpg" alt="" width="858" height="929" loading="lazy" style="object-position: 55% 72%">
+          </figure>
+        </li>
+      </ol>
+    </section>
+
+    <!-- Closing call to action, in the heroes' font: light background, dark
+         letters. The headline is justified by fit.js like the heroes.
+         With JS it is pinned behind the phases (hidden until they fill the
+         screen); at the end a circle closes on the phases and leaves it
+         (phases.js). Without JS it simply follows them. -->
+    <section class="cta" aria-labelledby="cta-title">
+      <div class="cta__inner">
+        <div class="hero__stage" data-fit-h="0.55">
+          <h2 class="hero__words" id="cta-title">
+            <span class="line">Tu homologación</span>
+            <span class="line">necesita</span>
+            <span class="line">una ruta</span>
+          </h2>
+        </div>
+        <p class="cta__price">Pago único 3.500 €</p>
+        <a class="cta__btn" href="https://calendly.com/ivan-ab89/ruta-approbation" target="_blank" rel="noopener noreferrer">Aplicar a Ruta Approbation</a>
+        <p class="cta__sign">Nos vemos en Alemania</p>
+      </div>
+    </section>
+
+    <!-- scroll distance spent pushing, then bringing in the phases -->
+    <div class="push-track__push" aria-hidden="true"></div>
+    <div class="push-track__phases" aria-hidden="true"></div>
+    <!-- extra scroll when the open phase is taller than the screen (phases.js) -->
+    <div class="push-track__more" aria-hidden="true"></div>
+    <!-- scroll spent closing the circle on the phases -->
+    <div class="push-track__close" aria-hidden="true"></div>
+    </div>
+  </main>
+
+  <script src="fit.js" defer></script>
+  <script src="reveal.js" defer></script>
+  <script src="push.js" defer></script>
+  <script src="phases.js" defer></script>
+  <script src="story.js" defer></script>
+  <script src="palette.js" defer></script>
+
+</body>
+</html>
