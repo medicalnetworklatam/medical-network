@@ -15,6 +15,14 @@ Last updated: 17 Nov 2026. This is the source of truth for the project. When a d
   - Spanish only, web only
 - **Admins:** Ivan and his cousin.
 
+## Changes on 17 Nov 2026 (night): Novedades in the new look
+
+- **Novedades is redesigned** (the second screen after the home page). Ruled cells: a dark column on the left (profile, Comunidad, "Chat de <Bundesland>", Administración for admins, the calendar preview, "Cerrar sesión") and the news on the light side, one row per post (date | title and text). Everything the page did before stays.
+- **The column no longer collapses on desktop.** The "Menú" button that opens and closes it is for phones only; there the column starts closed, as before. On larger screens it is always open.
+- **Calendar label:** the calendar preview shows a small "Próximamente" label, so clients know it doesn't work yet.
+- **Page heading:** "Novedades de <Bundesland>" (the state name in German, `lang="de"`, shown in lowercase with a full stop, "bayern.", through CSS only), or "Mis novedades" when no state is chosen. Screen readers hear the whole heading. The title's size comes from the name's longest word, so long names (Mecklenburg-Vorpommern, Niedersachsen) fit on a phone.
+- **Floating chat link on phones** is hidden while the menu is open (the menu has the same link).
+
 ## Changes on 17 Nov 2026 (evening): the redesign starts
 
 These replace the morning's "look and feel" bullet below where they differ.
@@ -104,7 +112,7 @@ These replace the morning's "look and feel" bullet below where they differ.
   - addresses: `/iniciar-sesion` (log in), `/recuperar-contrasena` (forgot password), `/nueva-contrasena` (set password; invite and reset links land here)
   - default access: the home page and the three login screens are public; every other page needs a login and sends logged-out visitors to `/iniciar-sesion`
   - after logging in, people return to the page they wanted, but only to an address on this site (a path starting with a single `/`, never a full URL or `//`), to prevent open redirects; otherwise they go to `/novedades`, as do logged-in people who open `/iniciar-sesion`
-  - an "Entrar" / "Cerrar sesión" pill is in the header of the home page and the state picker, and at the bottom of the green column on Novedades. "Cerrar sesión" logs out this device only.
+  - an "Entrar" / "Cerrar sesión" pill is in the header of the home page and the state picker, and at the bottom of the column on Novedades. "Cerrar sesión" logs out this device only.
   - the one-time code in invite and reset links is only used when the person presses "Guardar contraseña", so email scanners can't use it up
   - passwords need at least 8 characters, set in Supabase too so the server enforces it
   - email links are valid for 24 hours (one setting for invite and reset links)
@@ -154,7 +162,7 @@ These replace the morning's "look and feel" bullet below where they differ.
   - Posts appear immediately; admins can delete any post afterwards.
   - No approval before a post appears.
 - **Board page** (built 15 Nov 2026):
-  - Address `/comunidad` ("Comunidad"), login only. Linked from the green column on Novedades (the menu on a phone), with a "← Novedades" link back.
+  - Address `/comunidad` ("Comunidad"), login only. Linked from the column on Novedades (the menu on a phone), with a "← Novedades" link back.
   - Members with no state can open it. They see "Aún no has elegido tu estado." with an "Elegir mi estado" link above the board.
   - Free users see only "La comunidad es para miembros con el paquete completo." The page makes no request for posts (the database refuses them anyway).
   - Posts are listed newest first, 30 at a time, with "Ver más" for older ones. "Ver más" asks for posts older than the last one shown (by `created_at`, then `id` for posts with the very same time), using `created_at` exactly as the database sent it, so no post is skipped or shown twice.

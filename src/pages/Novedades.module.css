@@ -1,475 +1,468 @@
-/* State page styles (news, calendar preview, link to the chat), from
-   design-mockup/novedades.html. */
+/* ------------------------------------------------------------------
+   Novedades (the state page), in the new look: ruled cells split by
+   thin 1px lines, small spaced labels over big lowercase titles that
+   end in a full stop. Fonts and colour tokens come from
+   src/styles/redesign.css (never a hard-coded colour), so the palette
+   chosen with the home page's "Menú" applies here too.
 
-/* ---------- Layout ---------- */
-.layout {
-  display: flex;
-  flex-wrap: wrap;
-  height: 100vh;
-  /* the height actually visible: on iPhone/iPad, 100vh ignores Safari's
-     toolbar, which made the whole page a bit taller than the screen */
-  height: 100dvh;
+   Desktop:  dark column (profile, links, calendar, "Cerrar sesión")
+             | light side: title cell, then one row per news post
+             (date | title + text).
+   Phone:    a sticky dark bar (profile + "Menú"), the menu opening
+             under it, the news below, and a floating link to the chat.
+
+   Rule for this file: the site loads every page's CSS at once, so
+   nothing here may target html, body, * or :root directly.
+------------------------------------------------------------------- */
+
+/* Added to <body> only while the page is open (Novedades.tsx), and
+   removed when it is left. */
+.page-body {
+  background: var(--ink);
+  color: var(--accent);
+  font-family: var(--font-grotesk);
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
 }
 
-/* ---------- Left: sidebar ---------- */
-.sidebar {
-  flex: 0 0 auto;
-  width: 300px;
-  height: 100%;
-  background: #489E85;
-  border-radius: 0 36px 36px 0;
-  overflow-x: hidden;
+/* ------------------------------------------------------------------
+   Layout: the column on the left, the news on the right. The whole
+   page scrolls; the column stays pinned at the height of the screen.
+------------------------------------------------------------------- */
+.layout {
+  --col-w: 300px;
+  --pad: 20px;                  /* the column's side padding */
+  display: grid;
+  grid-template-columns: var(--col-w) minmax(0, 1fr);
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* Small spaced capitals ("MI PERFIL", "NOVEDADES DE", "CALENDARIO") */
+.label {
+  display: block;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+}
+
+/* ------------------------------------------------------------------
+   The column: dark, like the home page's heroes. Its lines are drawn
+   in the words' colour (the light sections draw them in the accent).
+------------------------------------------------------------------- */
+.column {
+  --rule: color-mix(in srgb, var(--ink) 28%, transparent);
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: 100vh;
+  height: 100dvh;
   overflow-y: auto;
   /* At its end, a swipe stops here instead of scrolling the whole page */
   overscroll-behavior: contain;
-  transition: width 340ms cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-.sidebar.is-collapsed {
-  width: 76px;
-  overflow-y: hidden;
-}
-
-.sidebar-header {
-  position: sticky;
-  top: 0;
-  z-index: 1;
   display: flex;
-  align-items: center;
-  padding: 16px;
-  background: #489E85;
-  border-bottom: 1px solid #3E8A73;
+  flex-direction: column;
+  background: var(--paper);
+  color: var(--ink);
 }
 
+.bar {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid var(--rule);
+}
+
+/* "Mi perfil" over the first name: the whole cell is the link */
 .profile {
   flex: 1 1 auto;
   min-width: 0;
+  min-height: 44px;
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+  padding: 26px var(--pad) 22px;
+  color: inherit;
+  text-decoration: none;
+}
+.profile-name {
   overflow: hidden;
   white-space: nowrap;
-  transition: opacity 220ms ease, visibility 220ms;
+  text-overflow: ellipsis;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -.03em;
 }
 
-.profile-btn {
-  flex: 0 0 44px;
-  width: 44px;
-  height: 44px;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: #EEF9F5;
-  color: #121413;
-  display: inline-flex;
+/* "Menú": phone only (see the phone rules at the end) */
+.menu-btn { display: none; }
+
+.menu-body {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Comunidad, Chat de <Bundesland>, Administración: one full-width row
+   each. A long state name wraps inside its row. */
+.row {
+  display: flex;
   align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  text-decoration: none;
-}
-
-.profile-name {
-  font-family: 'Figtree Variable', sans-serif;
+  min-height: 56px;
+  padding: 14px var(--pad);
+  border-bottom: 1px solid var(--rule);
+  color: inherit;
   font-size: 18px;
-  font-weight: 600;
-}
-
-.sidebar-toggle {
-  flex: 0 0 44px;
-  width: 44px;
-  height: 44px;
-  margin-left: auto;
-  padding: 0;
-  border: 0;
-  border-radius: 12px;
-  background: transparent;
-  color: #121413;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-.sidebar-toggle:hover { background: #3E8A73; }
-
-.profile-btn:focus-visible,
-.sidebar-toggle:focus-visible {
-  outline: 3px solid #EEF9F5;
-  outline-offset: 2px;
-}
-
-.sidebar-body {
-  width: 300px;
-  padding: 20px 24px 28px;
-  display: flex;
-  flex-direction: column;
-  gap: 28px;
-  transition: opacity 220ms ease, visibility 220ms;
-}
-
-.is-collapsed .profile,
-.is-collapsed .sidebar-body {
-  opacity: 0;
-  visibility: hidden;
-}
-
-/* Section titles: small spaced capitals, no box */
-.section-head {
-  padding: 4px 2px 0;
-}
-.sidebar-body > .section-head { margin-bottom: -16px; } /* sit close to their list */
-.section-head h2 {
-  margin: 0;
-  font-family: 'Figtree Variable', sans-serif;
-  font-weight: 700;
-  font-size: 13px;
-  line-height: 1.2;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-/* Link to the community board (same pill as "Cerrar sesión" on green),
-   under it the link to the state's chat and, for admins only, the link to
-   the admin area */
-.community-link,
-.chat-link,
-.admin-link {
-  align-self: flex-start;
-  margin-top: 34px;
-  height: 48px;
-  padding: 0 22px 0 18px;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  background: #EEF9F5;
-  border: 1px solid #EEF9F5;
-  border-radius: 999px;
-  font-size: 16px;
-  font-weight: 600;
-  color: #121413;
-  text-decoration: none;
-  white-space: nowrap;
-  transition: border-color 160ms ease;
-}
-.community-link:hover,
-.chat-link:hover,
-.admin-link:hover { border-color: #121413; }
-.community-link:focus-visible,
-.chat-link:focus-visible,
-.admin-link:focus-visible { outline: 3px solid #EEF9F5; outline-offset: 2px; }
-/* the next pills sit close under the first */
-.chat-link,
-.admin-link { margin-top: -14px; }
-/* "Chat de Mecklenburg-Vorpommern": a long state name wraps inside the pill */
-.chat-link {
-  height: auto;
-  min-height: 48px;
-  padding-top: 8px;
-  padding-bottom: 8px;
-  white-space: normal;
   line-height: 1.25;
+  text-decoration: none;
 }
-.chat-link svg { flex: 0 0 auto; }
-/* the links already make the room under the header */
-.community-link + .calendar,
-.chat-link + .calendar,
-.admin-link + .calendar { margin-top: 0; }
 
-/* Calendar */
+/* Hovering a cell swaps its colours, like the home page's inverted cells */
+.profile,
+.row {
+  transition: background-color .15s ease, color .15s ease;
+}
+.profile:hover,
+.row:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+/* a ring inside the cell, in the cell's text colour */
+.profile:focus-visible,
+.row:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: -5px;
+}
+
+/* ------------------------------------------------------------------
+   Calendar: a preview only. The month is a grid of ruled cells; today
+   is an inverted cell, a day with an event has a small mark.
+------------------------------------------------------------------- */
 .calendar {
-  margin-top: 34px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  flex: 1 0 auto;               /* takes the room left above "Cerrar sesión" */
+  padding: 22px var(--pad) 24px;
+  border-bottom: 1px solid var(--rule);
 }
-
-.cal-card {
-  background: #FFFFFF;
-  border-radius: 12px;
-  padding: 14px;
-}
-
-.cal-title {
-  margin: 0 0 10px;
-  text-align: center;
-  font-size: 15px;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-
-.cal-weekdays,
-.cal-days {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  text-align: center;
-}
-
-.cal-weekdays {
-  font-size: 12px;
-  font-weight: 600;
-  color: #3D4A46;
-  line-height: 24px;
-  margin-bottom: 2px;
-}
-
-.cal-days { grid-auto-rows: 30px; }
-
-.cal-days span {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-}
-
-.cal-days .today,
-.cal-days .event {
-  width: 26px;
-  height: 26px;
-  justify-self: center;
-  align-self: center;
-  border-radius: 50%;
-  font-weight: 700;
-}
-.cal-days .today { background: #121413; color: #FFFFFF; }
-.cal-days .event { background: #F2994A; color: #121413; }
-
-/* ---------- Middle + right wrapper ---------- */
-.workspace {
-  flex: 1 1 0;
-  min-width: 0;
-  height: 100%;
-  display: flex;
-  flex-wrap: nowrap;
-}
-
-/* ---------- Middle: main ---------- */
-.main {
-  flex: 999 1 560px;
-  min-width: 0;
-  height: 100%;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding: 0 40px 40px;
-  display: flex;
-  flex-direction: column;
-  gap: 28px;
-}
-
-.page-title {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  margin: 0 -40px;
-  padding: 28px 40px 20px;
-  background: #EEF9F5;
-  font-family: 'Anton', sans-serif;
-  font-weight: 400;
-  font-size: 88px;
-  line-height: 1;
-  text-align: center;
-}
-
-/* Frosted title: cards scrolling up get gradually blurrier before they
-   slide under it. Two blur layers behind the title fade in over the last
-   48px (the title's bottom padding + the gap above the first card). */
-@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .page-title { background: transparent; }
-  .page-title::before,
-  .page-title::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: -28px; /* reaches down to where the first card starts */
-    z-index: -1;
-    pointer-events: none;
-  }
-  /* light blur, starts lowest */
-  .page-title::before {
-    -webkit-backdrop-filter: blur(3px);
-    backdrop-filter: blur(3px);
-    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 48px), transparent);
-    mask-image: linear-gradient(to bottom, #000 calc(100% - 48px), transparent);
-  }
-  /* strong blur + page colour, right under the title */
-  .page-title::after {
-    background: rgba(238, 249, 245, 0.72);
-    -webkit-backdrop-filter: blur(16px);
-    backdrop-filter: blur(16px);
-    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 48px), transparent calc(100% - 8px));
-    mask-image: linear-gradient(to bottom, #000 calc(100% - 48px), transparent calc(100% - 8px));
-  }
-}
-
-.card {
-  flex-shrink: 0;
-  background: #FFFFFF;
-  border: 1px solid #CAE8E6;
-  border-radius: 16px;
-  padding: 24px 28px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-/* Date */
-.card-meta {
-  margin: 0;
+.cal-head {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 6px 12px;
+  justify-content: space-between;
+  gap: 8px 12px;
 }
-.card-date {
-  font-size: 14px;
-  color: #3D4A46;
-}
-
-.card h3 {
+/* "Próximamente": a small inverted cell */
+.cal-soon {
   margin: 0;
+  padding: 4px 7px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+.cal-month {
+  margin: 16px 0 12px;
   font-size: 22px;
   font-weight: 700;
-  line-height: 1.25;
+  line-height: 1.1;
+  letter-spacing: -.02em;
+  text-transform: lowercase;
 }
-.card-text {
+.cal-weekdays,
+.cal-days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.cal-weekdays {
+  margin-bottom: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .12em;
+}
+/* the lines between the days: 1px gaps showing the colour behind */
+.cal-days {
+  gap: 1px;
+  border: 1px solid var(--rule);
+  background: var(--rule);
+}
+.cal-days span {
+  position: relative;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--paper);
+  font-size: 13px;
+}
+.cal-days .today {
+  background: var(--ink);
+  color: var(--paper);
+  font-weight: 700;
+}
+.cal-days .event { font-weight: 700; }
+.cal-days .event::after {
+  content: "";
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  margin-left: -2.5px;
+  background: currentColor;
+}
+
+/* "Cerrar sesión": SessionButton's new look (a chip in the column's
+   own colours), its text lined up with the rows above */
+.session {
+  display: flex;
+  padding: 10px calc(var(--pad) - 14px);
+}
+
+/* ------------------------------------------------------------------
+   The news side: light, like the home page's "mi historia".
+------------------------------------------------------------------- */
+.main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Title cell: "NOVEDADES DE" over "bayern." */
+.head {
+  /* the title's size is measured on this cell's width (cqi units) */
+  container-type: inline-size;
+  padding: clamp(32px, 6vw, 80px) var(--gutter) clamp(16px, 1.8vw, 26px);
+  border-bottom: 1px solid var(--rule);
+}
+.title {
   margin: 0;
-  font-size: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 1.4vw, 22px);
+}
+/* The name is as big as fits: its longest word (Novedades.tsx sets
+   --title-chars: "Mecklenburg-" = 12) must fit the cell's width; a name
+   with a hyphen breaks after it ("nordrhein- / westfalen."). --k is the
+   width of one letter of this font, in em: measured at most .53 (in
+   "hamburg."), plus about 5% to spare. */
+.title-name {
+  --k: .56;
+  display: block;
+  font-size: clamp(2.5rem, 7vw, 7rem);   /* browsers without cqi */
+  font-size: min(7rem, 100cqi / (var(--title-chars, 10) * var(--k)));
+  font-weight: 700;
+  line-height: .95;
+  letter-spacing: -.05em;
+  text-transform: lowercase;
+  overflow-wrap: break-word;
+}
+
+/* One row per news post: date | title + text */
+.post {
+  display: grid;
+  grid-template-columns: minmax(150px, 14rem) minmax(0, 1fr);
+  border-bottom: 1px solid var(--rule);
+}
+.post-date {
+  margin: 0;
+  padding: clamp(24px, 2.4vw, 38px) var(--gutter);
+  border-right: 1px solid var(--rule);
+  font-size: 13px;
+  font-weight: 700;
   line-height: 1.5;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+.post-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: clamp(20px, 2.2vw, 34px) var(--gutter) clamp(28px, 3vw, 44px);
+}
+.post-title {
+  margin: 0;
+  max-width: 34ch;
+  font-size: clamp(22px, 2vw, 30px);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -.02em;
+}
+.post-text {
+  margin: 0;
+  max-width: 68ch;
+  font-size: clamp(16px, 1.15vw, 18px);
+  line-height: 1.6;
+  letter-spacing: .01em;
 }
 /* News is plain text: keep its line breaks, and let very long words or
-   web addresses wrap instead of overflowing the card */
-.card h3,
-.card-text {
+   web addresses wrap instead of overflowing */
+.post-title,
+.post-text {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 
-/* No state chosen / loading / no news / error: one white box */
+/* No state chosen / loading / error / no news yet: one cell. The ones
+   that need an answer are inverted, like "después" on the home page. */
 .message {
-  flex-shrink: 0;
   margin: 0;
-  background: #FFFFFF;
-  border: 1px solid #CAE8E6;
-  border-radius: 16px;
-  padding: 24px 28px;
-  font-size: 17px;
-  line-height: 1.45;
-  color: #3D4A46;
-  text-align: center;
+  padding: clamp(24px, 3vw, 44px) var(--gutter);
+  border-bottom: 1px solid var(--rule);
+  font-size: clamp(17px, 1.3vw, 20px);
+  line-height: 1.5;
 }
-.message p { margin: 0 0 16px; }
-.message.is-error { background: #FDECEA; border-color: #FDECEA; color: #B42318; font-weight: 600; }
-.message-btn {
-  min-height: 48px;
-  padding: 0 28px;
-  border: 0;
-  border-radius: 999px;
-  background: #121413;
-  color: #CAE8E6;
-  font-family: 'Figtree Variable', sans-serif;
-  font-size: 16px;
+.message p {
+  margin: 0 0 22px;
+  max-width: 44ch;
+}
+.message.is-inverted {
+  background: var(--accent);
+  color: var(--ink);
+}
+.message .message-lead {
+  max-width: 22ch;
+  font-size: clamp(22px, 2.4vw, 36px);
   font-weight: 700;
-  text-decoration: none;
+  line-height: 1.15;
+  letter-spacing: -.02em;
+  text-wrap: balance;
+}
+
+/* "Elegir mi estado" / "Reintentar": a square block, like the home
+   page's closing button */
+.message-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  min-height: 48px;
+  padding: 0 24px;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--accent);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  text-decoration: none;
   cursor: pointer;
-  transition: background-color 160ms ease, color 160ms ease;
+  transition: background-color .15s ease, color .15s ease;
 }
-.message-btn:hover { background: #2F7A64; color: #FFFFFF; }
-.message-btn:focus-visible { outline: 3px solid #489E85; outline-offset: 3px; }
+.message-btn:hover {
+  background: transparent;
+  color: var(--ink);
+}
+.message-btn:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
 
-/* ---------- Responsive ---------- */
-/* Phone-only link to the chat (hidden on larger screens) */
+/* Phone only: the floating link to the chat */
 .chat-fab { display: none; }
 
+/* ------------------------------------------------------------------
+   Phone
+------------------------------------------------------------------- */
 @media (max-width: 700px) {
-  .layout {
-    flex-direction: column;
-    flex-wrap: nowrap;
-    height: auto;
-    min-height: 100vh;
-  }
+  .layout { display: block; }
 
-  /* Sticky green header: profile, name, menu */
-  .sidebar,
-  .sidebar.is-collapsed {
-    position: sticky;
-    top: 0;
+  /* The column becomes a sticky bar; the menu opens under it */
+  .column {
     z-index: 3;
-    width: 100%;
     height: auto;
     max-height: 100vh;
     max-height: 100dvh;
-    overflow-x: hidden;
-    overflow-y: auto;
-    border-radius: 0 0 28px 28px;
-    /* Same motion as the desktop column, but it grows downward */
-    transition: max-height 340ms cubic-bezier(0.2, 0.8, 0.2, 1);
   }
-  .sidebar.is-collapsed {
-    overflow-y: hidden;
-    max-height: 73px; /* header only: 14 + 44 + 14 + 1px border */
-  }
-  .sidebar-header {
-    position: static;
-    padding: 14px 16px;
-    gap: 10px;
-    background: transparent;
-  }
-  .profile { gap: 10px; }
-  .is-collapsed .profile { opacity: 1; visibility: visible; }
-  .sidebar-toggle svg { stroke-width: 2.4; }
-  .sidebar-header { transition: border-color 220ms ease; }
-  .is-collapsed .sidebar-header { border-bottom-color: transparent; }
-  .sidebar-body { width: 100%; }
+  .column:not(.is-open) .menu-body { display: none; }
 
-  .workspace {
+  .bar { align-items: center; }
+  .profile {
+    gap: 4px;
+    padding: 10px var(--gutter);
+  }
+  .profile .label { font-size: 11px; }
+  .profile-name { font-size: 20px; }
+
+  /* "Menú": the home page's chip (Home.module.css, .menu-btn) */
+  .menu-btn {
     flex: 0 0 auto;
-    height: auto;
-    overflow: visible;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 44px;
+    margin-right: calc(var(--gutter) - 12px);
+    padding: 8px 12px;
+    border: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font: 400 17px / 1 var(--font);
+    cursor: pointer;
+  }
+  .menu-btn[aria-expanded="true"] {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .menu-btn:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: -6px;
+  }
+  .menu-btn-icon {
+    width: 30px;
+    height: 8px;
+    border-block: 2px solid currentColor;
   }
 
-  /* Content: title + cards, room at the bottom for the chat button */
-  .main {
-    padding: 20px 20px 110px;
-    gap: 16px;
+  .row { padding-inline: var(--gutter); }
+  .calendar {
+    flex: 0 0 auto;
+    padding-inline: var(--gutter);
   }
-  .page-title {
-    position: static;
-    margin: 0;
-    padding: 8px 0 4px;
-    background: transparent;
-    font-size: 64px;
+  .session { padding: 8px calc(var(--gutter) - 12px); }
+
+  /* room at the bottom, so the chat link never covers the last post */
+  .main { padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px)); }
+  .head { padding: 32px var(--gutter) 18px; }
+  .title { gap: 12px; }
+  .title .label { font-size: 12px; }
+
+  /* A post: the date above the title */
+  .post { display: block; }
+  .post-date {
+    padding: 22px var(--gutter) 0;
+    border-right: 0;
+    font-size: 12px;
   }
-  /* the title scrolls away with the page here, so no blur layers */
-  .page-title::before,
-  .page-title::after { display: none; }
-  .card {
-    padding: 18px 20px;
+  .post-body {
     gap: 10px;
+    padding: 10px var(--gutter) 26px;
   }
-  .card h3 { font-size: 20px; }
-  .card-text { font-size: 15px; }
+  .post-title { font-size: 22px; }
+  .post-text { font-size: 16px; line-height: 1.55; }
 
-  /* Floating "Chat de Berlin" link */
+  /* Floating "Chat de Bayern": a dark square chip */
   .chat-fab {
     position: fixed;
-    right: 20px;
-    bottom: 28px;
+    right: var(--gutter);
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
     z-index: 4;
     display: flex;
     align-items: center;
-    gap: 10px;
-    height: 56px;
-    padding: 0 22px 0 18px;
-    border: 0;
-    border-radius: 999px;
-    max-width: calc(100vw - 40px);
-    background: #121413;
-    color: #CAE8E6;
-    font-family: 'Figtree Variable', sans-serif;
+    min-height: 52px;
+    max-width: calc(100vw - 2 * var(--gutter));
+    padding: 0 18px;
+    background: var(--paper);
+    color: var(--ink);
     font-size: 16px;
-    font-weight: 600;
+    font-weight: 700;
     text-decoration: none;
   }
   /* very long state names end in "…" instead of leaving the screen */
@@ -479,17 +472,22 @@
     white-space: nowrap;
     text-overflow: ellipsis;
   }
-  .chat-fab svg { flex: 0 0 auto; }
-  .chat-fab:focus-visible { outline: 3px solid #489E85; outline-offset: 3px; }
+  .chat-fab:hover .chat-fab-label {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: .2em;
+  }
+  .chat-fab:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: -6px;
+  }
+  /* while the menu is open it would cover the menu's last rows (and the
+     menu has the same link) */
+  .column.is-open ~ .chat-fab { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .sidebar,
-  .sidebar-header,
   .profile,
-  .sidebar-body,
-  .message-btn,
-  .community-link,
-  .chat-link,
-  .admin-link { transition: none; }
+  .row,
+  .message-btn { transition: none; }
 }
