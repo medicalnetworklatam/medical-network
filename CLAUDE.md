@@ -53,7 +53,7 @@ Out of scope:
 - legal texts (handled by a law firm)
 
 ## Look & feel
-During the redesign, two looks exist side by side (DECISIONS.md, "Changes on 17 Nov 2026 (evening)"): the **new look** on redesigned screens, the **old look** on all the others until each one is redesigned. A screen uses one look, never a mix. Redesigned so far: the home page (`/`). Next: Novedades.
+During the redesign, two looks exist side by side (DECISIONS.md, "Changes on 17 Nov 2026 (evening)"): the **new look** on redesigned screens, the **old look** on all the others until each one is redesigned. A screen uses one look, never a mix. Redesigned so far: the home page (`/`) and Novedades (`/novedades`). Next: not decided yet.
 
 ### New look (redesigned screens)
 - **Read first:** `design-hero/HERO-NOTES.md` (the look, the motion, the home page section by section) and `design-hero/DESIGN-RULES.md` (hard rules). `design-hero/` is Ivan's plain-HTML prototype, kept as a reference only: don't edit it or build on it.
@@ -65,6 +65,8 @@ During the redesign, two looks exist side by side (DECISIONS.md, "Changes on 17 
   - **Albert Sans** (`--font`) for the big headlines, standing in for Aaux Next (commercial, needs a web licence first; its `@font-face` block is commented out in `redesign.css`)
   - **Space Grotesk** (`--font-grotesk`) for everything else
 - **Ruled cells:** cells split by thin 1px lines (`--rule`), square corners, a small spaced uppercase label over a big bold lowercase title that ends with a full stop ("mi / historia.", "las 3 / fases."). Inverted cells ("después", "resultado") swap the colours.
+  - On dark cells (`--paper` background), draw the lines in the words' colour (`color-mix(in srgb, var(--ink) 28%, transparent)`, as Novedades' column does): `--rule` is made from the accent, which equals `--paper` in some palettes and would disappear.
+- **Long names in big titles** (state names, e.g. "mecklenburg- / vorpommern."): the size comes from the name's longest word, passed as a CSS variable from React's `style` prop (never a `style="..."` attribute, which the CSP blocks), measured with container query units (`cqi`) on the title's cell. Hyphenated names break after the hyphen. Every state name must fit at 375px (see `Novedades.tsx` and `.title-name` in `Novedades.module.css`).
 - **Design rules:** no photo is ever cut off by the edge of the screen at the scroll point where it's meant to be seen (crop photos to frames, let frames resize); grids of cells fit on one screen (split long ones into several screens).
 - **Motion** is tied to the scroll, reverses cleanly when scrolling up, and respects `prefers-reduced-motion`.
 - **Rejected directions** (never go back to them): ruled "expediente" cards with D-DIN Condensed + Figtree; rounded white cards with petrol blue and numbered circles.

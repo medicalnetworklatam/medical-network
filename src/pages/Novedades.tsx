@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useState, type CSSProperties } from 'react'
 import { Link } from 'react-router'
-import MenuIcon from './MenuIcon.tsx'
 import SessionButton from './SessionButton.tsx'
 import { usePageTitle } from '../lib/usePageTitle.ts'
 import { useProfile } from '../lib/profile.ts'
@@ -31,23 +30,11 @@ type NewsResult =
   | { key: string; ok: true; posts: NewsPost[] }
   | { key: string; ok: false; error: string }
 
-const AdminIcon = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M4 6h10M18 6h2M4 12h2M10 12h10M4 18h10M18 18h2" />
-    <circle cx="16" cy="6" r="2" />
-    <circle cx="8" cy="12" r="2" />
-    <circle cx="16" cy="18" r="2" />
-  </svg>
-)
-const ChatIcon = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.4A8 8 0 1 1 21 12z" />
-  </svg>
-)
-
 /** The user's state page: the news for their one Bundesland, links to the
     community board and to the state's chat (/chat), and the calendar as a
-    preview only (from design-mockup/novedades.html) */
+    preview only. In the new look (src/styles/redesign.css): ruled cells, a
+    dark column on the left (on a phone, a bar with a menu) and the news on
+    the light side. */
 export default function Novedades() {
   const { profile } = useProfile()
   const firstName = profile?.first_name?.trim().split(/\s+/)[0] ?? ''
@@ -55,6 +42,12 @@ export default function Novedades() {
   /* German name of the state, '' when none is chosen yet */
   const name = MAP_SHAPES.find((s) => s.id === stateId)?.name ?? ''
   usePageTitle((name || 'Novedades') + ' · Medical Network')
+
+  // The page's own background, colour and font on <body>, only while it is open
+  useLayoutEffect(() => {
+    document.body.classList.add(styles.pageBody)
+    return () => document.body.classList.remove(styles.pageBody)
+  }, [])
 
   /* ---------- News ---------- */
   const [attempt, setAttempt] = useState(0)
@@ -91,131 +84,136 @@ export default function Novedades() {
   }, [stateId, attempt])
   const current = news?.key === newsKey ? news : null  // null = still loading
 
-  /* Sidebar collapse / expand (starts collapsed on a phone) */
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(
-    () => window.matchMedia('(max-width: 700px)').matches,
-  )
+  /* The menu: open or closed on a phone (it starts closed). On larger
+     screens the column is always open and the button is hidden. */
+  const [menuOpen, setMenuOpen] = useState(false)
 
   /* The link to the state's chat: "Chat de Bayern", or just "Chat" */
   const chatLabel = name ? <>Chat de <span lang="de">{name}</span></> : 'Chat'
 
-  return (
-    <>
-      <div className={styles.layout}>
+  /* The title's size comes from its longest word ("Mecklenburg-" counts
+     12, "Niedersachsen." 14), so it always fits its column; the CSS
+     turns this number into a size. Set from code (React's style prop),
+     never as a style="..." attribute: the site's CSP blocks those. */
+  const titleWord = name ? name + '.' : 'novedades.'
+  const titleParts = titleWord.split('-')
+  const titleChars = Math.max(...titleParts.map((w, i) => w.length + (i < titleParts.length - 1 ? 1 : 0)))
+  const titleStyle = { '--title-chars': titleChars } as CSSProperties
 
-        {/* Left: sidebar */}
-        <nav className={styles.sidebar + (sidebarCollapsed ? ' ' + styles.isCollapsed : '')} aria-label="Menú">
-          <div className={styles.sidebarHeader}>
-            <div className={styles.profile}>
-              <Link className={styles.profileBtn} to="/perfil" aria-label="Perfil">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <circle cx="12" cy="8" r="4" />
-                  <path d="M4 20c0-3.9 3.6-6 8-6s8 2.1 8 6" />
-                </svg>
-              </Link>
-              <span className={styles.profileName}>{firstName}</span>
+  return (
+    <div className={styles.layout}>
+
+      {/* Left: the column (on a phone, a bar with the menu below it) */}
+      <nav className={styles.column + (menuOpen ? ' ' + styles.isOpen : '')} aria-label="Menú">
+        <div className={styles.bar}>
+          <Link className={styles.profile} to="/perfil">
+            <span className={styles.label}>Mi perfil</span>
+            <span className={styles.profileName}>{firstName}</span>
+          </Link>
+          <button
+            type="button" className={styles.menuBtn}
+            aria-expanded={menuOpen} aria-controls="novedades-menu"
+            onClick={() => setMenuOpen((open) => !open)}
+          >
+            <span>Menú</span>
+            <span className={styles.menuBtnIcon} aria-hidden="true"></span>
+          </button>
+        </div>
+
+        <div className={styles.menuBody} id="novedades-menu">
+          <Link className={styles.row} to="/comunidad">Comunidad</Link>
+          <Link className={styles.row} to="/chat"><span>{chatLabel}</span></Link>
+
+          {/* Admins only. Hiding the link is not the protection: the admin
+              pages check again, and the database decides (RLS). */}
+          {profile?.is_admin === true && (
+            <Link className={styles.row} to="/admin">Administración</Link>
+          )}
+
+          {/* Calendar: preview only, it doesn't work yet */}
+          <section className={styles.calendar} aria-labelledby="cal-heading">
+            <div className={styles.calHead}>
+              <h2 className={styles.label} id="cal-heading">Calendario</h2>
+              <p className={styles.calSoon}>Próximamente</p>
             </div>
-            <button
-              type="button" className={styles.sidebarToggle}
-              aria-expanded={!sidebarCollapsed} aria-controls="sidebar-body"
-              aria-label={sidebarCollapsed ? 'Mostrar columna' : 'Ocultar columna'}
-              onClick={() => setSidebarCollapsed((c) => !c)}
-            >
-              <MenuIcon />
+            <p className={styles.calMonth}>Noviembre 2026</p>
+            <div className={styles.calWeekdays}>
+              <span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span>
+            </div>
+            <div className={styles.calDays}>
+              <span></span><span></span><span></span><span></span><span></span><span></span>
+              <span>1</span>
+              <span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span>
+              <span>9</span><span>10</span><span>11</span><span className={styles.today} aria-current="date">12</span><span>13</span><span>14</span><span className={styles.event}>15</span>
+              <span>16</span><span>17</span><span>18</span><span>19</span><span>20</span><span>21</span><span>22</span>
+              <span>23</span><span>24</span><span>25</span><span>26</span><span>27</span><span>28</span><span>29</span>
+              <span>30</span><span></span><span></span><span></span><span></span><span></span><span></span>
+            </div>
+          </section>
+
+          <div className={styles.session}>
+            <SessionButton redesign />
+          </div>
+        </div>
+      </nav>
+
+      {/* Right: the news */}
+      <main className={styles.main}>
+        <header className={styles.head}>
+          {/* Read as one heading: "Novedades de Bayern" / "Mis novedades" */}
+          <h1 className={styles.title} style={titleStyle}>
+            {name ? (
+              <>
+                <span className={styles.label}>Novedades de</span>{' '}
+                <span className={styles.titleName} lang="de">{name}<span aria-hidden="true">.</span></span>
+              </>
+            ) : (
+              <>
+                <span className={styles.label}>Mis</span>{' '}
+                <span className={styles.titleName}>novedades<span aria-hidden="true">.</span></span>
+              </>
+            )}
+          </h1>
+        </header>
+
+        {!stateId ? (
+          <div className={styles.message + ' ' + styles.isInverted}>
+            <p className={styles.messageLead}>Elige tu estado para ver sus novedades.</p>
+            <Link className={styles.messageBtn} to="/estados">Elegir mi estado</Link>
+          </div>
+        ) : !current ? (
+          <p className={styles.message} role="status">Cargando novedades…</p>
+        ) : !current.ok ? (
+          <div className={styles.message + ' ' + styles.isInverted} role="alert">
+            <p>No se pudieron cargar las novedades. {current.error}</p>
+            <button type="button" className={styles.messageBtn} onClick={() => setAttempt((n) => n + 1)}>
+              Reintentar
             </button>
           </div>
-
-          <div className={styles.sidebarBody} id="sidebar-body">
-            <Link className={styles.communityLink} to="/comunidad">
-              <ChatIcon />
-              Comunidad
-            </Link>
-            <Link className={styles.chatLink} to="/chat">
-              <ChatIcon />
-              <span>{chatLabel}</span>
-            </Link>
-
-            {/* Admins only. Hiding the link is not the protection: the admin
-                pages check again, and the database decides (RLS). */}
-            {profile?.is_admin === true && (
-              <Link className={styles.adminLink} to="/admin">
-                <AdminIcon />
-                Administración
-              </Link>
-            )}
-
-            {/* Calendar: preview only */}
-            <section className={styles.calendar} aria-labelledby="cal-heading">
-              <div className={styles.sectionHead}>
-                <h2 id="cal-heading">Calendario</h2>
-              </div>
-              <div className={styles.calCard}>
-                <p className={styles.calTitle}>Noviembre 2026</p>
-                <div className={styles.calWeekdays}>
-                  <span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span>
-                </div>
-                <div className={styles.calDays}>
-                  <span></span><span></span><span></span><span></span><span></span><span></span>
-                  <span>1</span>
-                  <span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span>
-                  <span>9</span><span>10</span><span>11</span><span className={styles.today} aria-current="date">12</span><span>13</span><span>14</span><span className={styles.event}>15</span>
-                  <span>16</span><span>17</span><span>18</span><span>19</span><span>20</span><span>21</span><span>22</span>
-                  <span>23</span><span>24</span><span>25</span><span>26</span><span>27</span><span>28</span><span>29</span>
-                  <span>30</span>
-                </div>
-              </div>
-            </section>
-
-            <SessionButton onGreen />
-          </div>
-        </nav>
-
-        <div className={styles.workspace}>
-
-          {/* Middle: main content */}
-          <main className={styles.main}>
-            <h1 className={styles.pageTitle}>{(name || 'Novedades').toUpperCase()}</h1>
-
-            {!stateId ? (
-              <div className={styles.message}>
-                <p>Elige tu estado para ver sus novedades.</p>
-                <Link className={styles.messageBtn} to="/estados">Elegir mi estado</Link>
-              </div>
-            ) : !current ? (
-              <p className={styles.message} role="status">Cargando novedades…</p>
-            ) : !current.ok ? (
-              <div className={styles.message + ' ' + styles.isError} role="alert">
-                <p>No se pudieron cargar las novedades. {current.error}</p>
-                <button type="button" className={styles.messageBtn} onClick={() => setAttempt((n) => n + 1)}>
-                  Reintentar
-                </button>
-              </div>
-            ) : current.posts.length === 0 ? (
-              <p className={styles.message}>
-                Todavía no hay novedades para <span lang="de">{name}</span>.
+        ) : current.posts.length === 0 ? (
+          <p className={styles.message}>
+            Todavía no hay novedades para <span lang="de">{name}</span>.
+          </p>
+        ) : (
+          current.posts.map((post) => (
+            <article key={post.id} className={styles.post}>
+              <p className={styles.postDate}>
+                <time dateTime={post.published_at}>{formatDate(post.published_at)}</time>
               </p>
-            ) : (
-              current.posts.map((post) => (
-                <article key={post.id} className={styles.card}>
-                  <p className={styles.cardMeta}>
-                    <time className={styles.cardDate} dateTime={post.published_at}>{formatDate(post.published_at)}</time>
-                  </p>
-                  {/* Plain text only (never HTML); line breaks kept by CSS */}
-                  <h3>{post.title}</h3>
-                  {post.body && <p className={styles.cardText}>{post.body}</p>}
-                </article>
-              ))
-            )}
-          </main>
-
-        </div>
-      </div>
+              <div className={styles.postBody}>
+                {/* Plain text only (never HTML); line breaks kept by CSS */}
+                <h2 className={styles.postTitle}>{post.title}</h2>
+                {post.body && <p className={styles.postText}>{post.body}</p>}
+              </div>
+            </article>
+          ))
+        )}
+      </main>
 
       {/* Phone only: floating link to the state's chat */}
       <Link className={styles.chatFab} to="/chat">
-        <ChatIcon />
         <span className={styles.chatFabLabel}>{chatLabel}</span>
       </Link>
-    </>
+    </div>
   )
 }
