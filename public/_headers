@@ -16,8 +16,9 @@
 #                           no style="..." attributes. (React setting a style
 #                           from code is still fine.)
 #   img-src 'self' data:    images: our own files, plus images written inside
-#                           the CSS ("data:"), used by the arrow of the admin
-#                           dropdown lists (src/pages/Admin.module.css)
+#                           the CSS ("data:"). Nothing uses "data:" right now
+#                           (since 18 Nov 2026 the dropdown arrows are drawn
+#                           with CSS gradients), but it stays allowed.
 #   font-src 'self'         fonts: only our own files (no Google Fonts)
 #   connect-src ...         data requests: our own site and the Supabase project
 #   object-src 'none'       no plug-ins

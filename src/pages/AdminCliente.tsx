@@ -44,7 +44,7 @@ export default function AdminCliente() {
   const { id = '' } = useParams()
 
   return (
-    <AdminLayout title="CLIENTE">
+    <AdminLayout title="Cliente">
       <p className={styles.back}>
         <Link className={styles.backLink} to="/admin">
           <span aria-hidden="true">←</span> Todos los clientes
@@ -206,7 +206,7 @@ function ClientScreen({ clientId }: { clientId: string }) {
       )}
 
       {/* Who it is. Everything from the database is plain text. */}
-      <section className={styles.card} aria-labelledby="client-heading">
+      <section className={styles.card + ' ' + styles.clientCard} aria-labelledby="client-heading">
         <div className={styles.listHead}>
           <h2 className={styles.clientTitle} id="client-heading">
             {name || 'Sin nombre'}
@@ -219,7 +219,7 @@ function ClientScreen({ clientId }: { clientId: string }) {
       </section>
 
       {/* The three things an admin may change */}
-      <section className={styles.card} aria-labelledby="settings-heading">
+      <section className={styles.card + ' ' + styles.settingsCard} aria-labelledby="settings-heading">
         <h2 className={styles.sectionTitle} id="settings-heading">Estado, ruta y plan</h2>
 
         <Setting
@@ -279,7 +279,7 @@ function ClientScreen({ clientId }: { clientId: string }) {
       </section>
 
       {/* Their checklist, read-only */}
-      <section className={styles.card} aria-labelledby="checklist-heading" aria-busy={!!state && !!route && !currentChecklist}>
+      <section className={styles.card + ' ' + styles.checklistCard} aria-labelledby="checklist-heading" aria-busy={!!state && !!route && !currentChecklist}>
         <h2 className={styles.sectionTitle} id="checklist-heading">Checklist (solo lectura)</h2>
 
         {!state ? (
