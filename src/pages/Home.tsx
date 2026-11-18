@@ -70,6 +70,11 @@ export default function Home() {
                 <Line>es un laberinto</Line>
               </div>
             </div>
+
+            {/* 4. an arrow at the bottom: scroll down (decoration only) */}
+            <svg className={styles.heroScroll} viewBox="0 0 24 56" aria-hidden="true" focusable="false">
+              <path d="M12 1v52M3 44l9 9 9-9" />
+            </svg>
           </section>
 
           {/* Revealed through the circle (reveal.ts), then scrolls on normally. */}
@@ -95,6 +100,8 @@ export default function Home() {
 
           {/* scroll distance spent growing the circle */}
           <div className={styles.heroTrackGrow} aria-hidden="true"></div>
+          {/* then a rest with "ruta." fully open, before "mi historia" comes up */}
+          <div className={styles.heroTrackRest} aria-hidden="true"></div>
         </div>
 
         {/* Mi historia: one pinned screen. Under the head, the two layouts sit
@@ -110,15 +117,10 @@ export default function Home() {
 
             <div className={styles.storyStack}>
               <div className={`${styles.storyBody} ${styles.storyBodyThen}`}>
-                <div className={`${styles.storyShift} ${styles.storyShiftThen}`}>
-                  <p className={styles.label}>antes</p>
-                  <p>No tenía idea de por dónde empezar ni qué hacer.</p>
-                </div>
-
                 <div className={styles.storyBio}>
-                  <p>Soy Ivan Bruckner Calahorrano, médico ecuatoriano. Me gradué en 2015
+                  <p>Soy Iván Bruckner Calahorrano, médico ecuatoriano. Me gradué en 2015
                   y ese mismo año llegué a Alemania. En 2017 obtuve la <span lang="de">Approbation</span>, hice
-                  mi especialidad y hoy trabajo como médico especialista en un hospital
+                  mi especialidad y hoy trabajo como especialista en un hospital
                   alemán.</p>
                 </div>
 
@@ -127,7 +129,7 @@ export default function Home() {
                     <img
                       className={styles.photoAntes}
                       src={antes}
-                      alt="Ivan de joven, con una camiseta a rayas verdes"
+                      alt="Iván de joven, con una camiseta de rayas verdes"
                       width={914}
                       height={816}
                       loading="lazy"
@@ -135,6 +137,11 @@ export default function Home() {
                   </div>
                   <figcaption>Mis inicios</figcaption>
                 </figure>
+
+                <div className={`${styles.storyShift} ${styles.storyShiftThen}`}>
+                  <p className={styles.label}>antes</p>
+                  <p>No tenía idea por dónde empezar ni qué hacer.</p>
+                </div>
               </div>
 
               <div className={`${styles.storyBody} ${styles.storyBodyNow}`}>
@@ -142,7 +149,7 @@ export default function Home() {
                   <div className={styles.storyFrame}>
                     <img
                       src={hoy}
-                      alt="Ivan hoy, en quirófano con gorro y mascarilla"
+                      alt="Iván hoy, en quirófano con gorro y mascarilla"
                       width={564}
                       height={776}
                       loading="lazy"
@@ -153,8 +160,8 @@ export default function Home() {
 
                 <div className={`${styles.storyShift} ${styles.storyShiftNow}`}>
                   <p className={styles.label}>después</p>
-                  <p>Un plan claro y estructurado para enfrentar la burocracia alemana y
-                  ejecutar el proceso de homologación.</p>
+                  <p>Estructuré un plan claro para enfrentar la burocracia alemana y
+                  completar la homologación.</p>
                 </div>
               </div>
             </div>
@@ -183,7 +190,7 @@ export default function Home() {
             <div className={`${styles.heroStage} ${styles.heroStageB}`} data-fit-h="0.5">
               <p className={styles.heroWords}>
                 <Line>Por eso creé</Line>
-                <Line>la ruta <span lang="de">Approbation</span></Line>
+                <Line>la Ruta <span lang="de">Approbation</span></Line>
               </p>
             </div>
           </section>
@@ -202,14 +209,14 @@ export default function Home() {
                 <div className={styles.phaseMain}>
                   <h3 className={styles.phaseTitle}>planificación</h3>
                   <p className={styles.phaseIntro}>Empezamos por lo importante: tu objetivo. Defino
-                  contigo la ruta exacta que debes seguir y en qué orden, para que dejes
-                  de adivinar. Tú decides tus prioridades, incluido cómo vas a aprender
-                  alemán.</p>
+                  contigo la ruta exacta que debes seguir y el orden de cada paso, para que
+                  dejes de adivinar. Tú decides tus prioridades, incluso cómo vas a
+                  aprender alemán.</p>
                 </div>
                 <div className={styles.phaseDetail}>
                   <div className={styles.phaseResult}>
                     <p className={styles.label}>resultado</p>
-                    <p>Sabes exactamente qué hacer primero y cuál es tu siguiente paso.</p>
+                    <p>Sabes exactamente por dónde empezar y cuál es tu siguiente paso.</p>
                   </div>
                 </div>
                 <figure className={styles.phaseMedia}>
@@ -221,21 +228,20 @@ export default function Home() {
                 <div className={styles.phaseMain}>
                   <h3 className={styles.phaseTitle}>documentación</h3>
                   <p className={styles.phaseIntro}>Tú reúnes tus documentos, pero no vas a ciegas: yo
-                  te digo exactamente cuáles necesitas y los reviso contigo antes de que
-                  avances. Mientras tanto, avanzamos en paralelo:</p>
+                  te digo exactamente cuáles necesitas y los reviso contigo antes de
+                  seguir. Mientras tanto, trabajamos en paralelo en:</p>
                 </div>
                 <div className={styles.phaseDetail}>
                   <ul className={styles.phaseItems}>
-                    <li>Reunir la documentación necesaria, con mi guía</li>
                     <li>Aprender alemán</li>
-                    <li>Te ayudo a elegir tu escuela de idiomas</li>
-                    <li>Te ayudo a planificar tu estadía en Alemania</li>
-                    <li>Preparamos juntos los siguientes pasos</li>
+                    <li>Elegir tu escuela de idiomas, con mi ayuda</li>
+                    <li>Planificar tu estadía en Alemania, con mi ayuda</li>
+                    <li>Preparar juntos los siguientes pasos</li>
                   </ul>
                   <div className={styles.phaseResult}>
                     <p className={styles.label}>resultado</p>
-                    <p>Tu documentación avanza bien hecha, sin perder meses, y tú preparas
-                    tu llegada con mi ayuda en cada paso.</p>
+                    <p>Dejamos tu documentación lista y en regla, sin meses de espera
+                    innecesarios, y te acompañamos en cada paso de tu llegada.</p>
                   </div>
                 </div>
                 <figure className={styles.phaseMedia}>
@@ -251,15 +257,15 @@ export default function Home() {
                 </div>
                 <div className={styles.phaseDetail}>
                   <ul className={styles.phaseItems}>
-                    <li>Cursar alemán intensivo</li>
+                    <li>Hacer un curso intensivo de alemán</li>
                     <li>Presentar tu solicitud de homologación, con mi guía</li>
-                    <li>Te ayudo a conseguir <span lang="de">Hospitationen</span>, cuando sea posible</li>
-                    <li>Te oriento sobre un posible <span lang="de">Nebenjob</span> para amortiguar gastos, según tu situación</li>
+                    <li>Conseguir <span lang="de">Hospitationen</span>, cuando sea posible, con mi ayuda</li>
+                    <li>Valorar un posible <span lang="de">Nebenjob</span> para cubrir parte de tus gastos, según tu situación</li>
                   </ul>
                   <div className={styles.phaseResult}>
                     <p className={styles.label}>resultado</p>
-                    <p>Tú das cada paso con un plan claro, y yo te acompaño mientras avanzas
-                    en tu homologación.</p>
+                    <p>Das cada paso con un plan claro y yo te acompaño hasta tu
+                    homologación.</p>
                   </div>
                 </div>
                 <figure className={styles.phaseMedia}>
@@ -296,7 +302,7 @@ export default function Home() {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Aplicar a Ruta <span lang="de">Approbation</span>
+                Quiero empezar la Ruta <span lang="de">Approbation</span>
               </a>
               <p className={styles.ctaSign}>Nos vemos en Alemania</p>
             </div>

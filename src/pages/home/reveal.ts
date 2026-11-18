@@ -11,8 +11,10 @@ import { all, clamp, one, smooth } from './dom.ts'
   centred. Once the whole title fits inside, the section "opens": the
   circle widens to full screen, the title glides to its place and the rest
   fades in. Scrolling back up runs the same motion in reverse, following
-  the scroll. With reduced motion the opening jumps to where it is heading
-  instead of easing there.
+  the scroll, but only after a rest: going up, the open section stays still
+  for a while (UP_REST) before the circle starts to close. Going down there
+  is no such wait: it opens as soon as the title fits. With reduced motion
+  the opening jumps to where it is heading instead of easing there.
 
   Clean-up when the page is left: every listener is removed (one
   AbortController) and the waiting animation frame is cancelled.
@@ -21,6 +23,8 @@ import { all, clamp, one, smooth } from './dom.ts'
 const HOLD = 0.15 // last share of each grow distance spent at rest
 const BACK = 0.22 // how far below the opening point the reverse finishes (share of the grow)
 const EASE = 0.11 // how quickly the opening catches up with its target, per frame at 60fps
+const UP_REST = 0.45 // going up: scroll spent at rest before closing (share of the grow, about half a screen)
+const MIN_CLOSE = 0.3 // the closing never gets less scroll than this (share of the grow)
 
 interface Circle {
   track: HTMLElement
@@ -78,12 +82,16 @@ export function useReveal(rootRef: RefObject<HTMLElement | null>): void {
         }
         let target = 0
         if (c.open) {
-          // Once open, the motion is spread over all the scroll from the furthest
-          // point reached (tMax) back to a little before the opening point, so
-          // scrolling up undoes it gradually from the very first pixel.
+          // Once open, scrolling up first rests (nothing moves) from the furthest
+          // point reached (tMax) for UP_REST, then the motion is spread over the
+          // scroll from there back to a little before the opening point. Going
+          // down, t is tMax, so the target stays 1: no wait. The rest is shorter
+          // when you only went a little past the opening, so the closing always
+          // keeps at least MIN_CLOSE of scroll.
           c.tMax = Math.max(c.tMax, t)
           const from = tOpen - back
-          target = clamp((t - from) / Math.max(c.tMax - from, 1e-3))
+          const rest = Math.min(UP_REST, Math.max(0, c.tMax - from - MIN_CLOSE))
+          target = clamp((t - from) / Math.max(c.tMax - rest - from, 1e-3))
         }
 
         // ease q toward the target (instant on first paint or with reduced motion)
