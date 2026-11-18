@@ -1,6 +1,6 @@
 # MNL client area: decisions log
 
-Last updated: 17 Nov 2026. This is the source of truth for the project. When a decision changes, update this file in the Claude project knowledge and in the code repository.
+Last updated: 18 Nov 2026. This is the source of truth for the project. When a decision changes, update this file in the Claude project knowledge and in the code repository.
 
 ## Context
 
@@ -14,6 +14,17 @@ Last updated: 17 Nov 2026. This is the source of truth for the project. When a d
   - about 25 accounts in the first 12 months
   - Spanish only, web only
 - **Admins:** Ivan and his cousin.
+
+## Changes on 18 Nov 2026: Flatline, and the whole site in the new look
+
+- **Palette: Flatline is final** (black `#050505` on cream `#F3F0E9`). The palette switcher and the other four palettes are removed, and "Menú" on the home page becomes a real menu.
+- **Every remaining screen moves to the new look, in one pull request:** the three login screens, `/perfil`, the state map page, Comunidad, Chat and the three admin screens, plus the loading and "Tu cuenta no está lista" screens. New layouts are allowed, as on the home page and Novedades. What each screen does, and every rule in this log, stays the same.
+- **State map page:** the map keeps its exact shapes, sizes, animations, city search and behaviour. Only its colours, its fonts and the page around it change.
+- **Admin screens:** full redesign, like the client screens.
+- **The old look is removed** once every screen is redesigned: Figtree, Anton and the mint colours go, and the new look's background, colour and fonts become the site-wide default.
+- **Home menu:** "Menú" opens a list with "Aplicar a Ruta Approbation" (the Calendly link, in a new tab) and "Entrar"; when logged in, "Mi área" and "Cerrar sesión" instead of "Entrar". The header chips next to "Menú" stay.
+- **Errors** are shown as inverted cells (dark background, light text), as on Novedades. There is no red colour.
+- **Title labels:** "tu" over "comunidad."; in the chat, "chat de" over the state name, or "tu" over "chat." when there is no state; "administración" over the admin titles. The headings' own words don't change.
 
 ## Changes on 17 Nov 2026 (night): Novedades in the new look
 
@@ -30,13 +41,13 @@ These replace the morning's "look and feel" bullet below where they differ.
 - **The redesign starts now,** before the checklist screen, so that screen is built in the new look instead of being restyled later. Ivan decides the look.
 - **The new home page** is Ivan's own plain-HTML prototype, kept in the repository in `design-hero/` (notes in `design-hero/HERO-NOTES.md`, rules in `design-hero/DESIGN-RULES.md`). It replaces the current home page (`/`), ported into React with the same text, order and scroll motion.
 - **New layouts are allowed** on redesigned screens. This replaces "the redesign changes styles, not structure". What each screen does, and every rule in this log, stays the same.
-- **Order:** the home page first, then Novedades. All other screens keep the old look for now, and both state maps stay exactly as they are.
+- **Order:** the home page first, then Novedades, then every other screen (18 Nov 2026, see above). The state map keeps its shapes, sizes and behaviour; only its colours and fonts change.
 - **Novedades:** new layout, with the left column redesigned from scratch. It keeps everything it has today: profile link and first name, Comunidad, "Chat de <Bundesland>", Administración (admins only), the calendar preview (still non-working), "Cerrar sesión", and the floating chat button on phones.
-- **Fonts on redesigned screens:** Albert Sans for the big headlines, standing in for Aaux Next, a commercial font that isn't licensed yet (it needs a web licence before it can be used). Space Grotesk is used for everything else. Both are open-licence fonts and self-hosted. Figtree and Anton stay on screens that aren't redesigned yet.
-- **Colours on redesigned screens:** every colour comes from three values (`--paper`, `--ink`, `--accent-rgb`). The palette isn't chosen yet. Until it is, the home page's menu button keeps cycling the five candidate palettes (Flatline, Negativo, Bello, Impasto, MNL actual), the choice is remembered in the browser, and it applies to every redesigned screen. Flatline is the default (18 Nov 2026): what a visitor sees until they press the button. Once a palette is chosen for good, it becomes the default and the switcher is removed. This must happen before the test with friendly clients.
+- **Fonts on redesigned screens:** Albert Sans for the big headlines, standing in for Aaux Next, a commercial font that isn't licensed yet (it needs a web licence before it can be used). Space Grotesk is used for everything else. Both are open-licence fonts and self-hosted. Since 18 Nov 2026 they are the site's only fonts: Figtree and Anton are removed.
+- **Colours on redesigned screens:** every colour comes from three values (`--paper`, `--ink`, `--accent-rgb`). The palette is Flatline, chosen on 18 Nov 2026 (see above); the five-palette switcher on the home page's menu button is removed.
 - **Design rules** (from `design-hero/DESIGN-RULES.md`): no photo is ever cut off by the edge of the screen where it is meant to be seen, and grids of cells fit on one screen (long ones are split into several screens).
 - **Rejected directions** (don't go back to them): ruled "expediente" cards with D-DIN Condensed + Figtree; rounded white cards with petrol blue and numbered circles.
-- **Home page header:** logged-out visitors see "Entrar" and "Menú". Logged-in visitors also see a "Mi área" link to Novedades, next to "Cerrar sesión", so they aren't stuck on the home page while "Menú" cycles the palettes.
+- **Home page header:** logged-out visitors see "Entrar" and "Menú". Logged-in visitors also see a "Mi área" link to Novedades, next to "Cerrar sesión", so they aren't stuck on the home page. "Menú" is a real menu since 18 Nov 2026 (see above).
 
 ## Changes on 17 Nov 2026
 
@@ -72,7 +83,7 @@ These replace the morning's "look and feel" bullet below where they differ.
 - **Website: Cloudflare Pages,** with free static hosting.
 - **Website code: React + Vite** (confirmed 13 Nov 2026).
   - React builds screens from reusable pieces. Vite turns the code into files the browser can run.
-  - The plain-HTML design mock-up in the repository `pinatryingtocode/medical-network` was a test. Its look gets carried into React: colours, fonts, layouts and the state map.
+  - The plain-HTML design mock-up in the repository `pinatryingtocode/medical-network` was a test. Its look was carried into React: colours, fonts, layouts and the state map. Since 18 Nov 2026 every screen is in the new look instead; the state map keeps its shapes, sizes and behaviour.
   - Chosen because the first version is app-like: about 10 screens that depend on data.
 - **Chat and calendar:**
   - The calendar is a non-working preview.
@@ -95,8 +106,7 @@ These replace the morning's "look and feel" bullet below where they differ.
     - If the database refuses the save because a state was already saved (for example from another device), the page says so in Spanish and reloads the profile.
 - **Website code is written in TypeScript** (confirmed 13 Nov 2026), JavaScript with type labels that catch mistakes before the site is built.
 - **Fonts are self-hosted** (confirmed 13 Nov 2026). The font files are served from our own site, never from Google's servers (a GDPR risk in Germany).
-  - **Figtree** for all text, except **Anton** for the big uppercase page titles. The mock-up's home page used Archivo for body text; that is dropped.
-  - Redesigned screens use Albert Sans and Space Grotesk instead (17 Nov 2026 evening, see above).
+  - **Albert Sans** for the big headlines and **Space Grotesk** for everything else, on every screen (18 Nov 2026, see above). They replaced Figtree and Anton, the mock-up's fonts.
 - **State names are shown in German** (confirmed 13 Nov 2026): Bayern, Nordrhein-Westfalen, Thüringen… All other text users see is in Spanish.
 - **Domain and email stay at IONOS for the first version.**
   - Add only one CNAME record, a pointer such as `app.` or `www.`, aimed at Cloudflare Pages.
@@ -112,7 +122,7 @@ These replace the morning's "look and feel" bullet below where they differ.
   - addresses: `/iniciar-sesion` (log in), `/recuperar-contrasena` (forgot password), `/nueva-contrasena` (set password; invite and reset links land here)
   - default access: the home page and the three login screens are public; every other page needs a login and sends logged-out visitors to `/iniciar-sesion`
   - after logging in, people return to the page they wanted, but only to an address on this site (a path starting with a single `/`, never a full URL or `//`), to prevent open redirects; otherwise they go to `/novedades`, as do logged-in people who open `/iniciar-sesion`
-  - an "Entrar" / "Cerrar sesión" pill is in the header of the home page and the state picker, and at the bottom of the column on Novedades. "Cerrar sesión" logs out this device only.
+  - an "Entrar" / "Cerrar sesión" button is in the header of the home page and the state picker, and at the bottom of the column on Novedades. "Cerrar sesión" logs out this device only.
   - the one-time code in invite and reset links is only used when the person presses "Guardar contraseña", so email scanners can't use it up
   - passwords need at least 8 characters, set in Supabase too so the server enforces it
   - email links are valid for 24 hours (one setting for invite and reset links)
