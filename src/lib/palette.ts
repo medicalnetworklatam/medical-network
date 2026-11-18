@@ -17,11 +17,11 @@ export interface Palette {
 /** The five candidates, in the order "Menú" cycles them. The first is the
     default: it has no data-palette attribute. */
 export const PALETTES: readonly Palette[] = [
+  { id: 'flatline', name: 'Flatline' },
   { id: 'negativo', name: 'Negativo' },
   { id: 'bello', name: 'Bello' },
   { id: 'impasto', name: 'Impasto' },
   { id: 'mnl', name: 'MNL actual' },
-  { id: 'flatline', name: 'Flatline' },
 ]
 
 const KEY = 'mnl-palette'

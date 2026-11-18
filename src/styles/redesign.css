@@ -70,10 +70,10 @@
        --ink         words on the heroes, the circle, the pale sections
        --accent-rgb  text and lines in the pale sections, the "después"
                      cell, and (see-through) the words crossing a photo
-     Default "Negativo": the photographic negative of the first pass. */
-  --paper: #101118;
-  --ink: #e1eaec;
-  --accent-rgb: 71 51 56;  /* #473338 */
+     Default "Flatline" (flatlineagency.com): black on cream. */
+  --paper: #050505;
+  --ink: #f3f0e9;
+  --accent-rgb: 5 5 5;     /* #050505 */
 
   --accent: rgb(var(--accent-rgb));
   --tint: rgb(var(--accent-rgb) / 0.82);   /* words where they cross a photo */
@@ -99,6 +99,11 @@
    is chosen: make it the :root default above, delete the others, and
    delete src/lib/palette.ts and src/pages/home/PaletteMenu.tsx.
    Exact colours sampled from the reference images. */
+:root[data-palette="negativo"] {   /* the photographic negative of the first pass */
+  --paper: #101118;
+  --ink: #e1eaec;
+  --accent-rgb: 71 51 56;           /* #473338 */
+}
 :root[data-palette="bello"] {      /* mijobello.com: sage and oxblood */
   --paper: #6a0c06;
   --ink: #b2c7ab;
@@ -113,9 +118,4 @@
   --paper: #121413;
   --ink: #eef9f5;
   --accent-rgb: 72 158 133;         /* #489e85 */
-}
-:root[data-palette="flatline"] {   /* flatlineagency.com: black on cream */
-  --paper: #050505;
-  --ink: #f3f0e9;
-  --accent-rgb: 5 5 5;              /* #050505 */
 }

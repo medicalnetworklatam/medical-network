@@ -49,10 +49,10 @@ import { all, clamp, lerp, one, smooth } from './dom.ts'
 // share of the spacer each step takes to move (title, 01, 02, 03), and the
 // rest after each step (01 and 02). The spacer is TOTAL svh tall
 // (.push-track__phases in Home.module.css): keep the two in step.
-const STEPS = [50, 70, 70, 70]
+const STEPS = [100, 70, 70, 70]
 const RESTS = [0, 50, 50, 0]
 const TOTAL = [...STEPS, ...RESTS].reduce((a, b) => a + b, 0)
-const CLOSE_REST = 50 / 170 // first share of the closing scroll: a rest on the finished phases
+const CLOSE_REST = 75 / 195 // first share of the closing scroll (195svh): a rest on the finished phases
 const CLOSE_HOLD = 0.15 // last share of the circle's scroll spent at rest
 const ABSORB = 0.12 // how much the phases shrink while the circle closes
 const EASE = 0.14 // how quickly a choice opens, per frame at 60fps

@@ -678,9 +678,10 @@
 .push-track__close { display: none; }
 /* 85svh of pushing, then a 75svh rest before the phases (push.ts) */
 .push-track.is-pushing .push-track__push { display: block; height: 160svh; }
-.push-track.is-staged .push-track__phases { display: block; height: 360svh; } /* TOTAL in phases.ts */
-/* a rest on the finished phases (first 50svh), then the closing circle */
-.push-track.is-staged .push-track__close { display: block; height: 170svh; }
+.push-track.is-staged .push-track__phases { display: block; height: 410svh; } /* TOTAL in phases.ts */
+/* a rest on the finished phases (first 75svh), then the closing circle
+   (CLOSE_REST in phases.ts) */
+.push-track.is-staged .push-track__close { display: block; height: 195svh; }
 
 /* The closing slide, staged: pinned behind the phases (above the hero),
    hidden until the phases fill the screen (.is-closing, phases.ts); then

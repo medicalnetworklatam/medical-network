@@ -60,7 +60,7 @@ During the redesign, two looks exist side by side (DECISIONS.md, "Changes on 17 
 - **Colours:** only the tokens in `src/styles/redesign.css`, never a hard-coded colour.
   - Three values make every palette: `--paper` (dark hero background), `--ink` (hero words, circles, light section backgrounds), `--accent-rgb` (text and lines on light sections, inverted cells, see-through words over photos).
   - Derived from them: `--accent`, `--tint`, `--rule`.
-  - The palette isn't chosen yet. **Temporary:** the home page's "Menú" button cycles the five candidates (`src/lib/palette.ts`, `src/pages/home/PaletteMenu.tsx`), set as `data-palette` on `<html>` and remembered in the browser, so it applies to every redesigned screen. Once one is chosen, it becomes the `:root` default and the switcher is removed.
+  - The palette isn't chosen yet. **Temporary:** the home page's "Menú" button cycles the five candidates (`src/lib/palette.ts`, `src/pages/home/PaletteMenu.tsx`), set as `data-palette` on `<html>` and remembered in the browser, so it applies to every redesigned screen. **Flatline** is the default (the `:root` values) until then. Once one is chosen, it becomes the `:root` default and the switcher is removed.
 - **Fonts** (self-hosted, open licence; files and licences in `src/assets/fonts/`):
   - **Albert Sans** (`--font`) for the big headlines, standing in for Aaux Next (commercial, needs a web licence first; its `@font-face` block is commented out in `redesign.css`)
   - **Space Grotesk** (`--font-grotesk`) for everything else
