@@ -100,6 +100,8 @@ export default function Home() {
 
           {/* scroll distance spent growing the circle */}
           <div className={styles.heroTrackGrow} aria-hidden="true"></div>
+          {/* then a rest with "ruta." fully open, before "mi historia" comes up */}
+          <div className={styles.heroTrackRest} aria-hidden="true"></div>
         </div>
 
         {/* Mi historia: one pinned screen. Under the head, the two layouts sit

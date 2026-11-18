@@ -118,6 +118,7 @@
 ------------------------------------------------------------------- */
 .hero-track { position: relative; }
 .hero-track__grow { height: 140svh; } /* scroll spent growing the circle */
+.hero-track__rest { height: 50svh; }  /* then still, fully open, before "mi historia" */
 
 .hero {
   position: sticky;
