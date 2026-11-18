@@ -384,6 +384,18 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+/* Web addresses in the text (src/lib/linkify.tsx): underlined, in the
+   text's own colour */
+.post-text a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: .15em;
+}
+.post-text a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
 
 .post-actions {
   display: flex;
