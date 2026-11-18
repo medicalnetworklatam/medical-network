@@ -342,7 +342,7 @@ function HomeHeader() {
         {!loading && session ? (
           <Link className={styles.chip} to="/novedades">Mi área</Link>
         ) : null}
-        <SessionButton redesign />
+        <SessionButton />
       </div>
       <HomeMenu />
     </header>

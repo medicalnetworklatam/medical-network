@@ -1,4 +1,4 @@
-import { useLayoutEffect, type CSSProperties, type ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import { Link, useLocation } from 'react-router'
 import SessionButton from './SessionButton.tsx'
 import styles from './Admin.module.css'
@@ -16,11 +16,6 @@ export default function AdminLayout({ title, wide = false, children }: {
   const { pathname } = useLocation()
   const onNews = pathname.startsWith('/admin/novedades')
 
-  // The page's own background, colour and font on <body>, only while it is open
-  useLayoutEffect(() => {
-    document.body.classList.add(styles.pageBody)
-    return () => document.body.classList.remove(styles.pageBody)
-  }, [])
 
   /* The title's size comes from its longest word (plus the full stop), set
      from code (React's style prop): the site's CSP blocks style="..." */
@@ -33,7 +28,7 @@ export default function AdminLayout({ title, wide = false, children }: {
         <Link className={styles.pill} to="/novedades">
           <span aria-hidden="true">←</span> Novedades
         </Link>
-        <SessionButton redesign />
+        <SessionButton />
       </header>
 
       <nav className={styles.tabs} aria-label="Administración">

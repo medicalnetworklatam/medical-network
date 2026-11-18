@@ -13,16 +13,6 @@
    nothing here may target html, body, * or :root directly.
 ------------------------------------------------------------------- */
 
-/* Added to <body> only while one of these screens is open (AuthLayout.tsx,
-   Loading.tsx), and removed when it is left. */
-.page-body {
-  background: var(--ink);
-  color: var(--accent);
-  font-family: var(--font-grotesk);
-  -webkit-font-smoothing: antialiased;
-  -webkit-text-size-adjust: 100%;
-}
-
 .page {
   position: relative;
   min-height: 100vh;

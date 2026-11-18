@@ -1,4 +1,4 @@
-import { useLayoutEffect, type CSSProperties, type ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import { Link } from 'react-router'
 import styles from './Auth.module.css'
 
@@ -15,12 +15,6 @@ export default function AuthLayout({ title, headerAction, children }: {
   headerAction?: ReactNode
   children: ReactNode
 }) {
-  // The page's own background, colour and font on <body>, only while it is open
-  useLayoutEffect(() => {
-    document.body.classList.add(styles.pageBody)
-    return () => document.body.classList.remove(styles.pageBody)
-  }, [])
-
   const words = title.split(' ')
   const word = words.pop() ?? ''
   const label = words.join(' ')

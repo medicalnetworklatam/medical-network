@@ -1,4 +1,4 @@
-import { useLayoutEffect, useState, type CSSProperties } from 'react'
+import { useState, type CSSProperties } from 'react'
 import { Link } from 'react-router'
 import PostBoard from './PostBoard.tsx'
 import SessionButton from './SessionButton.tsx'
@@ -31,11 +31,6 @@ export default function Chat() {
   const name = MAP_SHAPES.find((s) => s.id === stateId)?.name ?? ''
   usePageTitle((name ? 'Chat de ' + name : 'Chat') + ' · Medical Network')
 
-  // The page's own background, colour and font on <body>, only while it is open
-  useLayoutEffect(() => {
-    document.body.classList.add(board.pageBody)
-    return () => document.body.classList.remove(board.pageBody)
-  }, [])
 
   /* The title's size comes from its longest word ("Mecklenburg-" counts
      12, "Niedersachsen." 14), as on Novedades. Set from code (React's style
@@ -51,7 +46,7 @@ export default function Chat() {
         <Link className={board.pill} to="/novedades">
           <span aria-hidden="true">←</span> Novedades
         </Link>
-        <SessionButton redesign />
+        <SessionButton />
       </header>
 
       <main className={board.main}>

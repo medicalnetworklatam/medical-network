@@ -1,5 +1,6 @@
 /* Styles shared by every page. Each page's own styles live next to it in
-   src/pages/<Page>.module.css. */
+   src/pages/<Page>.module.css. The fonts and colour tokens are in
+   src/styles/redesign.css. */
 
 *, *::before, *::after { box-sizing: border-box; }
 html, body { margin: 0; }
@@ -8,10 +9,15 @@ html, body { margin: 0; }
 * { scrollbar-width: none; -ms-overflow-style: none; }
 *::-webkit-scrollbar { display: none; }
 
+/* The light sections' colours and Space Grotesk on every page. The home
+   page swaps in its dark background and Albert Sans while it is open
+   (Home.tsx, .page-body in Home.module.css). */
 body {
-  background: #EEF9F5;
-  color: #121413;
-  font-family: 'Figtree Variable', sans-serif;
+  background: var(--ink);
+  color: var(--accent);
+  font-family: var(--font-grotesk);
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
 }
 
 /* Text for screen readers only */

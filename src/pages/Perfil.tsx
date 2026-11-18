@@ -87,7 +87,7 @@ export default function Perfil() {
   const preview = first.trim() ? authorName(first, last) : ''
 
   return (
-    <AuthLayout title={title} headerAction={<SessionButton redesign />}>
+    <AuthLayout title={title} headerAction={<SessionButton />}>
       <p className={styles.intro}>
         En las publicaciones de la comunidad, los demás miembros verán solo tu primer nombre
         y la inicial de tu primer apellido: «Nombre I.». Nunca verán tu correo ni tus apellidos completos.

@@ -1,7 +1,7 @@
 /* ------------------------------------------------------------------
-   The new look, shared by every REDESIGNED screen (the home page now,
-   Novedades next). Screens that aren't redesigned yet keep the old look
-   (global.css + their own module) and never use anything from this file.
+   The site's look: fonts and colour tokens, used by every screen.
+   global.css makes them the default for <body>; each page's own styles
+   are in src/pages/<Page>.module.css.
 
    Only custom properties and fonts live here: nothing in this file
    targets an element, so it can't change the look of the other pages.
@@ -62,10 +62,10 @@
 }
 
 /* ------------------------------------------------------------------
-   Tokens. Never hard-code a colour on a redesigned screen: use these.
+   Tokens. Never hard-code a colour: use these.
 ------------------------------------------------------------------- */
 :root {
-  /* Three colours make every palette:
+  /* Three colours make the palette:
        --paper       background of the dark heroes
        --ink         words on the heroes, the circle, the pale sections
        --accent-rgb  text and lines in the pale sections, the "después"

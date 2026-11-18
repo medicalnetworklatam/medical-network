@@ -1,4 +1,4 @@
-import { useLayoutEffect, type CSSProperties } from 'react'
+import type { CSSProperties } from 'react'
 import { Link } from 'react-router'
 import PostBoard from './PostBoard.tsx'
 import SessionButton from './SessionButton.tsx'
@@ -18,11 +18,6 @@ export default function Comunidad() {
   // The database (RLS) decides in the end; this only avoids useless requests
   const canRead = profile?.plan === 'paid' || isAdmin
 
-  // The page's own background, colour and font on <body>, only while it is open
-  useLayoutEffect(() => {
-    document.body.classList.add(styles.pageBody)
-    return () => document.body.classList.remove(styles.pageBody)
-  }, [])
 
   /* The title's size comes from its length ("comunidad." = 10), set from
      code (React's style prop): the site's CSP blocks style="..." attributes */
@@ -34,7 +29,7 @@ export default function Comunidad() {
         <Link className={styles.pill} to="/novedades">
           <span aria-hidden="true">←</span> Novedades
         </Link>
-        <SessionButton redesign />
+        <SessionButton />
       </header>
 
       <main className={styles.main}>

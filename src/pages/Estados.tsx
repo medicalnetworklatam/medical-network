@@ -48,11 +48,6 @@ const MAP_CLASSES: MapClasses = {
 export default function Estados() {
   usePageTitle('Estados · Medical Network')
 
-  // The page's own background, colour and font on <body>, only while it is open
-  useLayoutEffect(() => {
-    document.body.classList.add(styles.pageBody)
-    return () => document.body.classList.remove(styles.pageBody)
-  }, [])
   const navigate = useNavigate()
   const { session } = useAuth()
   const { profile, reload, replace } = useProfile()
@@ -297,7 +292,7 @@ export default function Estados() {
         <header className={styles.siteHeader}>
           <Link className={styles.brand} to="/">Medical Network</Link>
           <div className={styles.headerActions}>
-            <SessionButton redesign />
+            <SessionButton />
             <Link className={styles.menuBtn} to="/novedades" aria-label="Abrir menú">
               <span>Menú</span>
               <span className={styles.menuBtnIcon} aria-hidden="true"></span>

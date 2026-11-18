@@ -11,7 +11,8 @@
 ------------------------------------------------------------------- */
 
 /* Added to <body> only while the home page is open (Home.tsx), and
-   removed when it is left: the prototype's body rules. */
+   removed when it is left: the prototype's body rules (a dark page in
+   Albert Sans, instead of the site's light default in global.css). */
 .page-body {
   background: var(--paper);
   color: var(--ink);
@@ -530,7 +531,7 @@
    Phone row:   number | title + checklist, photo full width below
    From dark to light: phase 01 is nearly the hero's dark, 02 a middle
    tone, 03 the page's light. All three are mixed from the palette's
-   --paper and --ink, so they follow whichever palette is chosen.
+   --paper and --ink.
 ------------------------------------------------------------------- */
 .phases {
   --tone-1: color-mix(in oklab, var(--paper), var(--ink) 12%);

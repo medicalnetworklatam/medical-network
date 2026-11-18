@@ -2,12 +2,9 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Route, Routes } from 'react-router'
 
-// Fonts are bundled into our own site (no Google servers): Anton for the big
-// titles, Figtree for everything else. Both use the SIL Open Font License.
-import '@fontsource/anton'
-import '@fontsource-variable/figtree'
+// The site's fonts and colour tokens. The fonts are self-hosted (no Google
+// servers): Albert Sans and Space Grotesk, SIL Open Font License.
 import './styles/global.css'
-// The new look's fonts and colour tokens, for redesigned screens (home page)
 import './styles/redesign.css'
 
 import AuthProvider from './lib/AuthProvider.tsx'

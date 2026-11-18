@@ -1,55 +1,11 @@
-/* "Entrar" / "Cerrar sesión" pill (SessionButton.tsx), same look as the
-   white "No lo sé" pill on the state picker */
+/* "Entrar" / "Cerrar sesión" (SessionButton.tsx): a square chip in the
+   page's colours, like the home page's "Menú" and "Mi área"
+   (Home.module.css, .chip): keep the two in step. */
 
-.pill {
-  height: 48px;
-  padding: 0 22px;
+.chip {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #FFFFFF;
-  border: 1px solid #CAE8E6;
-  border-radius: 999px;
-  font-family: 'Figtree Variable', sans-serif;
-  font-size: 16px;
-  font-weight: 600;
-  color: #121413;
-  text-decoration: none;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: border-color 160ms ease;
-}
-.pill:hover { border-color: #489E85; }
-.pill:focus-visible { outline: 3px solid #489E85; outline-offset: 2px; }
-.pill:disabled { color: #3D4A46; cursor: wait; }
-
-/* In the green sidebar of Novedades */
-.on-green {
-  align-self: flex-start;
-  background: #EEF9F5;
-  border-color: #EEF9F5;
-}
-.on-green:hover { border-color: #121413; }
-.on-green:focus-visible { outline-color: #EEF9F5; }
-
-/* On a phone the header is narrow: "Salir" instead of "Cerrar sesión" */
-.short { display: none; }
-@media (max-width: 700px) {
-  .pill:not(.on-green) { padding: 0 18px; }
-  .pill:not(.on-green) .long { display: none; }
-  .pill:not(.on-green) .short { display: inline; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .pill { transition: none; }
-}
-
-/* The new look, on redesigned screens (the home page): a square chip in
-   the palette's colours, like the home page's "Menú" and "Mi área"
-   (Home.module.css, .chip): keep the two in step. Last in this file, so
-   it wins over the pill rules above. */
-.pill.redesign {
-  height: auto;
   min-height: 44px;
   padding: 10px 14px;
   border: 0;
@@ -57,17 +13,25 @@
   background: var(--paper);
   color: var(--ink);
   font: 400 clamp(17px, 1.25vw, 22px) / 1 var(--font);
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
 }
-.pill.redesign:hover {
+.chip:hover {
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: .2em;
 }
-.pill.redesign:focus-visible {
+.chip:focus-visible {
   outline: 2px solid var(--ink);
   outline-offset: -6px;
 }
-.pill.redesign:disabled { color: var(--ink); opacity: .6; }
+.chip:disabled { opacity: .6; cursor: wait; }
+
+/* On a phone the header is narrow: "Salir" instead of "Cerrar sesión" */
+.short { display: none; }
 @media (max-width: 700px) {
-  .pill.redesign { padding: 8px 12px; }
+  .chip { padding: 8px 12px; }
+  .long { display: none; }
+  .short { display: inline; }
 }
