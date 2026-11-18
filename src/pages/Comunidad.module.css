@@ -31,45 +31,13 @@
   text-transform: uppercase;
 }
 
-/* ---------- Top bar: back to Novedades, "Cerrar sesión" ---------- */
-.header {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 8px calc(var(--gutter) - 14px);
-  background: var(--paper);
-  color: var(--ink);
-}
-
-/* "← Novedades": the home page's chip (Home.module.css, .chip) */
-.pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 44px;
-  padding: 10px 14px;
-  background: var(--paper);
-  color: var(--ink);
-  font: 400 clamp(17px, 1.25vw, 22px) / 1 var(--font);
-  text-decoration: none;
-  white-space: nowrap;
-}
-.pill:hover {
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: .2em;
-}
-.pill:focus-visible {
-  outline: 2px solid var(--ink);
-  outline-offset: -6px;
-}
-
 /* ---------- Main ---------- */
+/* Its width is what the board looks at (container queries below), not
+   the screen's: beside the dark column, an upright iPad leaves it only
+   about 520px */
 .main {
+  container-name: area-main;
+  container-type: inline-size;
   display: flex;
   flex-direction: column;
 }
@@ -312,6 +280,9 @@
 
 /* ---------- List ---------- */
 .list {
+  /* each post looks at the list's own width (below) */
+  container-name: post-list;
+  container-type: inline-size;
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -322,6 +293,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  flex-wrap: wrap;
   padding: 12px var(--gutter);
   border-bottom: 1px solid var(--rule);
 }
@@ -441,16 +413,19 @@
    empty they shouldn't take any room */
 .live:empty { display: none; }
 
-/* ---------- Phone ---------- */
-@media (max-width: 700px) {
-  .header { padding: 6px calc(var(--gutter) - 12px); }
-  .pill { padding: 8px 12px; }
-  .head { padding: 32px var(--gutter) 18px; gap: 12px; }
-  .label { font-size: 12px; }
-
+/* ---------- Narrow board: one column ----------
+   Decided by the width beside the dark column (.main), not the screen's:
+   a phone, an upright iPad (820px screen, about 520px here), or a small
+   window. Below 760px the form and the posts can't sit side by side (the
+   posts would be about 220px wide), so the form goes above the posts. */
+@container area-main (max-width: 760px) {
   .board { display: block; }
   .board > .list { border-left: 0; }
-
+}
+/* A narrow list (the cases above, and iPad landscape, where the list
+   beside the form is about 480px): each post puts its author and date
+   above its text instead of in a column of their own */
+@container post-list (max-width: 640px) {
   .post { display: flex; flex-direction: column; gap: 10px; }
   .post-meta {
     flex-direction: row;
@@ -458,8 +433,14 @@
     align-items: baseline;
     gap: 4px 12px;
   }
-  .post-text { font-size: 15px; }
   .confirm { justify-content: flex-start; }
+}
+
+/* ---------- Phone ---------- */
+@media (max-width: 700px) {
+  .head { padding: 32px var(--gutter) 18px; gap: 12px; }
+  .label { font-size: 12px; }
+  .post-text { font-size: 15px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

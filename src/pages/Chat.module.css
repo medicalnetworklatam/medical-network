@@ -79,9 +79,10 @@
    stuck to the bottom of the chat area. Square corners and no shadows:
    ruled cells, not rounded bubbles.
 
-   One scrollbar: the page scrolls, never a box inside it. The chat is at
-   least one screen tall (minus the top bar), so the writing box starts at
-   the bottom of the screen even with few messages.
+   One scrollbar: the page scrolls, never a box inside it (the dark column
+   beside it, AreaLayout.tsx, stays put). The chat is at least one screen
+   tall (on a phone minus the dark bar at the top), so the writing box
+   starts at the bottom of the screen even with few messages.
 
    --chat-lift is set from code (ChatView.tsx, "Keyboard") while a phone's
    or iPad's keyboard is open: the writing box sits that far above the
@@ -92,8 +93,8 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
-  min-height: calc(100vh - 60px);
-  min-height: calc(100dvh - 60px);
+  min-height: 100vh;
+  min-height: 100dvh;
   padding-bottom: var(--chat-lift, 0px);
   /* ChatView keeps the reader's place itself when older messages load;
      the browser's own "scroll anchoring" would move it a second time */
@@ -388,9 +389,10 @@ div > .chat { grid-column: 1 / -1; }
 .new-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
 @media (max-width: 700px) {
+  /* minus the sticky dark bar ("Mi perfil" | "Menú") */
   .chat {
-    min-height: calc(100vh - 56px);
-    min-height: calc(100dvh - 56px);
+    min-height: calc(100vh - 64px);
+    min-height: calc(100dvh - 64px);
   }
   .msg-text { font-size: 15px; }
 }
