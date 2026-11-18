@@ -3,7 +3,6 @@ import {
   type FocusEvent, type KeyboardEvent, type PointerEvent,
 } from 'react'
 import { Link, useNavigate } from 'react-router'
-import MenuIcon from './MenuIcon.tsx'
 import SessionButton from './SessionButton.tsx'
 import { usePageTitle } from '../lib/usePageTitle.ts'
 import { useMediaQuery } from '../lib/useMediaQuery.ts'
@@ -48,6 +47,12 @@ const MAP_CLASSES: MapClasses = {
     the map only shows it; only an admin can change it. */
 export default function Estados() {
   usePageTitle('Estados · Medical Network')
+
+  // The page's own background, colour and font on <body>, only while it is open
+  useLayoutEffect(() => {
+    document.body.classList.add(styles.pageBody)
+    return () => document.body.classList.remove(styles.pageBody)
+  }, [])
   const navigate = useNavigate()
   const { session } = useAuth()
   const { profile, reload, replace } = useProfile()
@@ -278,6 +283,10 @@ export default function Estados() {
     navigate('/novedades')
   }
 
+  /* The focused state, for the light inner line of the focus ring (an SVG
+     <use> of the state's own outline: no path data is copied) */
+  const focusId = focusRing ? MAP_STATES.find((s) => s.d === focusRing.d)?.id : undefined
+
   const n = chosen.length
   const countText = n === 0 ? 'Ningún estado elegido' : '1 estado elegido'
 
@@ -288,9 +297,10 @@ export default function Estados() {
         <header className={styles.siteHeader}>
           <Link className={styles.brand} to="/">Medical Network</Link>
           <div className={styles.headerActions}>
-            <SessionButton />
+            <SessionButton redesign />
             <Link className={styles.menuBtn} to="/novedades" aria-label="Abrir menú">
-              <MenuIcon />
+              <span>Menú</span>
+              <span className={styles.menuBtnIcon} aria-hidden="true"></span>
             </Link>
           </div>
         </header>
@@ -299,7 +309,10 @@ export default function Estados() {
           <div className={styles.intro}>
             {locked ? (
               <>
-                <h1 className={styles.pageTitle} id="page-title">Tu estado federal</h1>
+                <h1 className={styles.pageTitle} id="page-title">
+                  <span className={styles.titleLabel}>Tu estado</span>{' '}
+                  federal<span aria-hidden="true">.</span>
+                </h1>
                 <p className={styles.hint}>
                   Tu estado es <span lang="de">{locked.name}</span>. Para cambiarlo, contáctanos.
                 </p>
@@ -418,6 +431,13 @@ export default function Estados() {
                 className={styles.focusRing + (focusRing?.visible ? ' ' + styles.isOn : '')}
                 d={focusRing?.d ?? ''}
               />
+              {focusId && (
+                <use
+                  className={styles.focusInner + (focusRing?.visible ? ' ' + styles.isOn : '')}
+                  href={'#st-' + focusId}
+                  aria-hidden="true"
+                />
+              )}
               <g ref={leadersRef} className={styles.leaders} aria-hidden="true"></g>
               <g ref={labelsRef} className={styles.labels} aria-hidden="true"></g>
             </svg>
