@@ -294,6 +294,8 @@
 .tiles-column {
   grid-template: repeat(2, minmax(0, 1fr)) / minmax(0, 1fr);
   width: calc((100% + 1px) / 2);
+  /* centred in the square, in line with the middle of the 2×2 grid */
+  margin-inline: auto;
 }
 .tiles-grid {
   grid-template: repeat(2, minmax(0, 1fr)) / repeat(2, minmax(0, 1fr));
