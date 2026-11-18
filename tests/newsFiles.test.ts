@@ -1,7 +1,9 @@
 /* Tests for photos and PDFs in Novedades posts (src/lib/newsFiles.ts):
    which file types are accepted, the size a photo is shrunk to, how long
    file names are shortened, the storage path, the alt text, the order of
-   a post's files and the Spanish upload errors.
+   a post's files and the Spanish upload errors. Since migration 6 also the
+   photos' small copies (size and path), which files are deleted with a
+   photo, and the tiles and screen-reader summary of the Novedades list.
 
    Run with:  npm test
    It needs no database, no internet and no browser (shrinking the photo
@@ -11,8 +13,9 @@
    Node.js 22 runs this TypeScript file directly. */
 
 import {
-  altText, filePath, fileTypeError, fitSize, looksLikePdf, moveItem, nextSortOrder, orderChanges, shortName,
-  sortAttachments, storageErrorMessage, typeOf, HEIC, MAX_NAME, WRONG_TYPE,
+  altText, filePath, filesCount, filesSummary, fileTypeError, fitSize, looksLikePdf, moveItem, nextSortOrder, orderChanges,
+  previewTiles, shortName, sortAttachments, storageErrorMessage, storagePaths, thumbPath, thumbSize, typeOf,
+  HEIC, MAX_NAME, THUMB_SIDE, WRONG_TYPE,
 } from '../src/lib/newsFiles.ts'
 import { NO_CONNECTION } from '../src/lib/dataErrors.ts'
 
@@ -79,6 +82,71 @@ check('path with a given uuid', filePath(post, 'pdf', 'A1B2C3D4-0000-4000-8000-0
 const UUID_PATH = /^[0-9a-f-]{36}\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.jpg$/
 check('path with a random uuid matches the database rule', UUID_PATH.test(filePath(post, 'jpg')), true)
 check('two paths are never the same', filePath(post, 'jpg') === filePath(post, 'jpg'), false)
+
+/* ---------- Small copies of photos (migration 6) ---------- */
+check('small copy side is 480 px', THUMB_SIDE, 480)
+check('small copy of a landscape photo', thumbSize(4032, 3024), { width: 480, height: 360 })
+check('small copy of a portrait photo', thumbSize(3024, 4032), { width: 360, height: 480 })
+check('small copy of a square photo', thumbSize(2000, 2000), { width: 480, height: 480 })
+check('small copy of an already shrunk photo', thumbSize(2000, 1500), { width: 480, height: 360 })
+check('small photo is never made bigger', thumbSize(300, 200), { width: 300, height: 200 })
+check('exactly 480 stays', thumbSize(480, 100), { width: 480, height: 100 })
+check('very thin photo keeps at least 1 px', thumbSize(10000, 3), { width: 480, height: 1 })
+check('small copy path with a given uuid', thumbPath(post, 'A1B2C3D4-0000-4000-8000-000000000000'),
+  post + '/a1b2c3d4-0000-4000-8000-000000000000.jpg')
+check('small copy path matches the database rule (lowercase .jpg, post folder)', UUID_PATH.test(thumbPath(post)), true)
+check('small copy is in the post\'s folder', thumbPath(post).split('/')[0], post)
+check('small copy is always a .jpg', thumbPath(post).endsWith('.jpg'), true)
+{
+  const photo = filePath(post, 'jpg')
+  check('small copy is never the photo\'s own path', thumbPath(post) === photo, false)
+}
+check('removing a photo with a small copy deletes both files',
+  storagePaths({ path: post + '/p.jpg', thumb_path: post + '/t.jpg' }), [post + '/p.jpg', post + '/t.jpg'])
+check('removing an old photo deletes only the photo (no empty entry)',
+  storagePaths({ path: post + '/p.jpg', thumb_path: null }), [post + '/p.jpg'])
+check('removing a PDF deletes only the PDF', storagePaths({ path: post + '/d.pdf', thumb_path: null }), [post + '/d.pdf'])
+
+/* ---------- The preview's file area on the Novedades list ---------- */
+const photo = (n: number) => ({ kind: 'image' as const, thumb_path: 't' + n + '.jpg' })
+const oldPhoto = { kind: 'image' as const, thumb_path: null }
+const pdf = { kind: 'pdf' as const, thumb_path: null }
+const many = (n: number) => Array.from({ length: n }, (_, i) => photo(i + 1))
+check('no files: no tiles', previewTiles([]), [])
+check('1 file: one tile (fills the square)', previewTiles([photo(1)]), [{ kind: 'thumb', path: 't1.jpg' }])
+check('1 old photo: a "Foto" tile', previewTiles([oldPhoto]), [{ kind: 'photo' }])
+check('1 PDF: a "PDF" tile', previewTiles([pdf]), [{ kind: 'pdf' }])
+check('2 files: two tiles (a column), in their order', previewTiles([pdf, photo(1)]),
+  [{ kind: 'pdf' }, { kind: 'thumb', path: 't1.jpg' }])
+check('3 files: the three files, then a black tile with "3"', previewTiles([pdf, oldPhoto, photo(1)]),
+  [{ kind: 'pdf' }, { kind: 'photo' }, { kind: 'thumb', path: 't1.jpg' }, { kind: 'count', count: 3 }])
+check('4 files: all four, no number', previewTiles([photo(1), photo(2), photo(3), pdf]),
+  [{ kind: 'thumb', path: 't1.jpg' }, { kind: 'thumb', path: 't2.jpg' }, { kind: 'thumb', path: 't3.jpg' }, { kind: 'pdf' }])
+check('5 files: the first three, then "5"', previewTiles(many(5)),
+  [{ kind: 'thumb', path: 't1.jpg' }, { kind: 'thumb', path: 't2.jpg' }, { kind: 'thumb', path: 't3.jpg' },
+    { kind: 'count', count: 5 }])
+check('6 files: the first three, then the total "6" (not "+N")', previewTiles([photo(1), oldPhoto, pdf, photo(4), photo(5), pdf]),
+  [{ kind: 'thumb', path: 't1.jpg' }, { kind: 'photo' }, { kind: 'pdf' }, { kind: 'count', count: 6 }])
+check('10 files: "10"', previewTiles(many(10))[3], { kind: 'count', count: 10 })
+check('tiles per number of files: 0, 1, 2, 4, 4, 4, 4',
+  [0, 1, 2, 3, 4, 5, 6].map((n) => previewTiles(many(n)).length), [0, 1, 2, 4, 4, 4, 4])
+check('small copies asked for: at most 3 with more than 4 files',
+  previewTiles(many(6)).filter((t) => t.kind === 'thumb').length, 3)
+check('small copies asked for: 4 with 4 files', previewTiles(many(4)).filter((t) => t.kind === 'thumb').length, 4)
+
+/* ---------- What screen readers hear instead of the tiles ---------- */
+check('no files: nothing', filesSummary([]), '')
+check('phone box: no files, no box', filesCount([]), '')
+check('phone box: 1 foto', filesCount([photo(1)]), '1 foto')
+check('phone box: 3 fotos y 1 PDF', filesCount([photo(1), pdf, photo(2), oldPhoto]), '3 fotos y 1 PDF')
+check('phone box: 2 PDF', filesCount([pdf, pdf]), '2 PDF')
+check('1 foto', filesSummary([photo(1)]), 'Archivos: 1 foto')
+check('2 fotos', filesSummary([photo(1), oldPhoto]), 'Archivos: 2 fotos')
+check('1 PDF', filesSummary([pdf]), 'Archivos: 1 PDF')
+check('2 PDF (no plural s)', filesSummary([pdf, pdf]), 'Archivos: 2 PDF')
+check('1 foto y 2 PDF', filesSummary([pdf, photo(1), pdf]), 'Archivos: 1 foto y 2 PDF')
+check('3 fotos y 1 PDF', filesSummary([photo(1), pdf, photo(2), oldPhoto]), 'Archivos: 3 fotos y 1 PDF')
+check('2 fotos y 1 PDF', filesSummary([photo(1), photo(2), pdf]), 'Archivos: 2 fotos y 1 PDF')
 
 /* ---------- Alt text: never empty ---------- */
 check('description is the alt text', altText('Edificio de la Ärztekammer', 'Plazos'), 'Edificio de la Ärztekammer')

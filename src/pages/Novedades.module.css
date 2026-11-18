@@ -1,14 +1,19 @@
 /* ------------------------------------------------------------------
-   Novedades (the state page), in the new look: ruled cells split by
-   thin 1px lines, small spaced labels over big lowercase titles that
-   end in a full stop. Fonts and colour tokens come from
-   src/styles/redesign.css (never a hard-coded colour).
+   Novedades (the state page) and one full post (NovedadPost.tsx), in
+   the new look: ruled cells split by thin 1px lines, small spaced
+   labels over big lowercase titles that end in a full stop. Fonts and
+   colour tokens come from src/styles/redesign.css (never a hard-coded
+   colour).
+
+   The list shows each post as a preview (title, the start of the text
+   and a square file area), which opens the full post. The full
+   post shows the whole text, the photos and the PDFs.
 
    The dark column, the phone's "Menú" bar and the floating chat link
    are shared with Comunidad and Chat: AreaLayout.module.css.
 
    Desktop:  the title cell, then the posts, each in its own frame
-             with room around it: date + tag | title + text.
+             with room around it: date + tag | title + text (+ tiles).
    Narrow:   (phone, iPad upright) the same frames, the date and tag
              in a strip on top.
 
@@ -116,9 +121,19 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* The tag, and on phones the box with the number of files above it */
+.post-labels {
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
 /* "TODOS LOS ESTADOS" (outlined) or the post's Bundesland (inverted).
    A long name breaks after its hyphen ("MECKLENBURG- / VORPOMMERN"). */
-.post-tag {
+.post-tag,
+.post-files-note {
   max-width: 100%;
   margin: 0;
   padding: 5px 8px;
@@ -134,6 +149,8 @@
   background: var(--accent);
   color: var(--ink);
 }
+/* "3 FOTOS Y 1 PDF": phones only (see the end of this file) */
+.post-files-note { display: none; }
 
 /* Right cell: the title, the text (with its links), then the post's
    photos and PDFs */
@@ -179,6 +196,194 @@
 .post-text a:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+/* ------------------------------------------------------------------
+   The list: each post is a preview. The title is the post's one link,
+   stretched over the whole frame by its ::after, so clicking or tapping
+   anywhere opens the post (no link inside a link). The keyboard's focus
+   ring is drawn around the whole frame.
+------------------------------------------------------------------- */
+.is-preview {
+  position: relative;
+  /* the file area: about 88 px on a 375 px phone, up to about 190 px */
+  --tiles-size: clamp(88px, 17cqi, 190px);
+}
+.preview {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  align-items: start;
+  row-gap: 16px;
+  padding: clamp(22px, 2.2vw, 30px) clamp(20px, 2.4vw, 36px) clamp(26px, 2.6vw, 38px);
+}
+/* With files: the square file area on the right, from the title's first
+   line; the title and the text on its left */
+.preview.has-files {
+  grid-template-columns: minmax(0, 1fr) var(--tiles-size);
+  column-gap: clamp(16px, 2.4vw, 36px);
+}
+.preview.has-files > .post-title,
+.preview.has-files > .preview-text { grid-column: 1; }
+
+.post-link {
+  color: inherit;
+  text-decoration: none;
+}
+.post-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  /* Above every other part of the card. Parts that make their own layer
+     (the faded text's mask, the file area) would otherwise sit on top of
+     it and not open the post. */
+  z-index: 1;
+  cursor: pointer;
+}
+.post-link:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: .12em;
+}
+.post-link:focus-visible { outline: none; }
+.post-link:focus-visible::after {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* The start of the text: about 4 lines (5 on a phone), plain text with
+   its line breaks. When it's longer (Novedades.tsx adds .is-long), it
+   fades out at the bottom; a short text shows whole, with no fade. The
+   mask only uses how see-through the gradient is, not its colour. */
+.preview-text {
+  --lines: 4;
+  --line: 1.6em;
+  margin: 0;
+  max-width: 31em;
+  max-height: calc(var(--lines) * var(--line));
+  overflow: hidden;
+  font-size: clamp(16px, 1.15vw, 18px);
+  line-height: var(--line);
+  letter-spacing: .01em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.preview-text.is-long {
+  -webkit-mask-image: linear-gradient(to bottom, var(--accent) calc(100% - 1.8 * var(--line)), transparent);
+  mask-image: linear-gradient(to bottom, var(--accent) calc(100% - 1.8 * var(--line)), transparent);
+}
+
+/* The file area: a square that keeps its size whatever the number of
+   files; inside it, the tiles (newsFiles.ts, previewTiles):
+   - one tile filling the square (1 file)
+   - a column of two tiles, as wide as one tile of the grid (2 files)
+   - the 2×2 grid (3 files plus "3", 4 files, or 3 files plus the total)
+   Tiles are split by 1px ruled lines (the gaps let the --rule background
+   through). Decoration only: screen readers hear the summary next to it. */
+.file-area {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  /* its labels are sized on the square's width (cqi) */
+  container-type: inline-size;
+  width: var(--tiles-size);
+  aspect-ratio: 1;
+}
+.tiles {
+  display: grid;
+  gap: 1px;
+  height: 100%;
+  border: 1px solid var(--rule);
+  background: var(--rule);
+  background-clip: padding-box;
+}
+.tiles-one {
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+}
+/* As wide as one tile of the 2×2 grid: (square − 3 lines) / 2, plus its
+   two side lines. (A percentage of the square, not --tiles-size: inside
+   the square, that size's cqi would be measured on the square itself.) */
+.tiles-column {
+  grid-template: repeat(2, minmax(0, 1fr)) / minmax(0, 1fr);
+  width: calc((100% + 1px) / 2);
+  /* centred in the square, in line with the middle of the 2×2 grid */
+  margin-inline: auto;
+}
+.tiles-grid {
+  grid-template: repeat(2, minmax(0, 1fr)) / repeat(2, minmax(0, 1fr));
+}
+.tile {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: var(--ink);
+  font-weight: 700;
+  line-height: 1;
+}
+/* A photo's small copy, cropped to its tile (only here: the full post
+   shows photos whole) */
+.tile-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+/* "FOTO" (a photo without a small copy) and "PDF" */
+.tile-word,
+.tile-pdf {
+  font-size: clamp(9px, 7cqi, 13px);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+/* "PDF" and the number: inverted (dark) tiles */
+.tile-pdf,
+.tile-count {
+  background: var(--accent);
+  color: var(--ink);
+}
+/* The number: "3" with 3 files, the total with more than 4 */
+.tile-count {
+  font-size: clamp(15px, 18cqi, 40px);
+  letter-spacing: -.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------------------------------------------------
+   The full post: "← Novedades" on top
+------------------------------------------------------------------- */
+.back {
+  padding: clamp(24px, 3vw, 44px) var(--gutter) 0;
+}
+/* "No encontramos esta novedad." / loading / error under it: same room
+   as the post's frame gets */
+.back + .message {
+  margin-top: clamp(24px, 3vw, 44px);
+  border-top: 1px solid var(--rule);
+}
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid var(--accent);
+  color: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background-color .15s ease, color .15s ease;
+}
+.back-link:hover {
+  background: var(--accent);
+  color: var(--ink);
+}
+.back-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
 }
 
 /* ------------------------------------------------------------------
@@ -294,6 +499,7 @@
   color: var(--ink);
 }
 .message .message-lead {
+  margin: 0 0 22px;
   max-width: 22ch;
   font-size: clamp(22px, 2.4vw, 36px);
   font-weight: 700;
@@ -346,6 +552,9 @@
 
   /* room for the sticky bar at the top and the chat link at the bottom */
   .photo-img { max-height: calc(100svh - 180px); }
+
+  .preview-text { --lines: 5; }
+  .back { padding-top: 20px; }
 }
 
 /* A narrow post (phones, and the iPad held upright): the date and the
@@ -362,6 +571,7 @@
     border-right: 0;
     border-bottom: 1px solid var(--rule);
   }
+  .post-labels { align-items: flex-end; }
   .post-date { gap: 6px; }
   .post-month { font-size: 12px; }
   .post-day { font-size: 40px; }
@@ -369,14 +579,32 @@
     gap: 12px;
     padding: 18px 16px 22px;
   }
+  .preview {
+    row-gap: 12px;
+    padding: 18px 16px 22px;
+  }
+  .preview.has-files { column-gap: 14px; }
   .post-title { font-size: 25px; }
+  .preview.has-files > .post-title { font-size: 22px; }
   .post-text { font-size: 16px; line-height: 1.55; }
+  .preview-text { font-size: 16px; --line: 1.55em; }
   .post-files { gap: 12px; }
   .pdf-name { font-size: 15px; padding: 10px 12px; }
   .pdf-open { padding: 0 12px; }
 }
 
+/* Phone: no file area in the previews (DECISIONS.md, 18 Nov 2026,
+   evening). The title and the text take the whole width, and a box
+   above the tag says how many files the post has. */
+@media (max-width: 700px) {
+  .file-area { display: none; }
+  .preview.has-files { grid-template-columns: minmax(0, 1fr); }
+  .preview.has-files > .post-title { font-size: 25px; }
+  .post-files-note { display: block; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .message-btn,
-  .pdf-open { transition: none; }
+  .pdf-open,
+  .back-link { transition: none; }
 }

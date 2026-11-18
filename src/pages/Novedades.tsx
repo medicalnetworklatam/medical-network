@@ -1,18 +1,25 @@
-import { useEffect, useMemo, useState, type CSSProperties } from 'react'
-import { Link } from 'react-router'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { Link, useLocation, useNavigationType } from 'react-router'
 import AreaLayout from './AreaLayout.tsx'
+import NewsMeta from './NewsMeta.tsx'
 import { usePageTitle } from '../lib/usePageTitle.ts'
 import { useProfile } from '../lib/profile.ts'
 import { supabase } from '../lib/supabase.ts'
 import { dataErrorMessage } from '../lib/dataErrors.ts'
-import { linkify } from '../lib/linkify.tsx'
 import {
-  altText, sortAttachments, ATTACHMENT_COLUMNS, BUCKET, LINK_SECONDS, type Attachment,
+  filesCount, filesSummary, previewTiles, sortAttachments, BUCKET, LINK_SECONDS, type Attachment, type Tile,
 } from '../lib/newsFiles.ts'
+import { readListScroll, saveListScroll, type FromList } from '../lib/listScroll.ts'
 import { MAP_SHAPES } from '../estados/mapShapes.ts'
 import styles from './Novedades.module.css'
 
-/** One news post as the page gets it (title and body are plain text) */
+/** What the list needs of a post's file: its kind, its small copy (photos
+    since migration 6) and its place. Never the full file's path: the list
+    never loads full photos or PDFs. */
+type PreviewFile = Pick<Attachment, 'id' | 'kind' | 'thumb_path' | 'sort_order' | 'created_at'>
+const PREVIEW_FILE_COLUMNS = 'id, kind, thumb_path, sort_order, created_at'
+
+/** One news post as the list gets it (title and body are plain text) */
 interface NewsPost {
   id: string
   title: string
@@ -22,23 +29,12 @@ interface NewsPost {
   state: string | null
   /** Its photos and PDFs (only those the reader may see: the database
       decides) */
-  news_attachments: Attachment[]
+  news_attachments: PreviewFile[]
 }
 
-/** Signed links (file addresses that stop working after 1 hour), by path.
-    A path missing here couldn't get a link. */
+/** Signed links (file addresses that stop working after 1 hour) of the
+    small copies, by path. A path missing here couldn't get a link. */
 type Links = Record<string, string>
-
-/* A post's date in German time, in parts: { day: "12", month: "nov",
-   year: "2026", text: "12 nov 2026" } */
-const DATE = new Intl.DateTimeFormat('es-ES', {
-  day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Europe/Berlin',
-})
-function dateParts(iso: string): { day: string; month: string; year: string; text: string } {
-  const date = new Date(iso)
-  const part = (type: string) => DATE.formatToParts(date).find((p) => p.type === type)?.value.replace('.', '') ?? ''
-  return { day: part('day'), month: part('month'), year: part('year'), text: DATE.format(date).replace('.', '') }
-}
 
 /* The answer of one news request. `key` says which request it answers
    (state + attempt), so an old answer is never shown for a new request. */
@@ -49,7 +45,12 @@ type NewsResult =
 /** The user's state page: the news for their one Bundesland. In the new
     look (src/styles/redesign.css): the shared dark column on the left
     (AreaLayout.tsx: links, calendar preview, "Cerrar sesión") and the news
-    on the light side, each post in its own ruled frame. */
+    on the light side, each post in its own ruled frame.
+
+    Each post is a preview (DECISIONS.md, 18 Nov 2026, evening): date, tag,
+    title, the start of the text, and its files as small tiles. The whole
+    preview opens the full post, /novedades/<id> (NovedadPost.tsx). Going
+    back returns the reader to where they were in the list. */
 export default function Novedades() {
   const { profile } = useProfile()
   const stateId = profile?.main_state ?? null
@@ -77,7 +78,7 @@ export default function Novedades() {
         // Each post comes with its files' rows in the same request.
         const { data, error } = await client
           .from('news_posts')
-          .select('id, title, body, published_at, state, news_attachments(' + ATTACHMENT_COLUMNS + ')')
+          .select('id, title, body, published_at, state, news_attachments(' + PREVIEW_FILE_COLUMNS + ')')
           .eq('published', true)
           .lte('published_at', new Date().toISOString())
           .or('state.is.null,state.eq.' + stateId)
@@ -87,7 +88,7 @@ export default function Novedades() {
           result = { key, ok: false, error: dataErrorMessage(error) }
         } else {
           const posts = data ?? []
-          result = { key, ok: true, posts, links: await signedLinks(client, posts) }
+          result = { key, ok: true, posts, links: await thumbLinks(client, posts) }
         }
       } catch (err) {
         result = { key, ok: false, error: dataErrorMessage(err) }
@@ -98,6 +99,24 @@ export default function Novedades() {
     return () => { cancelled = true }
   }, [stateId, attempt])
   const current = news?.key === newsKey ? news : null  // null = still loading
+
+  /* ---------- Back from a post: return to the same place ---------- */
+  /* (The router this site uses doesn't do it by itself.) On Back ("POP"),
+     scroll to where the list was when the post was opened, once the posts
+     are on screen. Only once per visit; anything else opens at the top. */
+  const location = useLocation()
+  const navigationType = useNavigationType()
+  const restored = useRef(false)
+  const postsShown = current?.ok === true && current.posts.length > 0
+  useLayoutEffect(() => {
+    if (restored.current || !postsShown) return
+    restored.current = true
+    if (navigationType !== 'POP') return
+    const y = readListScroll(location.key)
+    if (y !== null) window.scrollTo(0, y)
+  }, [postsShown, navigationType, location.key])
+  const listKey = location.key
+  const rememberPlace = () => saveListScroll(listKey, window.scrollY)
 
   /* The title's size comes from its longest word ("Mecklenburg-" counts
      12, "Niedersachsen." 14), so it always fits its column; the CSS
@@ -149,7 +168,9 @@ export default function Novedades() {
           </p>
         ) : (
           <div className={styles.posts}>
-            {current.posts.map((post) => <Post key={post.id} post={post} links={current.links} />)}
+            {current.posts.map((post) => (
+              <Post key={post.id} post={post} links={current.links} onOpen={rememberPlace} />
+            ))}
           </div>
         )}
       </main>
@@ -157,12 +178,13 @@ export default function Novedades() {
   )
 }
 
-/** One signed link for every file on the page, all made in ONE request.
-    The storage service makes a link only for a file the reader may read
-    (migration 5). If the request fails, the posts are still shown and each
-    file says it couldn't be loaded. */
-async function signedLinks(client: NonNullable<typeof supabase>, posts: NewsPost[]): Promise<Links> {
-  const paths = posts.flatMap((p) => (p.news_attachments ?? []).map((a) => a.path))
+/** One signed link for every small copy shown on the page (at most 4 per
+    post), all made in ONE request. The storage service makes a link only
+    for a file the reader may read (migration 6). If the request fails, the
+    posts are still shown and their photos show a "Foto" tile. */
+async function thumbLinks(client: NonNullable<typeof supabase>, posts: NewsPost[]): Promise<Links> {
+  const paths = posts.flatMap((p) =>
+    previewTiles(sortAttachments(p.news_attachments ?? [])).flatMap((t) => (t.kind === 'thumb' ? [t.path] : [])))
   if (paths.length === 0) return {}
   try {
     const { data, error } = await client.storage.from(BUCKET).createSignedUrls(paths, LINK_SECONDS)
@@ -177,76 +199,92 @@ async function signedLinks(client: NonNullable<typeof supabase>, posts: NewsPost
   }
 }
 
-/** One news post, in its own frame: the date and the post's tag ("Todos
-    los estados" or the Bundesland) in one cell, the title and text in the
-    other. Title and body are plain text only (never HTML); web addresses
-    in the body become links (linkify, built as React elements). After the
-    text come the post's photos and PDFs, in the admin's order. */
-function Post({ post, links }: { post: NewsPost; links: Links }) {
-  const date = dateParts(post.published_at)
-  const text = useMemo(() => linkify(post.body), [post.body])
+/** One news post as a preview, in its own frame: the date and the tag in
+    one cell; in the other, the title, the start of the text (plain text,
+    no links: the whole preview is one link already) and, when the post has
+    files, a square file area on the right, filled by the number of files
+    (see previewTiles in newsFiles.ts). On phones there is no file area:
+    a box above the tag says how many files there are instead.
+
+    The title is the only link (its accessible name is the title); CSS
+    stretches its ::after layer over the whole frame, above every other part
+    of the card, so clicking or tapping anywhere opens the post. */
+function Post({ post, links, onOpen }: { post: NewsPost; links: Links; onOpen: () => void }) {
   const files = useMemo(() => sortAttachments(post.news_attachments ?? []), [post.news_attachments])
-  const stateName = post.state ? MAP_SHAPES.find((s) => s.id === post.state)?.name ?? '' : ''
+  const tiles = useMemo(() => previewTiles(files), [files])
+  const state: FromList = { fromList: true }
   return (
-    <article className={styles.post}>
-      <div className={styles.postMeta}>
-        {/* Seen as "NOV 2026" over "18."; heard once as "18 nov 2026" */}
-        <time className={styles.postDate} dateTime={post.published_at}>
-          <span className={styles.postMonth} aria-hidden="true">{date.month} {date.year}</span>
-          <span className={styles.postDay} aria-hidden="true">{date.day}.</span>
-          <span className="sr-only">{date.text}</span>
-        </time>
-        {stateName
-          ? <p className={styles.postTag} lang="de">{stateName}</p>
-          : <p className={styles.postTag}>Todos los estados</p>}
-      </div>
-      <div className={styles.postBody}>
-        {/* Line breaks kept by CSS */}
-        <h2 className={styles.postTitle}>{post.title}</h2>
-        {post.body && <p className={styles.postText}>{text}</p>}
-        {files.length > 0 && (
-          <div className={styles.postFiles}>
-            {files.map((file) => (
-              <PostFile key={file.id} file={file} url={links[file.path]} title={post.title} />
-            ))}
-          </div>
+    <article className={styles.post + ' ' + styles.isPreview}>
+      <NewsMeta publishedAt={post.published_at} state={post.state} filesNote={filesCount(files)} />
+      <div className={styles.preview + (tiles.length ? ' ' + styles.hasFiles : '')}>
+        <h2 className={styles.postTitle}>
+          <Link className={styles.postLink} to={'/novedades/' + post.id} state={state} onClick={onOpen}>
+            {post.title}
+          </Link>
+        </h2>
+        {post.body && <PreviewText text={post.body} />}
+        {tiles.length > 0 && (
+          <>
+            {/* Screen readers hear "Archivos: 3 fotos y 1 PDF" instead */}
+            <div className={styles.fileArea} aria-hidden="true">
+              <div className={styles.tiles + ' ' + TILES_LAYOUT[tiles.length]}>
+                {tiles.map((tile, i) => <TileCell key={i} tile={tile} links={links} />)}
+              </div>
+            </div>
+            <p className="sr-only">{filesSummary(files)}</p>
+          </>
         )}
       </div>
     </article>
   )
 }
 
-/** One file of a post. Both kinds open in a new tab, from the storage
-    service's own address (never inside this site, never as HTML).
-    - a photo: shown whole, never taller than the screen and never cropped
-      (design-hero/DESIGN-RULES.md); tapping it opens it full size
-    - a PDF: a row with its name and "Abrir PDF" */
-function PostFile({ file, url, title }: { file: Attachment; url: string | undefined; title: string }) {
-  if (!url) {
-    return (
-      <p className={styles.fileMissing}>
-        {file.kind === 'pdf'
-          ? <>No se pudo cargar el PDF «{file.file_name}».</>
-          : 'No se pudo cargar esta foto.'}{' '}
-        Vuelve a cargar la página para intentarlo de nuevo.
-      </p>
-    )
-  }
-  if (file.kind === 'image') {
-    return (
-      <a className={styles.photo} href={url} target="_blank" rel="noopener noreferrer">
-        <img className={styles.photoImg} src={url} alt={altText(file.description, title)} loading="lazy" decoding="async" />
-        <span className="sr-only"> (se abre en tamaño completo en una pestaña nueva)</span>
-      </a>
-    )
-  }
+/** The start of a post's text: about 4 lines (5 on a phone), set by CSS.
+    When the text is longer than that, it fades out at the bottom: this
+    measures whether the text is cut (a ResizeObserver tells when the box
+    changes size, e.g. on turning the iPad) and adds the class that fades
+    it. Short texts show whole, with no fade. */
+function PreviewText({ text }: { text: string }) {
+  const ref = useRef<HTMLParagraphElement>(null)
+  const [long, setLong] = useState(false)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const measure = () => setLong(el.scrollHeight > el.clientHeight + 1)
+    measure()
+    if (typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(measure)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [text])
   return (
-    <a className={styles.pdf} href={url} target="_blank" rel="noopener noreferrer">
-      <span className={styles.pdfKind} aria-hidden="true">PDF</span>
-      <span className={styles.pdfName}>{file.file_name}</span>
-      <span className={styles.pdfOpen}>
-        Abrir PDF<span className="sr-only"> (se abre en una pestaña nueva)</span>
-      </span>
-    </a>
+    <p ref={ref} className={styles.previewText + (long ? ' ' + styles.isLong : '')}>{text}</p>
   )
+}
+
+/** The file area's layout by the number of tiles (previewTiles gives 1, 2
+    or 4): one tile filling the square, a column of two, or the 2×2 grid */
+const TILES_LAYOUT: Record<number, string> = {
+  1: styles.tilesOne,
+  2: styles.tilesColumn,
+  4: styles.tilesGrid,
+}
+
+/** One tile of the file area: a photo's small copy (cropped to its tile),
+    "FOTO" for a photo without one (or whose link failed), "PDF", or the
+    black tile with a number. Decoration only: the summary is read
+    instead. */
+function TileCell({ tile, links }: { tile: Tile; links: Links }) {
+  if (tile.kind === 'thumb' && links[tile.path]) {
+    return (
+      <span className={styles.tile}>
+        <img className={styles.tileImg} src={links[tile.path]} alt="" loading="lazy" decoding="async" />
+      </span>
+    )
+  }
+  if (tile.kind === 'thumb' || tile.kind === 'photo') {
+    return <span className={styles.tile + ' ' + styles.tileWord}>Foto</span>
+  }
+  if (tile.kind === 'pdf') return <span className={styles.tile + ' ' + styles.tilePdf}>PDF</span>
+  return <span className={styles.tile + ' ' + styles.tileCount}>{tile.count}</span>
 }

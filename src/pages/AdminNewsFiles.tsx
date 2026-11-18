@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase.ts'
 import { dataErrorMessage, NOT_ALLOWED } from '../lib/dataErrors.ts'
 import {
   altText, fileTypeError, filePath, moveItem, nextSortOrder, orderChanges, prepareFile, shortName,
-  sortAttachments, storageErrorMessage, typeOf,
+  sortAttachments, storageErrorMessage, storagePaths, thumbPath, typeOf,
   ACCEPT, ATTACHMENT_COLUMNS, BUCKET, MAX_FILES, MAX_NAME, type Attachment,
 } from '../lib/newsFiles.ts'
 import styles from './Admin.module.css'
@@ -27,11 +27,15 @@ type FocusTarget = { id: string; button: 'up' | 'down' | 'remove' } | { heading:
     cambios":
     - add: the file is checked and, for photos, shrunk and re-saved in the
       browser (newsFiles.ts), uploaded to "<post id>/<uuid>.<ending>", then
-      its news_attachments row is added. If the row can't be saved, the
-      file is removed again.
+      its news_attachments row is added. A photo also gets a small copy
+      (480 px JPEG, migration 6), made in the same step and uploaded right
+      after the photo; the admin sees no extra step. Order: photo, small
+      copy, row. If the small copy can't be uploaded, the photo is removed
+      again; if the row can't be saved, both files are removed again.
     - order: "Arriba" / "Abajo" swap two files
-    - remove: asks first, then deletes the row, then the file. If only the
-      file can't be deleted, clients still can't see it (it has no row).
+    - remove: asks first, then deletes the row, then the file (and a
+      photo's small copy). If only the files can't be deleted, clients
+      still can't see them (they have no row).
     At most 10 files per post. Names and descriptions are plain text. */
 export default function AdminNewsFiles({ postId, postTitle, disabled }: {
   postId: string
@@ -151,19 +155,39 @@ export default function AdminNewsFiles({ postId, postTitle, disabled }: {
       })
       if (upload.error) { fail(storageErrorMessage(upload.error)); return }
 
+      // A photo's small copy, right after the photo. If it fails, stop and
+      // remove the photo again, so no photo is left without its row.
+      let thumb: string | null = null
+      if (ready.thumb) {
+        thumb = thumbPath(postId)
+        const small = await db.storage.from(BUCKET).upload(thumb, ready.thumb, {
+          contentType: 'image/jpeg',
+          upsert: false,
+          cacheControl: '3600',
+        }).catch((err: unknown) => ({ error: err }))
+        if (small.error) {
+          await db.storage.from(BUCKET).remove([path]).catch(() => undefined)
+          fail(storageErrorMessage(small.error))
+          return
+        }
+      }
+      const uploaded = thumb ? [path, thumb] : [path]
+
       const row = {
         post_id: postId,
         kind: ready.kind,
         path,
         file_name: shortName(file.name, ready.kind === 'pdf' ? 'documento.pdf' : 'foto.' + ready.ext),
         description: ready.kind === 'image' ? description.trim() || null : null,
+        thumb_path: thumb,
         sort_order: nextSortOrder(items),
       }
       const { data, error } = await db
         .from('news_attachments').insert(row).select(ATTACHMENT_COLUMNS).maybeSingle<Attachment>()
       if (error || !data) {
-        // No row: remove the file again, so no file is left without one
-        await db.storage.from(BUCKET).remove([path]).catch(() => undefined)
+        // No row: remove the file (and the small copy) again, so no file is
+        // left without one
+        await db.storage.from(BUCKET).remove(uploaded).catch(() => undefined)
         fail(error ? rowErrorMessage(error) : 'No se guardó el archivo. Inténtalo de nuevo.')
         return
       }
@@ -230,9 +254,12 @@ export default function AdminNewsFiles({ postId, postTitle, disabled }: {
         setConfirmId(null)
         setFocus({ heading: true })
       }
-      const removed = await db.storage.from(BUCKET).remove([item.path]).catch(() => null)
+      // The file, and a photo's small copy when it has one (a photo from
+      // before migration 6 has none: then only the photo's path)
+      const paths = storagePaths(item)
+      const removed = await db.storage.from(BUCKET).remove(paths).catch(() => null)
       if (!mounted.current) return
-      setStatus(removed && !removed.error && removed.data?.length
+      setStatus(removed && !removed.error && removed.data?.length === paths.length
         ? 'Quitado: ' + item.file_name
         : 'Quitado de la novedad: ' + item.file_name + '. El archivo no se pudo borrar del almacenamiento, ' +
           'pero los clientes ya no lo ven.')

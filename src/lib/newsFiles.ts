@@ -5,7 +5,13 @@
    "<post id>/<random uuid>.<jpg|png|webp|pdf>". The uploaded file's own
    name is never part of that path; it is kept as plain text in
    news_attachments.file_name. Who may read a file is decided by the
-   database (migration 5), never by this code.
+   database (migrations 5 and 6), never by this code.
+
+   Each photo also gets a small copy (about 480 px, JPEG, migration 6) at
+   "<post id>/<another random uuid>.jpg", made in the browser when the
+   photo is uploaded. The Novedades list shows the small copies in its
+   preview tiles, never the full photos. Photos uploaded before migration 6
+   have none.
 
    The pure functions here are tested by tests/newsFiles.test.ts, which
    Node runs directly. prepareFile() needs a browser (it draws on a
@@ -24,6 +30,10 @@ export const MAX_SIDE = 2000
 export const MAX_NAME = 200
 /** Signed links (file addresses with a built-in expiry) last 1 hour */
 export const LINK_SECONDS = 3600
+/** A photo's small copy: the longest side at most this many pixels */
+export const THUMB_SIDE = 480
+/** A photo's small copy: JPEG quality (0 to 1) */
+export const THUMB_QUALITY = 0.8
 
 export type FileKind = 'image' | 'pdf'
 
@@ -36,10 +46,13 @@ export interface Attachment {
   file_name: string
   /** Photos only, optional: the alt text */
   description: string | null
+  /** Photos only: the small copy's path (migration 6). null for PDFs and
+      for photos uploaded before migration 6. */
+  thumb_path: string | null
   sort_order: number
   created_at: string
 }
-export const ATTACHMENT_COLUMNS = 'id, post_id, kind, path, file_name, description, sort_order, created_at'
+export const ATTACHMENT_COLUMNS = 'id, post_id, kind, path, file_name, description, thumb_path, sort_order, created_at'
 
 /** The four file types the bucket takes, with their kind and ending */
 const TYPES: Record<string, { kind: FileKind; ext: string }> = {
@@ -111,6 +124,83 @@ export function filePath(postId: string, ext: string, uuid: string = crypto.rand
   return postId + '/' + uuid.toLowerCase() + '.' + ext
 }
 
+/** The size of a photo's small copy: the longest side at most 480 px, the
+    same proportions, never made bigger */
+export function thumbSize(width: number, height: number): { width: number; height: number } {
+  return fitSize(width, height, THUMB_SIDE)
+}
+
+/** Where a photo's small copy goes: "<post id>/<another random uuid>.jpg".
+    Always a JPEG, and never the photo's own path (the database checks
+    both). */
+export function thumbPath(postId: string, uuid: string = crypto.randomUUID()): string {
+  return filePath(postId, 'jpg', uuid)
+}
+
+/** The files to delete from storage when a file is removed: the file, and
+    a photo's small copy when it has one (never an empty entry) */
+export function storagePaths(file: Pick<Attachment, 'path' | 'thumb_path'>): string[] {
+  return file.thumb_path ? [file.path, file.thumb_path] : [file.path]
+}
+
+/* ---------- The preview's file area on the Novedades list ---------- */
+
+/** One tile of a post's file area:
+    - thumb: a photo's small copy (path in storage)
+    - photo: a photo without a small copy (uploaded before migration 6)
+    - pdf: a PDF
+    - count: the black tile with a number (3 files: "3"; more than 4: the
+      total number of files) */
+export type Tile =
+  | { kind: 'thumb'; path: string }
+  | { kind: 'photo' }
+  | { kind: 'pdf' }
+  | { kind: 'count'; count: number }
+
+/** The tiles of a post's file area, for its files in their order. The
+    square keeps its size; what fills it depends on the number of files
+    (DECISIONS.md, 18 Nov 2026, evening):
+    - 1 file: one tile filling the square
+    - 2 files: a column of two tiles
+    - 3 files: three tiles (top left, top right, bottom left) and a black
+      tile with "3" (bottom right)
+    - 4 files: the 2×2 grid
+    - more than 4: the first three files and a black tile with the total
+      number of files
+    So there are 0, 1, 2 or 4 tiles; the page picks the layout from that
+    number. No files: no tiles. */
+export function previewTiles(files: readonly Pick<Attachment, 'kind' | 'thumb_path'>[]): Tile[] {
+  const fileTile = (file: Pick<Attachment, 'kind' | 'thumb_path'>): Tile =>
+    file.kind === 'pdf' ? { kind: 'pdf' }
+      : file.thumb_path ? { kind: 'thumb', path: file.thumb_path }
+        : { kind: 'photo' }
+  if (files.length === 3 || files.length > 4) {
+    return [...files.slice(0, 3).map(fileTile), { kind: 'count', count: files.length }]
+  }
+  return files.map(fileTile)
+}
+
+/** How many files a post has, in words: "3 fotos y 1 PDF", "1 foto",
+    "2 PDF". '' when there are no files. ("PDF" stays the same in the
+    plural.) Shown on phones in a box above the post's tag, instead of the
+    file area. */
+export function filesCount(files: readonly Pick<Attachment, 'kind'>[]): string {
+  const photos = files.filter((f) => f.kind === 'image').length
+  const pdfs = files.length - photos
+  const parts: string[] = []
+  if (photos > 0) parts.push(photos + (photos === 1 ? ' foto' : ' fotos'))
+  if (pdfs > 0) parts.push(pdfs + ' PDF')
+  return parts.join(' y ')
+}
+
+/** What screen readers hear instead of the tiles: "Archivos: 3 fotos y
+    1 PDF", "Archivos: 1 foto", "Archivos: 2 PDF". '' when there are no
+    files. */
+export function filesSummary(files: readonly Pick<Attachment, 'kind'>[]): string {
+  const count = filesCount(files)
+  return count ? 'Archivos: ' + count : ''
+}
+
 /** A photo's alt text: its description, or "Foto de la novedad «title»".
     Never empty. */
 export function altText(description: string | null, title: string): string {
@@ -168,6 +258,8 @@ export interface Prepared {
   kind: FileKind
   ext: string
   contentType: string
+  /** Photos only: the small copy (JPEG). null for PDFs. */
+  thumb: Blob | null
 }
 
 /** Checks a chosen file and gets it ready to upload (browser only).
@@ -177,6 +269,10 @@ export interface Prepared {
       The new file has none of the original's hidden data (EXIF), such as
       the phone's GPS location. A photo taken upright stays upright: the
       browser applies the photo's rotation note while drawing it.
+      The small copy is drawn the same way from the same picture: at most
+      480 px, JPEG, quality 0.8, upright, no hidden data. JPEG has no
+      transparency, so a see-through PNG gets a white background in its
+      small copy (the photo itself keeps its transparency).
     - Anything else is refused. */
 export async function prepareFile(file: File): Promise<{ ok: true; file: Prepared } | { ok: false; error: string }> {
   const type = typeOf(file.type)
@@ -186,7 +282,7 @@ export async function prepareFile(file: File): Promise<{ ok: true; file: Prepare
     if (file.size > MAX_BYTES) return { ok: false, error: PDF_TOO_BIG }
     const first = new Uint8Array(await file.slice(0, 5).arrayBuffer())
     if (!looksLikePdf(first)) return { ok: false, error: NOT_A_PDF }
-    return { ok: true, file: { blob: file, kind: 'pdf', ext: 'pdf', contentType: 'application/pdf' } }
+    return { ok: true, file: { blob: file, kind: 'pdf', ext: 'pdf', contentType: 'application/pdf', thumb: null } }
   }
 
   let bitmap: ImageBitmap
@@ -196,6 +292,7 @@ export async function prepareFile(file: File): Promise<{ ok: true; file: Prepare
     return { ok: false, error: PHOTO_UNREADABLE }
   }
   let blob: Blob | null
+  let thumb: Blob | null
   try {
     const size = fitSize(bitmap.width, bitmap.height)
     const canvas = document.createElement('canvas')
@@ -206,6 +303,19 @@ export async function prepareFile(file: File): Promise<{ ok: true; file: Prepare
     ctx.imageSmoothingQuality = 'high'
     ctx.drawImage(bitmap, 0, 0, size.width, size.height)
     blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, file.type, 0.85))
+
+    // The small copy, from the same upright picture
+    const small = thumbSize(bitmap.width, bitmap.height)
+    const thumbCanvas = document.createElement('canvas')
+    thumbCanvas.width = small.width
+    thumbCanvas.height = small.height
+    const thumbCtx = thumbCanvas.getContext('2d')
+    if (!thumbCtx) return { ok: false, error: PHOTO_UNREADABLE }
+    thumbCtx.fillStyle = 'white'  // under see-through parts (JPEG has no transparency)
+    thumbCtx.fillRect(0, 0, small.width, small.height)
+    thumbCtx.imageSmoothingQuality = 'high'
+    thumbCtx.drawImage(bitmap, 0, 0, small.width, small.height)
+    thumb = await new Promise<Blob | null>((resolve) => thumbCanvas.toBlob(resolve, 'image/jpeg', THUMB_QUALITY))
   } finally {
     bitmap.close()
   }
@@ -213,5 +323,6 @@ export async function prepareFile(file: File): Promise<{ ok: true; file: Prepare
   const made = blob ? typeOf(blob.type) : null
   if (!blob || !made || made.kind !== 'image') return { ok: false, error: PHOTO_UNREADABLE }
   if (blob.size > MAX_BYTES) return { ok: false, error: made.ext === 'png' ? PNG_TOO_BIG : PHOTO_TOO_BIG }
-  return { ok: true, file: { blob, kind: 'image', ext: made.ext, contentType: blob.type } }
+  if (!thumb || thumb.type !== 'image/jpeg') return { ok: false, error: PHOTO_UNREADABLE }
+  return { ok: true, file: { blob, kind: 'image', ext: made.ext, contentType: blob.type, thumb } }
 }
