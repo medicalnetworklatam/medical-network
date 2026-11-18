@@ -1,0 +1,256 @@
+/* ------------------------------------------------------------------
+   The client area's frame (AreaLayout.tsx), shared by Novedades,
+   Comunidad and Chat: the dark column on the left and the page on the
+   right. Fonts and colour tokens come from src/styles/redesign.css
+   (never a hard-coded colour).
+
+   Desktop:  dark column (profile, links, calendar, "Cerrar sesión"),
+             pinned at the height of the screen | the page.
+   Phone:    a sticky dark bar (profile + "Menú"), the menu opening
+             under it, the page below, and a floating link to the chat
+             (not on the chat itself).
+
+   Rule for this file: the site loads every page's CSS at once, so
+   nothing here may target html, body, * or :root directly.
+------------------------------------------------------------------- */
+
+.layout {
+  --col-w: 300px;
+  --pad: 20px;                  /* the column's side padding */
+  display: grid;
+  grid-template-columns: var(--col-w) minmax(0, 1fr);
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* The page's side: its <main> fills the whole height */
+.content {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.content > * { flex: 1 0 auto; }
+
+/* Small spaced capitals ("MI PERFIL") */
+.label {
+  display: block;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+}
+
+/* ------------------------------------------------------------------
+   The column: dark, like the home page's heroes. Its lines are drawn
+   in the words' colour (the light sections draw them in the accent).
+------------------------------------------------------------------- */
+.column {
+  --rule: color-mix(in srgb, var(--ink) 28%, transparent);
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: 100vh;
+  height: 100dvh;
+  overflow-y: auto;
+  /* At its end, a swipe stops here instead of scrolling the whole page */
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.bar {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid var(--rule);
+}
+
+/* "Mi perfil" over the first name: the whole cell is the link */
+.profile {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 44px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+  padding: 26px var(--pad) 22px;
+  color: inherit;
+  text-decoration: none;
+}
+.profile-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -.03em;
+}
+
+/* "Menú": phone only (see the phone rules at the end) */
+.menu-btn { display: none; }
+
+.menu-body {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Novedades, Comunidad MNL, Chat de <Bundesland>, Administración: one
+   full-width row each. A long state name wraps inside its row. */
+.row {
+  display: flex;
+  align-items: center;
+  min-height: 56px;
+  padding: 14px var(--pad);
+  border-bottom: 1px solid var(--rule);
+  color: inherit;
+  font-size: 18px;
+  line-height: 1.25;
+  text-decoration: none;
+}
+
+/* The current page: an inverted cell, like the home page's "después" */
+.row.is-current {
+  background: var(--ink);
+  color: var(--paper);
+  font-weight: 700;
+}
+
+/* Hovering another cell: a faint light tint and an underline (the
+   inverted look is kept for the current page) */
+.profile,
+.row {
+  transition: background-color .15s ease;
+}
+.profile:hover,
+.row:not(.is-current):hover {
+  background: color-mix(in srgb, var(--ink) 10%, transparent);
+}
+.profile:hover .profile-name,
+.row:not(.is-current):hover {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: .2em;
+}
+/* a ring inside the cell, in the cell's text colour */
+.profile:focus-visible,
+.row:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: -5px;
+}
+
+/* "Cerrar sesión": SessionButton's chip (in the column's own colours),
+   its text lined up with the rows above */
+.session {
+  display: flex;
+  padding: 10px calc(var(--pad) - 14px);
+}
+
+/* Phone only: the floating link to the chat */
+.chat-fab { display: none; }
+
+/* ------------------------------------------------------------------
+   Phone
+------------------------------------------------------------------- */
+@media (max-width: 700px) {
+  .layout { display: block; }
+
+  /* The column becomes a sticky bar; the menu opens under it */
+  .column {
+    z-index: 3;
+    height: auto;
+    max-height: 100vh;
+    max-height: 100dvh;
+  }
+  .column:not(.is-open) .menu-body { display: none; }
+
+  .bar { align-items: center; }
+  .profile {
+    gap: 4px;
+    padding: 10px var(--gutter);
+  }
+  .profile .label { font-size: 11px; }
+  .profile-name { font-size: 20px; }
+
+  /* "Menú": the home page's chip (Home.module.css, .menu-btn) */
+  .menu-btn {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 44px;
+    margin-right: calc(var(--gutter) - 12px);
+    padding: 8px 12px;
+    border: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font: 400 17px / 1 var(--font);
+    cursor: pointer;
+  }
+  .menu-btn[aria-expanded="true"] {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .menu-btn:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: -6px;
+  }
+  .menu-btn-icon {
+    width: 30px;
+    height: 8px;
+    border-block: 2px solid currentColor;
+  }
+
+  .row { padding-inline: var(--gutter); }
+  .session { padding: 8px calc(var(--gutter) - 12px); }
+
+  /* room at the bottom, so the chat link never covers the page's end */
+  .content.has-fab { padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px)); }
+
+  /* Floating "Chat de Bayern": a dark square chip */
+  .chat-fab {
+    position: fixed;
+    right: var(--gutter);
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    z-index: 4;
+    display: flex;
+    align-items: center;
+    min-height: 52px;
+    max-width: calc(100vw - 2 * var(--gutter));
+    padding: 0 18px;
+    background: var(--paper);
+    color: var(--ink);
+    font-size: 16px;
+    font-weight: 700;
+    text-decoration: none;
+  }
+  /* very long state names end in "…" instead of leaving the screen */
+  .chat-fab-label {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .chat-fab:hover .chat-fab-label {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: .2em;
+  }
+  .chat-fab:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: -6px;
+  }
+  /* while the menu is open it would cover the menu's last rows (and the
+     menu has the same link) */
+  .column.is-open ~ .chat-fab { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .profile,
+  .row { transition: none; }
+}

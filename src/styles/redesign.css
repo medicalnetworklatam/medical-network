@@ -80,6 +80,13 @@
   --tint: rgb(var(--accent-rgb) / 0.82);   /* words where they cross a photo */
   --rule: rgb(var(--accent-rgb) / 0.4);    /* thin cell lines */
 
+  /* The calendar's example events ("Webinars / reuniones"). The one
+     colour that isn't made from the three above, used only in the
+     calendar (CalendarPreview.module.css; DECISIONS.md, 18 Nov 2026,
+     afternoon). 5.7:1 against --paper, 3.2:1 against --ink.
+     To be confirmed by Ivan on the preview: change it here only. */
+  --event: #e8590c;
+
   --font: "aaux-next", "MNL Fallback", system-ui, sans-serif;
   --font-grotesk: "Space Grotesk", "MNL Fallback", system-ui, sans-serif;
 
