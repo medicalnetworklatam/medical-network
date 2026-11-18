@@ -1,5 +1,5 @@
 -- =============================================================================
--- RLS check: proves the access rules from migrations 1, 2, 3 and 4 work.
+-- RLS check: proves the access rules from migrations 1 to 5 work.
 -- =============================================================================
 -- Paste this whole file into Supabase's SQL Editor and press "Run".
 -- Run it after every migration, and again after any change to policies or
@@ -11,7 +11,10 @@
 --   2. Creates 5 fake logins (clients A, B, C and D, and an admin), test
 --      routes, test checklist items, test news posts and test community
 --      posts. Everything it creates is marked "rls-test", or belongs to a
---      fake login, so it can be found and removed.
+--      fake login, so it can be found and removed. The admin also uploads
+--      a few test files into the "news-files" bucket (rows in
+--      storage.objects, no real file content), each in a test news post's
+--      folder, and removes them again at the end.
 --   3. Pretends to be each of them in turn, the same way the website would be
 --      after a login, and checks what they can and can't see or change.
 --   4. Deletes everything it created.
@@ -53,6 +56,18 @@ declare
   p_c2           uuid;   -- community post by client C, after setting a first name
   p_b_chat       uuid;   -- client B's message in Bayern's chat
   p_d_chat       uuid;   -- client D's message in Thüringen's chat
+  -- test files (migration 5): "<post id>/<uuid>.<ending>" in the bucket
+  -- news-files, one per test post, each with a news_attachments row...
+  f_free         text;
+  f_paid         text;
+  f_draft        text;
+  f_future       text;
+  f_all          text;
+  f_other        text;
+  -- ...and one in the paid Bayern post's folder with NO row
+  f_orphan       text;
+  test_files     text[];   -- the seven test files above
+  names          text[];
   -- the 16 state codes (the same list as public.state_code in migration 1)
   states  text[] := array['bw', 'by', 'be', 'bb', 'hb', 'hh', 'he', 'mv',
                           'ni', 'nw', 'rp', 'sl', 'sn', 'st', 'sh', 'th'];
@@ -227,6 +242,52 @@ begin
   end if;
   ok := ok + 1;
 
+  -- CHECK: on news_attachments the website may change only sort_order, and
+  -- may not send the id or the date (the database sets them)
+  if not (has_column_privilege('authenticated', 'public.news_attachments', 'post_id', 'INSERT')
+      and has_column_privilege('authenticated', 'public.news_attachments', 'path', 'INSERT')
+      and has_column_privilege('authenticated', 'public.news_attachments', 'sort_order', 'UPDATE')) then
+    raise exception 'FAIL: the website lost the right to add attachments or change their order';
+  end if;
+  if has_column_privilege('authenticated', 'public.news_attachments', 'id', 'INSERT')
+  or has_column_privilege('authenticated', 'public.news_attachments', 'created_at', 'INSERT')
+  or has_column_privilege('authenticated', 'public.news_attachments', 'post_id', 'UPDATE')
+  or has_column_privilege('authenticated', 'public.news_attachments', 'kind', 'UPDATE')
+  or has_column_privilege('authenticated', 'public.news_attachments', 'path', 'UPDATE')
+  or has_column_privilege('authenticated', 'public.news_attachments', 'file_name', 'UPDATE')
+  or has_column_privilege('authenticated', 'public.news_attachments', 'description', 'UPDATE') then
+    raise exception 'FAIL: the website may send more than it should on news_attachments';
+  end if;
+  ok := ok + 1;
+
+  -- CHECK: the bucket news-files is private, at most 10 MB per file, and
+  -- takes only JPEG, PNG, WebP and PDF
+  select count(*) into cnt from storage.buckets
+   where id = 'news-files'
+     and public is false
+     and file_size_limit = 10485760
+     and cardinality(allowed_mime_types) = 4
+     and allowed_mime_types @> array['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+  if cnt <> 1 then
+    raise exception 'FAIL: the bucket news-files is missing, public, or has the wrong size limit or file types';
+  end if;
+  ok := ok + 1;
+
+  -- CHECK: storage.objects has Row Level Security on, and the four rules of
+  -- migration 5 (read, upload, update, delete)
+  select count(*) into cnt from pg_class
+   where oid = 'storage.objects'::regclass and relrowsecurity;
+  if cnt <> 1 then raise exception 'FAIL: storage.objects has Row Level Security switched off'; end if;
+  select count(*) into cnt from pg_policies
+   where schemaname = 'storage' and tablename = 'objects' and policyname like 'news-files:%';
+  if cnt <> 4 then raise exception 'FAIL: storage.objects has % news-files rules instead of 4', cnt; end if;
+  ok := ok + 1;
+
+  -- Supabase may refuse to delete storage rows with plain SQL ("use the
+  -- Storage API instead"). This lets the test remove its own test files.
+  -- It lasts only until the end of this test run.
+  perform set_config('storage.allow_delete_query', 'true', true);
+
   -- You can make someone an admin from the SQL Editor
   update public.profiles set is_admin = true where id = adm;
 
@@ -354,6 +415,109 @@ begin
   exception when insufficient_privilege then ok := ok + 1;
   end;
 
+  -- ---------------------------------------------------------------------------
+  -- Photos and PDFs of news posts (migration 5), still as the admin
+  -- ---------------------------------------------------------------------------
+  -- One test file per test news post, added the way the website does it:
+  -- first the file (a row in storage.objects, which is what the Storage
+  -- service writes on upload), then its news_attachments row. Plus one file
+  -- with NO row, in the paid Bayern post's folder: like an upload whose row
+  -- was never saved, or a file whose row was removed but the file wasn't.
+  f_free   := n_free::text   || '/' || gen_random_uuid()::text || '.jpg';
+  f_paid   := n_paid::text   || '/' || gen_random_uuid()::text || '.png';
+  f_draft  := n_draft::text  || '/' || gen_random_uuid()::text || '.webp';
+  f_future := n_future::text || '/' || gen_random_uuid()::text || '.pdf';
+  f_all    := n_all::text    || '/' || gen_random_uuid()::text || '.pdf';
+  f_other  := n_other::text  || '/' || gen_random_uuid()::text || '.jpg';
+  f_orphan := n_paid::text   || '/' || gen_random_uuid()::text || '.jpg';
+  test_files := array[f_free, f_paid, f_draft, f_future, f_all, f_other, f_orphan];
+
+  -- CHECK: admin can upload files to the bucket and add their rows
+  insert into storage.objects (bucket_id, name)
+    select 'news-files', unnest(test_files);
+  get diagnostics rc = row_count;
+  if rc <> 7 then raise exception 'FAIL: admin uploaded % of 7 test files', rc; end if;
+  insert into public.news_attachments (post_id, kind, path, file_name, description, sort_order)
+  values (n_free,   'image', f_free,   'foto.jpg',      'Una foto de prueba', 0),
+         (n_paid,   'image', f_paid,   'captura.png',   null, 0),
+         (n_draft,  'image', f_draft,  'borrador.webp', null, 0),
+         (n_future, 'pdf',   f_future, 'futuro.pdf',    null, 0),
+         (n_all,    'pdf',   f_all,    'todos.pdf',     null, 0),
+         (n_other,  'image', f_other,  'thueringen.jpg', null, 0);
+  get diagnostics rc = row_count;
+  if rc <> 6 then raise exception 'FAIL: admin added % of 6 attachment rows', rc; end if;
+  ok := ok + 1;
+
+  -- CHECK: admin can change the order of a post's files, but nothing else
+  -- of an attachment row (not its post, path, kind or name)
+  update public.news_attachments set sort_order = 1 where path = f_free;
+  get diagnostics rc = row_count;
+  if rc <> 1 then raise exception 'FAIL: admin could not change the order of a file'; end if;
+  begin
+    update public.news_attachments set path = f_orphan where path = f_free;
+    raise exception 'FAIL: admin changed the path of an attachment';
+  exception when insufficient_privilege then ok := ok + 1;
+  end;
+  begin
+    update public.news_attachments set file_name = 'otro.jpg' where path = f_free;
+    raise exception 'FAIL: admin changed the file name of an attachment';
+  exception when insufficient_privilege then ok := ok + 1;
+  end;
+
+  -- CHECK: the bucket refuses badly named files, even from an admin: the
+  -- uploaded file's own name, a folder that isn't a post, a folder that
+  -- isn't a uuid at all, a sub-folder, or another ending (SVG, HTML)
+  names := array[
+    n_free::text || '/foto-de-maria.jpg',
+    gen_random_uuid()::text || '/' || gen_random_uuid()::text || '.jpg',
+    'no-es-un-uuid/' || gen_random_uuid()::text || '.jpg',
+    n_free::text || '/carpeta/' || gen_random_uuid()::text || '.jpg',
+    n_free::text || '/' || gen_random_uuid()::text || '.svg',
+    n_free::text || '/' || gen_random_uuid()::text || '.html',
+    n_free::text || '/' || upper(gen_random_uuid()::text) || '.jpg'];
+  foreach txt in array names loop
+    begin
+      insert into storage.objects (bucket_id, name) values ('news-files', txt);
+      raise exception 'FAIL: admin uploaded a file named %', txt;
+    exception when insufficient_privilege then null;
+    end;
+  end loop;
+  ok := ok + 1;
+
+  -- CHECK: an attachment row must point into its own post's folder, with a
+  -- uuid as the name and an ending that matches its kind; file_name 1 to 200
+  -- characters; description empty or 1 to 200 characters
+  for i in 1 .. 7 loop
+    begin
+      case i
+        when 1 then  -- another post's folder
+          insert into public.news_attachments (post_id, kind, path, file_name)
+            values (n_free, 'image', n_paid::text || '/' || gen_random_uuid()::text || '.jpg', 'x.jpg');
+        when 2 then  -- the uploaded file's own name in the path
+          insert into public.news_attachments (post_id, kind, path, file_name)
+            values (n_free, 'image', n_free::text || '/foto.jpg', 'foto.jpg');
+        when 3 then  -- a photo with a .pdf ending
+          insert into public.news_attachments (post_id, kind, path, file_name)
+            values (n_free, 'image', n_free::text || '/' || gen_random_uuid()::text || '.pdf', 'x.pdf');
+        when 4 then  -- a PDF with a .jpg ending
+          insert into public.news_attachments (post_id, kind, path, file_name)
+            values (n_free, 'pdf', n_free::text || '/' || gen_random_uuid()::text || '.jpg', 'x.jpg');
+        when 5 then  -- file name of 201 characters
+          insert into public.news_attachments (post_id, kind, path, file_name)
+            values (n_free, 'pdf', n_free::text || '/' || gen_random_uuid()::text || '.pdf', repeat('a', 197) || '.pdf');
+        when 6 then  -- empty file name
+          insert into public.news_attachments (post_id, kind, path, file_name)
+            values (n_free, 'pdf', n_free::text || '/' || gen_random_uuid()::text || '.pdf', '');
+        when 7 then  -- empty description (no description is NULL)
+          insert into public.news_attachments (post_id, kind, path, file_name, description)
+            values (n_free, 'image', n_free::text || '/' || gen_random_uuid()::text || '.jpg', 'x.jpg', '');
+      end case;
+      raise exception 'FAIL: news_attachments accepted bad row number % of this check', i;
+    exception when check_violation then null;
+    end;
+  end loop;
+  ok := ok + 1;
+
   -- ===========================================================================
   -- As CLIENT A (free plan, no state yet)
   -- ===========================================================================
@@ -439,6 +603,23 @@ begin
   if cnt <> 2 then raise exception 'FAIL: free client A (Bayern) sees % test news posts instead of 2', cnt; end if;
   select count(*) into cnt from public.news_posts where id in (n_free, n_all);
   if cnt <> 2 then raise exception 'FAIL: free client A cannot see the free Bayern post and the all-states post'; end if;
+  ok := ok + 1;
+
+  -- CHECK: A (free, Bayern) reads the files (rows and stored files) of
+  -- exactly those two posts: the free Bayern post and the all-states post
+  select count(*) into cnt from public.news_attachments where path = any (test_files);
+  if cnt <> 2 then raise exception 'FAIL: free client A reads % test attachment rows instead of 2', cnt; end if;
+  select count(*) into cnt from storage.objects where bucket_id = 'news-files' and name = any (test_files);
+  if cnt <> 2 then raise exception 'FAIL: free client A reads % test files instead of 2', cnt; end if;
+  select count(*) into cnt from storage.objects where bucket_id = 'news-files' and name in (f_free, f_all);
+  if cnt <> 2 then raise exception 'FAIL: free client A cannot read the files of the free and the all-states post'; end if;
+  ok := ok + 1;
+
+  -- CHECK: A (free) can't read the file of the paid-only Bayern post
+  select count(*) into cnt from public.news_attachments where path = f_paid;
+  if cnt <> 0 then raise exception 'FAIL: free client A reads the attachment row of a paid-only post'; end if;
+  select count(*) into cnt from storage.objects where bucket_id = 'news-files' and name = f_paid;
+  if cnt <> 0 then raise exception 'FAIL: free client A reads the file of a paid-only post'; end if;
   ok := ok + 1;
 
   -- CHECK: A cannot change their profile's email copy or create/delete profiles
@@ -597,6 +778,73 @@ begin
   if cnt <> 3 then raise exception 'FAIL: paid client B sees % test news posts instead of 3', cnt; end if;
   select count(*) into cnt from public.news_posts where id in (n_free, n_paid, n_all);
   if cnt <> 3 then raise exception 'FAIL: paid client B cannot see Bayern''s posts and the all-states post'; end if;
+  ok := ok + 1;
+
+  -- CHECK: B (paid, Bayern) reads the files of the free and the paid Bayern
+  -- post and of the all-states post; not Thüringen's
+  select count(*) into cnt from public.news_attachments where path = any (test_files);
+  if cnt <> 3 then raise exception 'FAIL: paid client B reads % test attachment rows instead of 3', cnt; end if;
+  select count(*) into cnt from storage.objects where bucket_id = 'news-files' and name = any (test_files);
+  if cnt <> 3 then raise exception 'FAIL: paid client B reads % test files instead of 3', cnt; end if;
+  select count(*) into cnt from storage.objects where bucket_id = 'news-files' and name in (f_free, f_paid, f_all);
+  if cnt <> 3 then raise exception 'FAIL: paid client B cannot read the files of the posts they can see'; end if;
+  ok := ok + 1;
+
+  -- CHECK: the files of a draft and of a scheduled (future) post are hidden
+  -- from clients, rows and files alike
+  select count(*) into cnt from public.news_attachments where path in (f_draft, f_future);
+  if cnt <> 0 then raise exception 'FAIL: paid client B reads attachment rows of a draft or future post'; end if;
+  select count(*) into cnt from storage.objects where bucket_id = 'news-files' and name in (f_draft, f_future);
+  if cnt <> 0 then raise exception 'FAIL: paid client B reads files of a draft or future post'; end if;
+  ok := ok + 1;
+
+  -- CHECK: a file in the folder of a post B can see, but with no
+  -- attachment row, is invisible to B
+  select count(*) into cnt from storage.objects where bucket_id = 'news-files' and name = f_orphan;
+  if cnt <> 0 then raise exception 'FAIL: paid client B reads a file that has no attachment row'; end if;
+  ok := ok + 1;
+
+  -- CHECK: listing the paid Bayern post's folder (what the Storage service
+  -- does for "list") shows B only the file that has a row
+  select coalesce(array_agg(name), '{}') into names from storage.objects
+   where bucket_id = 'news-files' and name like n_paid::text || '/%';
+  if names <> array[f_paid] then
+    raise exception 'FAIL: listing a post''s folder shows paid client B % files instead of only the one with a row', cardinality(names);
+  end if;
+  ok := ok + 1;
+
+  -- CHECK: B cannot upload a file or add an attachment row...
+  begin
+    insert into storage.objects (bucket_id, name)
+      values ('news-files', n_free::text || '/' || gen_random_uuid()::text || '.jpg');
+    raise exception 'FAIL: client B uploaded a file to news-files';
+  exception when insufficient_privilege then ok := ok + 1;
+  end;
+  begin
+    insert into public.news_attachments (post_id, kind, path, file_name)
+      values (n_free, 'image', n_free::text || '/' || gen_random_uuid()::text || '.jpg', 'x.jpg');
+    raise exception 'FAIL: client B added an attachment row';
+  exception when insufficient_privilege then ok := ok + 1;
+  end;
+
+  -- CHECK: ...nor change or delete them, not even the ones B can read
+  update public.news_attachments set sort_order = 9 where path in (f_free, f_paid);
+  get diagnostics rc = row_count;
+  if rc <> 0 then raise exception 'FAIL: client B changed the order of a file'; end if;
+  delete from public.news_attachments where path in (f_free, f_paid);
+  get diagnostics rc = row_count;
+  if rc <> 0 then raise exception 'FAIL: client B deleted an attachment row'; end if;
+  update storage.objects set name = n_free::text || '/' || gen_random_uuid()::text || '.jpg'
+   where bucket_id = 'news-files' and name = f_free;
+  get diagnostics rc = row_count;
+  if rc <> 0 then raise exception 'FAIL: client B renamed a file'; end if;
+  update storage.objects set metadata = '{}'
+   where bucket_id = 'news-files' and name = any (test_files);
+  get diagnostics rc = row_count;
+  if rc <> 0 then raise exception 'FAIL: client B changed a file'; end if;
+  delete from storage.objects where bucket_id = 'news-files' and name = any (test_files);
+  get diagnostics rc = row_count;
+  if rc <> 0 then raise exception 'FAIL: client B deleted a file'; end if;
   ok := ok + 1;
 
   -- CHECK: B (paid) still cannot change or delete checklist items
@@ -953,6 +1201,17 @@ begin
   if cnt <> 2 then raise exception 'FAIL: client D cannot read the board'; end if;
   ok := ok + 1;
 
+  -- CHECK: D (paid, Thüringen) reads the files of Thüringen's post and the
+  -- all-states post, but no file of a Bayern post
+  select count(*) into cnt from public.news_attachments where path = any (test_files);
+  if cnt <> 2 then raise exception 'FAIL: client D (Thüringen) reads % test attachment rows instead of 2', cnt; end if;
+  select count(*) into cnt from storage.objects where bucket_id = 'news-files' and name in (f_other, f_all);
+  if cnt <> 2 then raise exception 'FAIL: client D cannot read the files of Thüringen''s and the all-states post'; end if;
+  select count(*) into cnt from storage.objects
+   where bucket_id = 'news-files' and name in (f_free, f_paid, f_draft, f_future, f_orphan);
+  if cnt <> 0 then raise exception 'FAIL: client D (Thüringen) reads % files of Bayern posts', cnt; end if;
+  ok := ok + 1;
+
   -- CHECK: D posts in Thüringen's chat, but not in Bayern's
   insert into public.community_posts (body, state) values ('Hola, Thüringen', 'th')
     returning id into p_d_chat;
@@ -1059,6 +1318,26 @@ begin
   begin
     perform 1 from public.community_posts;
     raise exception 'FAIL: a logged-out visitor can read community_posts';
+  exception when insufficient_privilege then ok := ok + 1;
+  end;
+  begin
+    perform 1 from public.news_attachments;
+    raise exception 'FAIL: a logged-out visitor can read news_attachments';
+  exception when insufficient_privilege then ok := ok + 1;
+  end;
+
+  -- CHECK: a logged-out visitor reads no file of news-files and can't upload
+  -- one. (Supabase lets logged-out visitors query storage.objects; the
+  -- rules then show them nothing.)
+  begin
+    select count(*) into cnt from storage.objects where bucket_id = 'news-files';
+  exception when insufficient_privilege then cnt := 0;
+  end;
+  if cnt <> 0 then raise exception 'FAIL: a logged-out visitor reads % files of news-files', cnt; end if;
+  begin
+    insert into storage.objects (bucket_id, name)
+      values ('news-files', n_free::text || '/' || gen_random_uuid()::text || '.jpg');
+    raise exception 'FAIL: a logged-out visitor uploaded a file to news-files';
   exception when insufficient_privilege then ok := ok + 1;
   end;
 
@@ -1203,6 +1482,33 @@ begin
   if rc <> 1 then raise exception 'FAIL: admin could not delete a member''s chat message'; end if;
   ok := ok + 1;
 
+  -- CHECK: admin reads every test file: the draft's, the one with no row,
+  -- and the future post's, whose row went with the post deleted above
+  select count(*) into cnt from storage.objects where bucket_id = 'news-files' and name = any (test_files);
+  if cnt <> 7 then raise exception 'FAIL: admin reads % of the 7 test files', cnt; end if;
+  select count(*) into cnt from public.news_attachments where path = any (test_files);
+  if cnt <> 5 then raise exception 'FAIL: admin reads % test attachment rows instead of 5', cnt; end if;
+  select count(*) into cnt from public.news_attachments where path = f_future;
+  if cnt <> 0 then raise exception 'FAIL: deleting a news post did not delete its attachment rows'; end if;
+  ok := ok + 1;
+
+  -- CHECK: admin removes a file the way the website does: first its row,
+  -- then the file
+  delete from public.news_attachments where path = f_draft;
+  get diagnostics rc = row_count;
+  if rc <> 1 then raise exception 'FAIL: admin could not delete an attachment row'; end if;
+  delete from storage.objects where bucket_id = 'news-files' and name = f_draft;
+  get diagnostics rc = row_count;
+  if rc <> 1 then raise exception 'FAIL: admin could not delete a file'; end if;
+  ok := ok + 1;
+
+  -- CHECK: admin can delete files that have no row (f_orphan, the future
+  -- post's) and the other test files
+  delete from storage.objects where bucket_id = 'news-files' and name = any (test_files);
+  get diagnostics rc = row_count;
+  if rc <> 6 then raise exception 'FAIL: admin deleted % of the 6 remaining test files', rc; end if;
+  ok := ok + 1;
+
   -- ---------------------------------------------------------------------------
   -- Clean up, as you (postgres) again
   -- ---------------------------------------------------------------------------
@@ -1211,7 +1517,8 @@ begin
 
   -- Deleting the logins also deletes their profiles, progress and posts.
   delete from auth.users where id in (a, b, c, d, adm);
-  delete from public.news_posts where title like '[rls-test]%';
+  delete from public.news_posts where title like '[rls-test]%';  -- and their attachment rows
+  delete from storage.objects where bucket_id = 'news-files' and name = any (test_files);
   delete from public.checklist_items where code like 'rls-test-%';
   delete from public.routes where code like 'rls-test-%';
 
@@ -1222,6 +1529,8 @@ begin
        + (select count(*) from public.community_posts where author_id in (a, b, c, d, adm))
        + (select count(*) from public.checklist_items where code like 'rls-test-%')
        + (select count(*) from public.news_posts where title like '[rls-test]%')
+       + (select count(*) from public.news_attachments where path = any (test_files))
+       + (select count(*) from storage.objects where bucket_id = 'news-files' and name = any (test_files))
        + (select count(*) from public.routes where code like 'rls-test-%')
     into cnt;
   if cnt <> 0 then raise exception 'FAIL: % test rows were left behind', cnt; end if;

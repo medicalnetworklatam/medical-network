@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import AdminLayout from './AdminLayout.tsx'
+import AdminNewsFiles from './AdminNewsFiles.tsx'
 import { usePageTitle } from '../lib/usePageTitle.ts'
 import { supabase } from '../lib/supabase.ts'
 import { dataErrorMessage, NOT_ALLOWED } from '../lib/dataErrors.ts'
@@ -69,7 +70,10 @@ const STATUS_CLASS: Record<NewsStatus, string> = {
 
 /** The admin news form: create, edit, unpublish (untick "Publicada") and
     schedule (a date in the future) news posts, and the list of every post
-    with its status. Posts are never deleted here; unpublish instead. */
+    with its status. Posts are never deleted here; unpublish instead.
+    Photos and PDFs are added to a post once it is saved (it needs its id):
+    after saving a new post the form stays open on it, with "Fotos y PDF"
+    (AdminNewsFiles.tsx) under the form. */
 export default function AdminNovedades() {
   usePageTitle('Publicar novedades · Administración · Medical Network')
 
@@ -111,8 +115,9 @@ export default function AdminNovedades() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [invalid, setInvalid] = useState<'title' | 'date' | null>(null)
-  /* The last saved post, exactly as the database returned it */
-  const [saved, setSaved] = useState<NewsPost | null>(null)
+  /* The last saved post, exactly as the database returned it, and whether
+     it was a new one */
+  const [saved, setSaved] = useState<{ post: NewsPost; created: boolean } | null>(null)
   const titleRef = useRef<HTMLInputElement>(null)
   const dateRef = useRef<HTMLInputElement>(null)
   const mounted = useRef(true)
@@ -217,8 +222,14 @@ export default function AdminNovedades() {
       }
       setPosts((list) => sortNews([data, ...(list ?? []).filter((p) => p.id !== data.id)]))
       setNow(Date.now())
-      setSaved(data)
-      startNew()
+      setSaved({ post: data, created: !editing })
+      if (editing) {
+        startNew()
+      } else {
+        // A new post: stay on it, so photos and PDFs can be added now
+        setEditing(data)
+        setDraft(draftOf(data))
+      }
     } catch (err) {
       if (mounted.current) setError(saveErrorMessage(err))
     } finally {
@@ -258,7 +269,7 @@ export default function AdminNovedades() {
               aria-describedby="news-body-hint"
             />
             <p className={styles.hint} id="news-body-hint">
-              Solo texto, con sus saltos de línea. Las direcciones web no se convierten en enlaces.
+              Solo texto, con sus saltos de línea. Las direcciones web se convierten en enlaces.
             </p>
           </div>
 
@@ -334,7 +345,8 @@ export default function AdminNovedades() {
           <div className={styles.live} role="status">
             {saved && (
               <p className={styles.notice}>
-                Guardada: «{saved.title}» · {NEWS_STATUS_LABEL[newsStatus(saved, now)]}
+                Guardada: «{saved.post.title}» · {NEWS_STATUS_LABEL[newsStatus(saved.post, now)]}
+                {saved.created && '. Ahora puedes añadirle fotos y PDF, abajo.'}
               </p>
             )}
           </div>
@@ -350,6 +362,20 @@ export default function AdminNovedades() {
             )}
           </div>
         </form>
+
+        {/* Photos and PDFs: only for a saved post (they need its id) */}
+        {editing ? (
+          <AdminNewsFiles key={editing.id} postId={editing.id} postTitle={editing.title} disabled={saving} />
+        ) : (
+          <div className={styles.files}>
+            <h3 className={styles.sectionTitle}>Fotos y PDF</h3>
+            <p className={styles.note}>
+              Guarda la novedad primero; después podrás añadirle fotos y PDF aquí. Para que los clientes
+              la vean completa desde el principio, guárdala sin marcar «Publicada», añade los archivos
+              y luego márcala.
+            </p>
+          </div>
+        )}
       </section>
 
       {/* Every post, newest first */}

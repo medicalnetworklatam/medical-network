@@ -22,6 +22,13 @@ Last updated: 18 Nov 2026. This is the source of truth for the project. When a d
   - Files live in a **private** Supabase Storage bucket. Each file is visible to exactly the people who can see its post (same state, paid-only and publish-date rules), enforced by the database (RLS on storage), never only by the website. The site shows them through short-lived signed links.
   - Photos are shrunk and re-saved in the browser before upload, which also removes hidden data such as the phone's GPS location.
   - Built in migration 5, with new checks in `rls_check.sql`. The Content-Security-Policy gets the Supabase project address in `img-src`.
+  - **Build details** (Ivan, 18 Nov 2026):
+    - Table `news_attachments` (post, kind `image`/`pdf`, path, file name, optional photo description used as alt text, order). Files are stored at `<post id>/<random uuid>.<jpg|png|webp|pdf>`; the uploaded file's own name is never in the path. Bucket `news-files`: private, 10 MB per file, JPEG, PNG, WebP and PDF only.
+    - **A client reads a file only when it has a `news_attachments` row** with exactly that path and they can read that row (which follows the news rule). A file without a row (its row removed but the file not, or an upload whose row was never saved) is invisible to clients, also when listing a folder. Admins read every file in the bucket, so they can still delete such files.
+    - **Flow in the admin form:** save the post first; after saving a new post the form stays open on it, with "Fotos y PDF" underneath. Files are saved at once, one at a time. Adding: upload the file, then add its row (if the row fails, the file is removed again). Removing: delete the row, then the file. Order with "Arriba" / "Abajo". At most 10 files per post, checked by the website only (only admins upload).
+    - Photos are shrunk to 2000 px on the longest side and re-saved in the same type. A PNG still over 10 MB is refused with a message suggesting JPG. HEIC is refused with a Spanish message (Safari normally hands over a JPEG). PDF names over 200 characters are shortened, keeping ".pdf". A photo without a description is read as "Foto de la novedad «<título>»", never empty.
+    - **Novedades:** photos inside the post, whole, never taller than the screen; tapping opens the full photo in a new tab. PDFs are a row with the name and "Abrir PDF", in a new tab. One request makes the signed links (valid 1 hour) for every file on the page.
+    - **Known limits, accepted:** signed links expire after 1 hour, so after that a PDF or a full-size photo needs a page reload (photos already on screen stay). Deleting a post by hand in the SQL Editor leaves its files in storage, invisible to clients.
 - **Links in text:** web addresses (`http://` and `https://` only) in Novedades, Comunidad and Chat become links. Built as React elements, never as HTML; they open in a new tab with `rel="noopener noreferrer nofollow"` and show the full address, so members see where a link goes. This settles the open decision on links.
 - **The dark column is shared** by Novedades, Comunidad and Chat, in this order: Mi perfil, Novedades, Comunidad MNL, Chat de <Bundesland>, Administración (admins only), Calendario, Cerrar sesión. The current page is marked. The "← Novedades" links on Comunidad and Chat go. (Ivan gave the order; using the column on all three pages is Claude's reading of his answer, to be confirmed on the preview.)
 - **"Comunidad" is called "Comunidad MNL"** in the column and the browser tab title. The page heading stays "tu" over "comunidad.".
@@ -340,7 +347,7 @@ These replace the morning's "look and feel" bullet below where they differ.
   - The new home page prototype lives in `design-hero/` (17 Nov 2026). Everything in it is public, photos included.
   - The React + Vite + TypeScript version is merged into `main` (pull request #3) and live on Cloudflare Pages. GitHub Pages is turned off.
 
-- **What a news post can include:** decided 18 Nov 2026 (afternoon): title, plain text with automatic links, photos and PDFs. No comments or likes.
+- **What a news post can include:** decided 18 Nov 2026 (afternoon): title, plain text with automatic links, photos and PDFs (up to 10 files per post). No comments or likes.
 - **Replies to community posts** (none in the prototype; replies can be added later)
 - **Alerts** (none in the first version)
 - **Calendar** (deferred)

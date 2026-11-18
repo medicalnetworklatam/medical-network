@@ -578,6 +578,73 @@ legend.label { margin-bottom: 8px; padding: 0; }
   gap: 8px;
 }
 
+/* ---------- Photos and PDF of the post in the form (AdminNewsFiles.tsx) ---------- */
+.files {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-top: 22px;
+  border-top: 1px solid var(--rule);
+}
+.files .section-title:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+/* One ruled row per file: kind and name, description, buttons */
+.file-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--rule);
+}
+.file-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--rule);
+}
+.file-info,
+.file-desc {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.file-info { font-size: 16px; line-height: 1.4; }
+.file-name { font-weight: 700; }
+.file-desc {
+  font-size: 14px;
+  line-height: 1.45;
+  color: color-mix(in srgb, var(--accent) 72%, transparent);
+}
+.file-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+/* The file picker: the real one is hidden but still reachable with Tab;
+   its label "Elegir archivo" is the outlined button you see */
+.file-pick-row {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+}
+.file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+}
+.file-pick { cursor: pointer; }
+.file-input:hover:not(:disabled) + .file-pick { background: var(--accent); color: var(--ink); }
+.file-input:focus-visible + .file-pick { outline: 2px solid var(--accent); outline-offset: 3px; }
+.file-input:disabled + .file-pick { opacity: .5; cursor: default; }
+.file-chosen {
+  min-width: 0;
+  font-size: 15px;
+  overflow-wrap: anywhere;
+  color: color-mix(in srgb, var(--accent) 72%, transparent);
+}
+
 /* ---------- News list: one ruled row per post ---------- */
 .post {
   display: flex;
