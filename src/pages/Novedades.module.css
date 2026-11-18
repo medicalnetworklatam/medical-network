@@ -135,8 +135,8 @@
   color: var(--ink);
 }
 
-/* Right cell: the title, the text, and later (next pull request) the
-   post's photos, PDFs and links, after the text */
+/* Right cell: the title, the text (with its links), then the post's
+   photos and PDFs */
 .post-body {
   min-width: 0;
   display: flex;
@@ -166,6 +166,113 @@
 .post-title,
 .post-text {
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* Links in the text: underlined, in the text's own colour */
+.post-text a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: .15em;
+}
+.post-text a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ------------------------------------------------------------------
+   The post's photos and PDFs, in the admin's order, after the text.
+------------------------------------------------------------------- */
+.post-files {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+/* A photo: always whole (design-hero/DESIGN-RULES.md). Never wider than
+   the cell and never taller than the screen, minus room for the phone's
+   bar and chat link; the frame takes the photo's own shape, so it is
+   never cropped. Tapping it opens it full size in a new tab. */
+.photo {
+  display: block;
+  max-width: 100%;
+  border: 1px solid var(--rule);
+}
+.photo-img {
+  display: block;
+  max-width: 100%;
+  width: auto;
+  height: auto;
+  max-height: calc(100svh - 64px);
+}
+.photo:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* A PDF: one ruled row, "PDF" | its name | "ABRIR PDF" */
+.pdf {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  min-height: 52px;
+  border: 1px solid var(--accent);
+  color: inherit;
+  text-decoration: none;
+}
+.pdf-kind {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  background: var(--accent);
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .16em;
+}
+.pdf-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  align-self: center;
+  padding: 10px 14px;
+  font-size: 16px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.pdf-open {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  border-left: 1px solid var(--rule);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: background-color .15s ease, color .15s ease;
+}
+.pdf:hover .pdf-open {
+  background: var(--accent);
+  color: var(--ink);
+}
+.pdf:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* A file that couldn't get its link: a ruled notice */
+.file-missing {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--rule);
+  font-size: 15px;
+  line-height: 1.45;
+  color: color-mix(in srgb, var(--accent) 72%, transparent);
   overflow-wrap: anywhere;
 }
 
@@ -236,6 +343,9 @@
     gap: 28px;
     padding: 24px var(--gutter) 32px;
   }
+
+  /* room for the sticky bar at the top and the chat link at the bottom */
+  .photo-img { max-height: calc(100svh - 180px); }
 }
 
 /* A narrow post (phones, and the iPad held upright): the date and the
@@ -261,8 +371,12 @@
   }
   .post-title { font-size: 25px; }
   .post-text { font-size: 16px; line-height: 1.55; }
+  .post-files { gap: 12px; }
+  .pdf-name { font-size: 15px; padding: 10px 12px; }
+  .pdf-open { padding: 0 12px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .message-btn { transition: none; }
+  .message-btn,
+  .pdf-open { transition: none; }
 }

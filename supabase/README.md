@@ -10,6 +10,7 @@ and Claude Code never connects to Supabase.
 | `migrations/20261115120000_one_state_news_community.sql` | **Migration 2.** One state per user, news by state, first name and last names instead of one name field, and the community board. Removes `followed_states`. Run it **once**, after migration 1. |
 | `migrations/20261116120000_checklist_own_state_route.sql` | **Migration 3.** Clients only read and tick the checklist for their own state and route. `is_admin` is changed only in the SQL Editor. Run it **once**, after migration 2. |
 | `migrations/20261117120000_state_chat.sql` | **Migration 4.** The chat per Bundesland (a `state` field on `community_posts`), the "Equipo MNL" mark on admin posts, the posting speed limit, and no execute rights on Supabase's `rls_auto_enable()` for the website. Run it **once**, after migration 3. |
+| `migrations/20261118120000_news_attachments.sql` | **Migration 5.** Photos and PDFs in Novedades posts: the table `news_attachments` and the private storage bucket `news-files`, with their rules. Run it **once**, after migration 4. |
 | `tests/rls_check.sql` | **The RLS test.** Proves that clients can't see or change each other's data and that admins can do their job. Run it as often as you like. |
 | `templates/` | **Login emails and settings.** The Spanish invite and reset-password emails, plus the guide (`templates/README.md`) to the URL, password and email settings that logins need. |
 
@@ -75,7 +76,7 @@ run it again.
 "Unrestricted". `profiles` has the columns `first_name` and `last_names`
 and no `full_name`.
 
-Then **run the RLS test again** (section 6). It should still end with
+Then **run the RLS test again** (section 7). It should still end with
 `ALL RLS TESTS PASSED`.
 
 ## 3. Apply migration 3 (once)
@@ -87,7 +88,7 @@ Migration 3 makes these changes:
   can read. Admins still read every item.
 - **`is_admin`:** it can no longer be changed through the website, by
   anyone, admins included. It changes only here in the SQL Editor, by user ID
-  (see section 5). Admins keep changing plan, state and route from the admin
+  (see section 6). Admins keep changing plan, state and route from the admin
   screens.
 - A new private helper, `my_route()`, gives the checklist rule the user's own
   route (like `my_state()` does for news).
@@ -105,7 +106,7 @@ Steps:
 unit). Send me the message. If it says something **"already exists"**,
 migration 3 was already applied. Don't run it again.
 
-Then **run the RLS test** (section 6), with the newest `tests/rls_check.sql`
+Then **run the RLS test** (section 7), with the newest `tests/rls_check.sql`
 from the repository. It should end with `ALL RLS TESTS PASSED`.
 
 **Before real clients use the checklist:** every paid client needs both a
@@ -185,10 +186,81 @@ The one result row must say `rls_was_on` = **true**, `left_behind` =
 **false** and `website_cannot_run_it` = **true**. If any of the three is
 different, send me the row.
 
-Then **run the RLS test** (section 6), with the newest `tests/rls_check.sql`
+Then **run the RLS test** (section 7), with the newest `tests/rls_check.sql`
 from the repository. It should end with `ALL RLS TESTS PASSED`.
 
-## 5. Make yourself and your cousin admins
+## 5. Apply migration 5 (once)
+
+Migration 5 makes these changes:
+- **New table `news_attachments`:** one row per photo or PDF of a news
+  post: the post, the kind (`image` or `pdf`), the file's path in storage,
+  its original name (plain text, shown for PDFs) and, for photos, an
+  optional description (the alt text). Deleting a post deletes its rows.
+- **New storage bucket `news-files`** (a bucket is a folder in Supabase
+  Storage): private, at most 10 MB per file, only JPEG, PNG, WebP and PDF.
+  Each file's path is `<post id>/<random uuid>.<ending>`.
+- **Who sees a file:** a client reads a file only when it has a
+  `news_attachments` row and they can see that row's post (same state,
+  paid-only and publish-date rules as the news). A file without a row is
+  invisible to clients, also when listing a folder. Admins read every file
+  in the bucket.
+- **Who writes:** only admins add, change or delete rows and files.
+
+The site that is live before this migration keeps working with it, so apply
+the migration **before** merging the website change.
+
+Steps:
+1. SQL Editor → **New query**.
+2. Open `supabase/migrations/20261118120000_news_attachments.sql` and copy
+   **all** of it ("Copy raw file" on GitHub).
+3. Paste it and click **Run**. Nothing is deleted, so if Supabase warns
+   about the query, read the warning and confirm.
+4. You should see **"Success. No rows returned"**.
+
+**If you get an error:** nothing was changed (the whole file runs as one
+unit, the storage part included). Send me the message. If it says something
+**"already exists"**, migration 5 was already applied. Don't run it again.
+
+Then **run the RLS test** (section 7), with the newest `tests/rls_check.sql`
+from the repository. It should end with `ALL RLS TESTS PASSED`.
+
+**Check the bucket and the rules** with these three queries (each in a new
+query, or all three one after another):
+
+```sql
+-- 1. The bucket: one row
+select id, public, file_size_limit, allowed_mime_types
+  from storage.buckets
+ where id = 'news-files';
+```
+
+Expected: `news-files` | `false` | `10485760` |
+`{image/jpeg,image/png,image/webp,application/pdf}`.
+
+```sql
+-- 2. The four rules on stored files
+select policyname, cmd, roles
+  from pg_policies
+ where schemaname = 'storage' and tablename = 'objects'
+   and policyname like 'news-files:%'
+ order by policyname;
+```
+
+Expected, four rows, each with `roles` = `{authenticated}`:
+`news-files: admins delete` (DELETE), `news-files: admins update` (UPDATE),
+`news-files: admins upload` (INSERT),
+`news-files: read attached files, admins read all` (SELECT).
+
+```sql
+-- 3. Row Level Security is on for storage.objects and news_attachments
+select c.oid::regclass as table_name, c.relrowsecurity as rls_on
+  from pg_class c
+ where c.oid in ('storage.objects'::regclass, 'public.news_attachments'::regclass);
+```
+
+Expected: two rows, both with `rls_on` = `true`.
+
+## 6. Make yourself and your cousin admins
 
 Accounts are only created by admins, through **Invite user**. Public sign-ups
 are disabled in Supabase (**Authentication** settings, "Allow new users to
@@ -229,7 +301,7 @@ admin. `plan`, `route` and the state can be changed by an admin in the admin
 screens, or by you here in the SQL Editor. A client can never change
 `plan`, `route` or `is_admin`, not even on their own profile.
 
-## 6. Run the RLS test
+## 7. Run the RLS test
 
 1. SQL Editor → **New query**. Paste **all** of `tests/rls_check.sql`, then
    click **Run**.
@@ -246,17 +318,22 @@ screens, or by you here in the SQL Editor. A client can never change
 **What the test does:**
 - **Setup:** it creates five fake logins (client A on the free plan, clients
   B, C and D on the paid plan, and an admin), plus test routes, checklist
-  items, news and community posts. Their names all start with `rls-test` /
+  items, news and community posts. The test admin also adds a few test files
+  to the `news-files` bucket (only their storage rows, no real content). Their names all start with `rls-test` /
   `[rls-test]`, or they belong to a fake login.
 - **Safety nets:** before that, it checks the whole database: every table
   has RLS on, logged-out visitors have no rights on any table, every
   `SECURITY DEFINER` function (one that runs with its owner's rights) has a
   fixed `search_path`, and there are no views in `public`.
 - **Checks:** it pretends to be each of them, the same way the website does
-  after a login, and runs 124 checks. (Before migration 4 there were 93,
-  before migration 3 there were 75, and before migration 2 there were 46.
-  The new version only works once migration 4 is applied.)
-- **Clean-up:** it deletes everything it created.
+  after a login, and runs 147 checks. (Before migration 5 there were 124,
+  before migration 4 there were 93, before migration 3 there were 75, and
+  before migration 2 there were 46. The new version only works once
+  migration 5 is applied.)
+- **Clean-up:** it deletes everything it created, the test files included.
+  Supabase may refuse plain-SQL deletes on stored files ("use the Storage
+  API instead"); the test switches that guard off for its own run only
+  (`storage.allow_delete_query`).
 - **Your data:** it only looks at its own test rows, so it's safe to run on
   the real project. Just never give real data names that start with
   `rls-test`.
@@ -285,6 +362,8 @@ There are two layers, and both must allow something before it works.
 | `checklist_items` | read active items for **their own state and route**, **only on the paid plan** (no state or no route = no items) | read all (also archived); add and change (never delete; use `archived`) |
 | `progress` | read, tick and untick their own (paid only; ticking only for active items of their own state and route) | read everyone's (but not tick for them) |
 | `news_posts` | read published posts whose date has come, for their own state or for all states, **only once they have a state**; `paid_only` posts only on the paid plan | read all (drafts too); add, change, delete |
+| `news_attachments` | read the rows of the posts they can see (same rules as `news_posts`) | read all; add, change the order (`sort_order` only) and delete |
+| files in the `news-files` bucket | read (download, signed links, listing) a file only when it has a `news_attachments` row they can read | read every file, also one without a row; upload (only to `<post id>/<uuid>.<jpg/png/webp/pdf>`), change and delete |
 | `community_posts` | **paid plan only:** read the board (posts with an empty `state`) and **their own state's chat**; post there (only the text and the state); delete their own. At most 5 posts a minute and 100 in 24 hours. Nobody edits posts. | read all (the board and all 16 chats); post anywhere, with no speed limit; delete any post |
 
 **Other things built in:**

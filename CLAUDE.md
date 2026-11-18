@@ -97,7 +97,7 @@ Every screen uses one look (DECISIONS.md, "Changes on 18 Nov 2026"), first built
   - `npm run build`: checks the TypeScript types, then makes the final website files in `dist/`. Cloudflare Pages runs this on every push.
   - `npm run preview`: serves the built `dist/` folder at http://localhost:4173, to check what will go online.
   - `npm run lint`: runs oxlint, which warns about common code mistakes.
-  - Tests: `npm test` checks the admin sums and German time (`tests/adminLogic.test.ts`, no database needed), the safe "return to the page they wanted" address after login (`tests/safePath.test.ts`), and which web addresses in posts and chat messages become links (`tests/linkify.test.ts`, for `src/lib/linkParts.ts`); it fails if any file fails. No other website tests yet. Database: `supabase/tests/rls_check.sql`, run by Ivan in Supabase's SQL Editor (see `supabase/README.md`).
+  - Tests: `npm test` checks the admin sums and German time (`tests/adminLogic.test.ts`, no database needed), the safe "return to the page they wanted" address after login (`tests/safePath.test.ts`), which web addresses in posts and chat messages become links (`tests/linkify.test.ts`, for `src/lib/linkParts.ts`), and the rules for photos and PDFs in news (`tests/newsFiles.test.ts`, for `src/lib/newsFiles.ts`); it fails if any file fails. No other website tests yet. Database: `supabase/tests/rls_check.sql`, run by Ivan in Supabase's SQL Editor (see `supabase/README.md`).
 - Cloudflare Pages settings: build command `npm run build`, output folder `dist`.
 - Where things are:
   - `src/main.tsx` starts the app and lists the pages.
@@ -110,6 +110,7 @@ Every screen uses one look (DECISIONS.md, "Changes on 18 Nov 2026"), first built
   - `src/lib/profile.ts` and `ProfileProvider.tsx`: the logged-in user's own profile (name, state, plan, admin), loaded once after login and shared with every page.
   - `src/lib/supabase.ts`: the one connection to Supabase. `src/lib/auth.ts` and `AuthProvider.tsx` share who is logged in; `src/pages/RequireLogin.tsx` guards the pages that need a login, and sends users without a first name to `/perfil` first.
   - `src/pages/Admin*.tsx` and `RequireAdmin.tsx`: the admin screens (`/admin`, `/admin/clientes/<id>`, `/admin/novedades`), drawn only when the loaded profile is an admin. They never offer `is_admin`, and each save sends only the one column it changes.
+  - Photos and PDFs in Novedades posts (migration 5): `src/lib/newsFiles.ts` (file types, shrinking photos, paths, order, Spanish upload errors) and `src/pages/AdminNewsFiles.tsx` ("Fotos y PDF" in the admin news form). Files live in the private bucket `news-files` and are shown through signed links.
   - `src/lib/adminData.ts` and `berlinTime.ts`: the admin reads (in pages of 1,000 rows, ordered by primary key), progress %, last activity, and German-time conversion. Their pure functions are tested by `tests/adminLogic.test.ts`; never put test rows in the live database.
   - `public/_headers`: the security headers Cloudflare Pages sends with every page (Content-Security-Policy and others). When the site starts using a new outside address (script, font, image or API), add it there, or the browser blocks it.
   - `supabase/templates/`: the Spanish login emails and the guide to Supabase's login settings.

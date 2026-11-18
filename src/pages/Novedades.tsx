@@ -1,10 +1,14 @@
-import { useEffect, useState, type CSSProperties } from 'react'
+import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { Link } from 'react-router'
 import AreaLayout from './AreaLayout.tsx'
 import { usePageTitle } from '../lib/usePageTitle.ts'
 import { useProfile } from '../lib/profile.ts'
 import { supabase } from '../lib/supabase.ts'
 import { dataErrorMessage } from '../lib/dataErrors.ts'
+import { linkify } from '../lib/linkify.tsx'
+import {
+  altText, sortAttachments, ATTACHMENT_COLUMNS, BUCKET, LINK_SECONDS, type Attachment,
+} from '../lib/newsFiles.ts'
 import { MAP_SHAPES } from '../estados/mapShapes.ts'
 import styles from './Novedades.module.css'
 
@@ -16,7 +20,14 @@ interface NewsPost {
   published_at: string
   /** The Bundesland the post is for, or null for all states */
   state: string | null
+  /** Its photos and PDFs (only those the reader may see: the database
+      decides) */
+  news_attachments: Attachment[]
 }
+
+/** Signed links (file addresses that stop working after 1 hour), by path.
+    A path missing here couldn't get a link. */
+type Links = Record<string, string>
 
 /* A post's date in German time, in parts: { day: "12", month: "nov",
    year: "2026", text: "12 nov 2026" } */
@@ -32,7 +43,7 @@ function dateParts(iso: string): { day: string; month: string; year: string; tex
 /* The answer of one news request. `key` says which request it answers
    (state + attempt), so an old answer is never shown for a new request. */
 type NewsResult =
-  | { key: string; ok: true; posts: NewsPost[] }
+  | { key: string; ok: true; posts: NewsPost[]; links: Links }
   | { key: string; ok: false; error: string }
 
 /** The user's state page: the news for their one Bundesland. In the new
@@ -63,15 +74,21 @@ export default function Novedades() {
         // RLS already limits clients to their state (and paid_only). Asking
         // for the same here gives admins the same view as a client of this
         // state: published, date has come, this state or all states.
+        // Each post comes with its files' rows in the same request.
         const { data, error } = await client
           .from('news_posts')
-          .select('id, title, body, published_at, state')
+          .select('id, title, body, published_at, state, news_attachments(' + ATTACHMENT_COLUMNS + ')')
           .eq('published', true)
           .lte('published_at', new Date().toISOString())
           .or('state.is.null,state.eq.' + stateId)
           .order('published_at', { ascending: false })
           .returns<NewsPost[]>()
-        result = error ? { key, ok: false, error: dataErrorMessage(error) } : { key, ok: true, posts: data ?? [] }
+        if (error) {
+          result = { key, ok: false, error: dataErrorMessage(error) }
+        } else {
+          const posts = data ?? []
+          result = { key, ok: true, posts, links: await signedLinks(client, posts) }
+        }
       } catch (err) {
         result = { key, ok: false, error: dataErrorMessage(err) }
       }
@@ -132,7 +149,7 @@ export default function Novedades() {
           </p>
         ) : (
           <div className={styles.posts}>
-            {current.posts.map((post) => <Post key={post.id} post={post} />)}
+            {current.posts.map((post) => <Post key={post.id} post={post} links={current.links} />)}
           </div>
         )}
       </main>
@@ -140,11 +157,35 @@ export default function Novedades() {
   )
 }
 
+/** One signed link for every file on the page, all made in ONE request.
+    The storage service makes a link only for a file the reader may read
+    (migration 5). If the request fails, the posts are still shown and each
+    file says it couldn't be loaded. */
+async function signedLinks(client: NonNullable<typeof supabase>, posts: NewsPost[]): Promise<Links> {
+  const paths = posts.flatMap((p) => (p.news_attachments ?? []).map((a) => a.path))
+  if (paths.length === 0) return {}
+  try {
+    const { data, error } = await client.storage.from(BUCKET).createSignedUrls(paths, LINK_SECONDS)
+    if (error || !data) return {}
+    const links: Links = {}
+    for (const item of data) {
+      if (item.path && item.signedUrl && !item.error) links[item.path] = item.signedUrl
+    }
+    return links
+  } catch {
+    return {}
+  }
+}
+
 /** One news post, in its own frame: the date and the post's tag ("Todos
     los estados" or the Bundesland) in one cell, the title and text in the
-    other. Title and body are plain text only (never HTML). */
-function Post({ post }: { post: NewsPost }) {
+    other. Title and body are plain text only (never HTML); web addresses
+    in the body become links (linkify, built as React elements). After the
+    text come the post's photos and PDFs, in the admin's order. */
+function Post({ post, links }: { post: NewsPost; links: Links }) {
   const date = dateParts(post.published_at)
+  const text = useMemo(() => linkify(post.body), [post.body])
+  const files = useMemo(() => sortAttachments(post.news_attachments ?? []), [post.news_attachments])
   const stateName = post.state ? MAP_SHAPES.find((s) => s.id === post.state)?.name ?? '' : ''
   return (
     <article className={styles.post}>
@@ -162,10 +203,50 @@ function Post({ post }: { post: NewsPost }) {
       <div className={styles.postBody}>
         {/* Line breaks kept by CSS */}
         <h2 className={styles.postTitle}>{post.title}</h2>
-        {post.body && <p className={styles.postText}>{post.body}</p>}
-        {/* Photos, PDFs and links go here, after the text (next pull
-            request, migration 5) */}
+        {post.body && <p className={styles.postText}>{text}</p>}
+        {files.length > 0 && (
+          <div className={styles.postFiles}>
+            {files.map((file) => (
+              <PostFile key={file.id} file={file} url={links[file.path]} title={post.title} />
+            ))}
+          </div>
+        )}
       </div>
     </article>
+  )
+}
+
+/** One file of a post. Both kinds open in a new tab, from the storage
+    service's own address (never inside this site, never as HTML).
+    - a photo: shown whole, never taller than the screen and never cropped
+      (design-hero/DESIGN-RULES.md); tapping it opens it full size
+    - a PDF: a row with its name and "Abrir PDF" */
+function PostFile({ file, url, title }: { file: Attachment; url: string | undefined; title: string }) {
+  if (!url) {
+    return (
+      <p className={styles.fileMissing}>
+        {file.kind === 'pdf'
+          ? <>No se pudo cargar el PDF «{file.file_name}».</>
+          : 'No se pudo cargar esta foto.'}{' '}
+        Vuelve a cargar la página para intentarlo de nuevo.
+      </p>
+    )
+  }
+  if (file.kind === 'image') {
+    return (
+      <a className={styles.photo} href={url} target="_blank" rel="noopener noreferrer">
+        <img className={styles.photoImg} src={url} alt={altText(file.description, title)} loading="lazy" decoding="async" />
+        <span className="sr-only"> (se abre en tamaño completo en una pestaña nueva)</span>
+      </a>
+    )
+  }
+  return (
+    <a className={styles.pdf} href={url} target="_blank" rel="noopener noreferrer">
+      <span className={styles.pdfKind} aria-hidden="true">PDF</span>
+      <span className={styles.pdfName}>{file.file_name}</span>
+      <span className={styles.pdfOpen}>
+        Abrir PDF<span className="sr-only"> (se abre en una pestaña nueva)</span>
+      </span>
+    </a>
   )
 }
