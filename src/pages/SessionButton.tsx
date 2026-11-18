@@ -10,14 +10,18 @@ import styles from './SessionButton.module.css'
 export default function SessionButton({
   onGreen = false,
   redesign = false,
+  className,
 }: {
   onGreen?: boolean
   redesign?: boolean
+  /** Its own look instead of the pill or chip (e.g. a row of the home
+      page's menu). Then it always says the full "Cerrar sesión". */
+  className?: string
 }) {
   const { session, loading } = useAuth()
   const [busy, setBusy] = useState(false)
   const [justSignedOut, setJustSignedOut] = useState(false)
-  const className =
+  const look = className ??
     styles.pill + (onGreen ? ' ' + styles.onGreen : '') + (redesign ? ' ' + styles.redesign : '')
 
   async function signOut() {
@@ -36,12 +40,16 @@ export default function SessionButton({
           login screen instead, which says it too */}
       <span className="sr-only" role="status">{justSignedOut && !session ? 'Has cerrado sesión.' : ''}</span>
       {loading ? null : session ? (
-        <button type="button" className={className} onClick={signOut} disabled={busy}>
-          <span className={styles.long}>Cerrar sesión</span>
-          <span className={styles.short}>Salir</span>
+        <button type="button" className={look} onClick={signOut} disabled={busy}>
+          {className ? 'Cerrar sesión' : (
+            <>
+              <span className={styles.long}>Cerrar sesión</span>
+              <span className={styles.short}>Salir</span>
+            </>
+          )}
         </button>
       ) : (
-        <Link className={className} to="/iniciar-sesion">Entrar</Link>
+        <Link className={look} to="/iniciar-sesion">Entrar</Link>
       )}
     </>
   )

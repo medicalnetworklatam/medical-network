@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import SessionButton from './SessionButton.tsx'
-import PaletteMenu from './home/PaletteMenu.tsx'
+import HomeMenu from './home/HomeMenu.tsx'
 import { useFit } from './home/fit.ts'
 import { useReveal } from './home/reveal.ts'
 import { usePush } from './home/push.ts'
@@ -332,7 +332,7 @@ function Line({ children }: { children: ReactNode }) {
 }
 
 /** Fixed header: "Mi área" (logged in only), "Entrar" / "Cerrar sesión",
-    and "Menú" (for now, the palette switcher). Its own component, so a login
+    and "Menú" (HomeMenu.tsx). Its own component, so a login
     change redraws only the header, never the page under the motion hooks. */
 function HomeHeader() {
   const { session, loading } = useAuth()
@@ -344,7 +344,7 @@ function HomeHeader() {
         ) : null}
         <SessionButton redesign />
       </div>
-      <PaletteMenu />
+      <HomeMenu />
     </header>
   )
 }

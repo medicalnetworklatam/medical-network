@@ -9,7 +9,6 @@ import '@fontsource-variable/figtree'
 import './styles/global.css'
 // The new look's fonts and colour tokens, for redesigned screens (home page)
 import './styles/redesign.css'
-import { applySavedPalette } from './lib/palette.ts'
 
 import AuthProvider from './lib/AuthProvider.tsx'
 import ProfileProvider from './lib/ProfileProvider.tsx'
@@ -36,9 +35,14 @@ try {
   /* storage blocked (e.g. private mode): nothing to remove */
 }
 
-// TEMPORARY (until the palette is chosen): show the palette last picked with
-// the home page's "Menú" button, on every page (src/lib/palette.ts)
-applySavedPalette()
+// The home page's "Menú" used to switch between five colour palettes and
+// remembered the choice in this browser ("mnl-palette"). The palette is now
+// chosen for good (Flatline): remove the old choice.
+try {
+  localStorage.removeItem('mnl-palette')
+} catch {
+  /* storage blocked (e.g. private mode): nothing to remove */
+}
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
