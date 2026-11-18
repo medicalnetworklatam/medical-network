@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import { Link } from 'react-router'
 import PostBoard from './PostBoard.tsx'
 import SessionButton from './SessionButton.tsx'
@@ -17,38 +18,48 @@ export default function Comunidad() {
   // The database (RLS) decides in the end; this only avoids useless requests
   const canRead = profile?.plan === 'paid' || isAdmin
 
+
+  /* The title's size comes from its length ("comunidad." = 10), set from
+     code (React's style prop): the site's CSP blocks style="..." attributes */
+  const titleStyle = { '--title-chars': 10 } as CSSProperties
+
   return (
     <div className={styles.page}>
-      <div className={styles.container}>
-        <header className={styles.header}>
-          <Link className={styles.pill} to="/novedades">
-            <span aria-hidden="true">←</span> Novedades
-          </Link>
-          <SessionButton />
-        </header>
+      <header className={styles.header}>
+        <Link className={styles.pill} to="/novedades">
+          <span aria-hidden="true">←</span> Novedades
+        </Link>
+        <SessionButton />
+      </header>
 
-        <main className={styles.main}>
-          <h1 className={styles.pageTitle}>COMUNIDAD</h1>
+      <main className={styles.main}>
+        <div className={styles.head}>
+          <p className={styles.label}>tu</p>
+          <h1 className={styles.pageTitle} style={titleStyle}>
+            Comunidad<span aria-hidden="true">.</span>
+          </h1>
+        </div>
 
-          {profile && !profile.main_state && (
-            <p className={styles.reminder}>
-              Aún no has elegido tu estado.{' '}
-              <Link className={styles.reminderLink} to="/estados">Elegir mi estado</Link>
-            </p>
-          )}
+        {profile && !profile.main_state && (
+          <p className={styles.reminder}>
+            Aún no has elegido tu estado.{' '}
+            <Link className={styles.reminderLink} to="/estados">Elegir mi estado</Link>
+          </p>
+        )}
 
-          {canRead && userId && profile ? (
+        {canRead && userId && profile ? (
+          <div className={styles.board}>
             <PostBoard
               key={userId}
               userId={userId}
               isAdmin={isAdmin}
               shownName={authorName(profile.first_name ?? '', profile.last_names ?? '')}
             />
-          ) : (
-            <p className={styles.message}>La comunidad es para miembros con el paquete completo.</p>
-          )}
-        </main>
-      </div>
+          </div>
+        ) : (
+          <p className={styles.message}>La comunidad es para miembros con el paquete completo.</p>
+        )}
+      </main>
     </div>
   )
 }

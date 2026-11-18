@@ -1,24 +1,34 @@
-/* State picker page styles, from design-mockup/estados.html.
-   The map's drawing code (estados/mapAnimations.ts) adds some of these
-   classes itself: flood-circle, is-flooding, label, leader, dot, ... */
+/* ------------------------------------------------------------------
+   State picker page (/estados), from design-mockup/estados.html, in the
+   new look. The map keeps its exact shapes, sizes, animations, city
+   search and behaviour (DECISIONS.md, 18 Nov 2026): only its colours (the
+   tokens in src/styles/redesign.css), its fonts and the page around it
+   changed. The map's drawing code (estados/mapAnimations.ts) adds some of
+   these classes itself: flood-circle, is-flooding, label, leader, dot, ...
 
-.page { padding: 28px 64px 28px; }
+   Page:  dark top bar | title cell | search cell | the map | actions cell.
+
+   Rule for this file: the site loads every page's CSS at once, so
+   nothing here may target html, body, * or :root directly.
+------------------------------------------------------------------- */
+
+.page {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
 
 .container {
-  max-width: 1312px;
-  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 24px;
 }
 
 .content {
   display: flex;
   flex-direction: column;
-  gap: 24px;
   /* Map height: as tall as the screen allows (minus the room the rest of
      the page needs), but never taller than the drawing needs at this
-     width. --map-ratio = height / width of the drawing. */
+     width. --map-ratio = height / width of the drawing. (Same values as
+     before the redesign: the map keeps its size.) */
   --map-reserve: 390px;
   --map-ratio: 0.755;
   --map-room: min(100vw - 128px, 1312px);
@@ -26,68 +36,98 @@
 }
 .content { --map-reserve: 468px; }
 
-/* 1. Header (same as the home page) */
+/* 1. Top bar: "Medical Network", "Cerrar sesión", "Menú" */
 .site-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
+  padding: 8px calc(var(--gutter) - 14px);
+  background: var(--paper);
+  color: var(--ink);
 }
 
 .brand {
-  margin: 0;
-  font-family: 'Figtree Variable', sans-serif;
-  font-size: 24px;
-  font-weight: 600;
-  letter-spacing: -0.2px;
-  color: #121413;
-  text-decoration: none;
-}
-.brand:focus-visible { outline: 3px solid #489E85; outline-offset: 4px; border-radius: 4px; }
-
-.menu-btn {
-  width: 48px;
-  height: 48px;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  background: #FFFFFF;
-  border: 1px solid #CAE8E6;
-  border-radius: 12px;
-  color: #121413;
+  min-height: 44px;
+  padding: 0 14px;
+  color: inherit;
+  font: 400 clamp(18px, 1.4vw, 22px) / 1 var(--font);
   text-decoration: none;
 }
-.menu-btn:hover { border-color: #489E85; }
-.menu-btn:focus-visible { outline: 3px solid #489E85; outline-offset: 2px; }
+.brand:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: .2em;
+}
+.brand:focus-visible { outline: 2px solid var(--ink); outline-offset: -4px; }
 
-/* "Entrar" / "Cerrar sesión" pill and menu button, side by side */
+/* "Menú" (a link to Novedades): the home page's chip */
+.menu-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 44px;
+  padding: 10px 14px;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 clamp(17px, 1.25vw, 22px) / 1 var(--font);
+  text-decoration: none;
+}
+.menu-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: -6px; }
+.menu-btn-icon {
+  width: 34px;
+  height: 8px;
+  border-block: 2px solid currentColor;
+  transition: height .3s ease;
+}
+.menu-btn:hover .menu-btn-icon { height: 12px; }
+
+/* "Cerrar sesión" chip and "Menú", side by side */
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 4px;
 }
 
-/* 2. Question */
-.intro { text-align: center; }
+/* 2. Title cell: the question (or "TU ESTADO" over "federal.") */
+.intro {
+  padding: 28px var(--gutter) 20px;
+  border-bottom: 1px solid var(--rule);
+}
 
 .page-title {
-  margin: 0 auto;
-  max-width: 24ch;
-  font-family: 'Anton', sans-serif;
-  font-weight: 400;
-  font-size: clamp(36px, 4vw, 58px);
+  margin: 0;
+  max-width: 30ch;
+  font-size: clamp(28px, 3vw, 46px);
+  font-weight: 700;
   line-height: 1.05;
-  text-transform: uppercase;
-  color: #2F7A64;
+  letter-spacing: -.03em;
+  text-transform: lowercase;
   text-wrap: balance;
+}
+/* "TU ESTADO": small spaced capitals over "federal." */
+.title-label {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 13px;
+  letter-spacing: .2em;
+  line-height: 1.2;
+  text-transform: uppercase;
 }
 
 .hint {
-  margin: 12px 0 0;
+  margin: 10px 0 0;
   font-size: 17px;
-  color: #3D4A46;
+  line-height: 1.4;
 }
 
-/* 3. Map */
+/* 3. Map: the same box as before (the page's old 64px / 20px sides) */
+.stage {
+  padding-inline: max(64px, (100% - 1312px) / 2);
+}
+
 .map {
   display: block;
   width: 100%;
@@ -97,40 +137,51 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Unchosen: the page's light colour with a dark outline (2.5px, as
+   before). The colours are read through --focus-* custom properties that
+   only the focus ring's inner line (a <use> of the same path, below) sets:
+   its copy of the path then draws a thin light line instead of a state,
+   whichever way the browser styles <use> copies. The real states never
+   see these properties, so they get the values after the comma. */
 .state {
-  fill: #FFFFFF;
   fill-rule: evenodd;
-  stroke: #489E85;
-  stroke-width: 2.5;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
+}
+.states > .state {
+  fill: var(--focus-fill, var(--ink));
+  stroke: var(--focus-stroke, var(--accent));
+  stroke-width: var(--focus-width, 2.5);
   cursor: pointer;
   transition: fill 160ms ease;
 }
-.state:focus { outline: none; }
-.state[aria-checked="true"] { fill: #7CDC92; }
+.states > .state:focus { outline: none; }
+/* Chosen (or saved): solid dark, like an inverted cell */
+.states > .state[aria-checked="true"] { fill: var(--focus-fill, var(--accent)); }
 
 @media (hover: hover) {
-  .state.is-hover { fill: #CAE8E6; }
-  .state[aria-checked="true"].is-hover { fill: #6CCB83; }
+  .states > .state.is-hover { fill: var(--focus-fill, color-mix(in srgb, var(--accent) 14%, var(--ink))); }
+  .states > .state[aria-checked="true"].is-hover { fill: var(--focus-fill, color-mix(in srgb, var(--accent) 82%, var(--ink))); }
 }
+/* Saved state: nothing to choose, so no hand cursor */
+.states > .state[aria-disabled="true"] { cursor: default; }
 
 /* Bigger invisible tap areas for Berlin, Bremen and Hamburg */
-.hit { fill: transparent; cursor: pointer; }
+.hits .hit { fill: transparent; cursor: pointer; }
 
-/* Selecting: the green grows as a circle from the black dot, cut to the
+/* Selecting: the dark fill grows as a circle from the dot, cut to the
    state's outline, until it fills the whole state. Meanwhile the state
    itself keeps its unselected colour (is-flooding). */
 .floods { pointer-events: none; }
 .flood-circle {
-  fill: #7CDC92;
+  fill: var(--accent);
   transform-box: fill-box;
   transform-origin: center;
   animation: flood 550ms cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 @keyframes flood { from { transform: scale(0); } to { transform: scale(1); } }
 /* Unselecting: the same thing backwards (mirrored easing curve), the
-   green shrinks back into the dot */
+   fill shrinks back into the dot */
 .flood-circle.is-shrinking {
   animation-name: unflood;
   animation-timing-function: cubic-bezier(0.8, 0, 0.6, 1);
@@ -138,32 +189,46 @@
 @keyframes unflood { from { transform: scale(1); } to { transform: scale(0); } }
 .flood-outline {
   fill: none;
-  stroke: #489E85;
+  stroke: var(--accent);
   stroke-width: 2.5;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
 }
-.state.is-flooding { fill: #FFFFFF; }
+.states > .state.is-flooding { fill: var(--focus-fill, var(--ink)); }
 @media (hover: hover) {
-  .state.is-flooding.is-hover { fill: #CAE8E6; }
+  .states > .state.is-flooding.is-hover { fill: var(--focus-fill, color-mix(in srgb, var(--accent) 14%, var(--ink))); }
 }
 
-/* Keyboard focus: drawn on top so neighbours never hide it */
+/* Keyboard focus: drawn on top so neighbours never hide it. A thick dark
+   line with a light line inside it (the <use> below), so it shows on a
+   light state and on a dark (chosen) one alike. */
 .focus-ring {
   fill: none;
-  stroke: #121413;
-  stroke-width: 3;
+  stroke: var(--accent);
+  stroke-width: 5;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
   pointer-events: none;
   visibility: hidden;
 }
 .focus-ring.is-on { visibility: visible; }
+/* the <use> of the focused state's outline; its copy inherits these */
+.focus-inner {
+  --focus-fill: none;
+  --focus-stroke: var(--ink);
+  --focus-width: 1.5;
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.5;
+  pointer-events: none;
+  visibility: hidden;
+}
+.focus-inner.is-on { visibility: visible; }
 
 /* Names with a line, like the sketch */
 .leader {
   fill: none;
-  stroke: #121413;
+  stroke: var(--accent);
   stroke-width: 2.5;
   stroke-linecap: round;
   vector-effect: non-scaling-stroke;
@@ -176,8 +241,13 @@
 }
 @keyframes draw-line { to { stroke-dashoffset: 0; } }
 
+/* The dot: light with a dark ring, so it shows on a light state and on
+   the dark fill */
 .dot {
-  fill: #121413;
+  fill: var(--ink);
+  stroke: var(--accent);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
   pointer-events: none;
   transform-box: fill-box;
   transform-origin: center;
@@ -187,12 +257,12 @@
 
 .label { cursor: pointer; }
 .label text {
-  font-family: 'Figtree Variable', sans-serif;
+  font-family: var(--font-grotesk);
   font-size: 24px;
-  font-weight: 600;
-  fill: #121413;
+  font-weight: 700;
+  fill: var(--accent);
 }
-.label:hover text { fill: #2F7A64; }
+.label:hover text { text-decoration: underline; }
 .label-hit { fill: transparent; }
 .label.is-new { animation: fade-in 260ms 180ms ease both; }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
@@ -215,81 +285,91 @@
 .dot.is-leaving { animation: pop-out 260ms 180ms cubic-bezier(0.8, 0, 0.8, 0.2) both; }
 @keyframes pop-out { from { transform: scale(1); } to { transform: scale(0); } }
 
-/* Option C: search by city */
+/* Search by city: its own ruled cell */
 .search {
   position: relative;
   width: 100%;
-  max-width: 520px;
+  max-width: calc(520px + 2 * var(--gutter));
   margin: 0 auto;
+  padding: 16px var(--gutter);
+}
+.search::after {   /* the cell's line, full width */
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 100vw;
+  margin-left: -50vw;
+  border-bottom: 1px solid var(--rule);
 }
 .search-icon {
   position: absolute;
-  left: 16px;
-  top: 26px;
+  left: calc(var(--gutter) + 16px);
+  top: 42px;
   transform: translateY(-50%);
-  color: #3D4A46;
   pointer-events: none;
 }
 .search-input {
   width: 100%;
   height: 52px;
   padding: 0 16px 0 48px;
-  background: #FFFFFF;
-  border: 1px solid #CAE8E6;
-  border-radius: 12px;
-  font-family: 'Figtree Variable', sans-serif;
+  border: 1px solid var(--accent);
+  border-radius: 0;
+  background: transparent;
+  color: var(--accent);
+  font-family: var(--font-grotesk);
   font-size: 16px;
-  color: #121413;
 }
-.search-input::placeholder { color: #3D4A46; }
-.search-input:hover { border-color: #489E85; }
-.search-input:focus-visible { outline: 2px solid #489E85; outline-offset: 2px; }
+.search-input::placeholder { color: color-mix(in srgb, var(--accent) 72%, transparent); opacity: 1; }
+.search-input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
+/* The suggestions: a square list of ruled rows; the active one inverted */
 .suggestions {
   position: absolute;
   z-index: 6;
-  left: 0;
-  right: 0;
-  top: calc(100% + 6px);
+  left: var(--gutter);
+  right: var(--gutter);
+  top: calc(100% - 10px);
   margin: 0;
-  padding: 6px;
+  padding: 0;
   list-style: none;
-  background: #FFFFFF;
-  border: 1px solid #CAE8E6;
-  border-radius: 12px;
-  box-shadow: 0 12px 32px rgba(18, 20, 19, 0.12);
+  background: var(--ink);
+  border: 1px solid var(--accent);
 }
 .suggestion {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
   gap: 12px;
-  padding: 12px;
-  border-radius: 8px;
+  min-height: 44px;
+  padding: 12px 14px;
   cursor: pointer;
 }
-.suggestion[aria-selected="true"] { background: #EEF9F5; }
-@media (hover: hover) { .suggestion:hover { background: #EEF9F5; } }
-.suggestion-city { font-size: 16px; font-weight: 600; }
-.suggestion-alias { font-weight: 400; color: #3D4A46; }
+.suggestion + .suggestion { border-top: 1px solid var(--rule); }
+.suggestion[aria-selected="true"] { background: var(--accent); color: var(--ink); }
+@media (hover: hover) {
+  .suggestion:hover { background: var(--accent); color: var(--ink); }
+}
+.suggestion-city { font-size: 16px; font-weight: 700; }
+.suggestion-alias { font-weight: 400; }
 .suggestion-state {
-  font-size: 14px;
-  font-weight: 600;
-  color: #2F7A64;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
   text-align: right;
 }
 .suggestion-empty {
-  padding: 12px;
+  padding: 12px 14px;
   font-size: 15px;
   line-height: 1.4;
-  color: #3D4A46;
 }
 
-/* 4. Chosen states (phone only) + Siguiente */
+/* 4. Chosen state (phone only) + Siguiente */
 .chips {
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 0 20px;
   display: none;
   flex-wrap: wrap;
   justify-content: center;
@@ -299,19 +379,19 @@
 .chip {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  height: 40px;
+  gap: 8px;
+  min-height: 44px;
   padding: 0 12px 0 16px;
-  background: #FFFFFF;
-  border: 1px solid #CAE8E6;
-  border-radius: 999px;
-  font-family: 'Figtree Variable', sans-serif;
+  border: 1px solid var(--accent);
+  border-radius: 0;
+  background: transparent;
+  color: var(--accent);
+  font-family: var(--font-grotesk);
   font-size: 15px;
-  font-weight: 600;
-  color: #121413;
+  font-weight: 700;
   cursor: pointer;
 }
-.chip:focus-visible { outline: 3px solid #489E85; outline-offset: 2px; }
+.chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .actions {
   display: flex;
@@ -319,87 +399,93 @@
   justify-content: center;
   align-items: center;
   gap: 12px 24px;
+  padding: 16px var(--gutter) 20px;
+  border-top: 1px solid var(--rule);
 }
 
 .count {
   margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: #3D4A46;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
 }
 
-/* Shown instead of the count while nothing is chosen */
+/* Square outline, shown instead of the count while nothing is chosen
+   ("No lo sé"; "Volver" in the dialog) */
 .unsure-btn {
-  height: 48px;
+  min-height: 48px;
   padding: 0 24px;
-  background: #FFFFFF;
-  border: 1px solid #CAE8E6;
-  border-radius: 999px;
-  font-family: 'Figtree Variable', sans-serif;
-  font-size: 16px;
-  font-weight: 600;
-  color: #121413;
+  border: 1px solid var(--accent);
+  border-radius: 0;
+  background: transparent;
+  color: var(--accent);
+  font-family: var(--font-grotesk);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
   cursor: pointer;
-  transition: border-color 160ms ease;
+  transition: background-color .15s ease, color .15s ease;
 }
-.unsure-btn:hover { border-color: #489E85; }
-.unsure-btn:focus-visible { outline: 3px solid #489E85; outline-offset: 2px; }
+.unsure-btn:hover:not(:disabled) { background: var(--accent); color: var(--ink); }
+.unsure-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .count[hidden], .unsure-btn[hidden] { display: none; }
 
+/* Square dark block: "Siguiente", "Ir a novedades", "Sí, confirmar" */
 .next-btn {
-  height: 56px;
+  min-height: 56px;
   padding: 0 40px;
   display: inline-flex;   /* also used on the "Ir a novedades" link */
   align-items: center;
   justify-content: center;
   text-decoration: none;
-  border: 0;
-  border-radius: 999px;
-  background: #121413;
-  color: #CAE8E6;
-  font-family: 'Anton', sans-serif;
-  font-size: 22px;
-  letter-spacing: 0.3px;
+  border: 1px solid var(--accent);
+  border-radius: 0;
+  background: var(--accent);
+  color: var(--ink);
+  font-family: var(--font-grotesk);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: .14em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: background-color 160ms ease, color 160ms ease;
+  transition: background-color .15s ease, color .15s ease;
 }
-.next-btn:hover:not(:disabled) { background: #2F7A64; color: #FFFFFF; }
-.next-btn:focus-visible { outline: 3px solid #489E85; outline-offset: 3px; }
+.next-btn:hover:not(:disabled) { background: transparent; color: var(--accent); }
+.next-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .next-btn:disabled {
-  background: #CAE8E6;
-  color: #3D4A46;
+  opacity: .45;
   cursor: not-allowed;
 }
 .unsure-btn:disabled { cursor: not-allowed; opacity: 0.6; }
 
-/* Save failed (e.g. the state was already saved). Red only for errors. */
+/* Save failed (e.g. the state was already saved): an inverted cell, no red */
 .save-error {
-  margin: 0 auto;
-  max-width: 640px;
-  padding: 14px 16px;
-  border-radius: 12px;
-  background: #FDECEA;
-  color: #B42318;
+  margin: 0;
+  padding: 14px var(--gutter);
+  background: var(--accent);
+  color: var(--ink);
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.4;
   text-align: center;
 }
 
 .search[hidden], .chips[hidden] { display: none; }
 
-/* "¿Confirmas Bayern?" box, shown over the page */
+/* "¿Confirmas Bayern?" box, shown over the page: a square light cell */
 .dialog {
   width: calc(100% - 32px);
   max-width: 460px;
-  padding: 32px;
-  border: 0;
-  border-radius: 20px;
-  background: #FFFFFF;
-  color: #121413;
+  padding: 28px;
+  border: 1px solid var(--accent);
+  border-radius: 0;
+  background: var(--ink);
+  color: var(--accent);
+  font-family: var(--font-grotesk);
 }
-.dialog::backdrop { background: rgba(18, 20, 19, 0.45); }
+.dialog::backdrop { background: color-mix(in srgb, var(--paper) 55%, transparent); }
 .dialog-text {
   margin: 0 0 24px;
   font-size: 18px;
@@ -412,43 +498,37 @@
   gap: 12px;
 }
 
-/* Small screens: map only (no side names), chosen states as chips,
-   Siguiente stays reachable at the bottom */
+/* Small screens: map only (no side names), the chosen state as a chip,
+   then "Siguiente" right under them. The actions are part of the page,
+   not stuck to the bottom of the screen, so they never cover the map
+   (DECISIONS.md, 18 Nov 2026). */
 @media (max-width: 700px) {
-  .page { padding: 20px 20px 0; }
-  .container, .content { gap: 18px; }
+  .site-header { padding: 6px calc(var(--gutter) - 12px); }
+  .brand { padding: 0 12px; }
+  .menu-btn { gap: 12px; padding: 8px 12px; }
+  .menu-btn-icon { width: 30px; }
+  .intro { padding: 24px 20px 18px; }
   .hint { font-size: 16px; }
+  .search { padding: 14px 20px; }
+  .search-icon { left: 36px; top: 40px; }
+  .suggestions { left: 20px; right: 20px; }
+  .stage { padding: 18px 20px; }
   .map { height: auto; }
   .labels, .leaders { display: none; }
-  .chips { display: flex; }
+  .chips { display: flex; padding-bottom: 18px; }
   .actions {
     flex-direction: column;
     gap: 10px;
-    position: sticky;
-    bottom: 0;
-    margin: 0 -20px;
-    padding: 10px 20px 22px;
-    background: #EEF9F5;
-  }
-  /* soft fade above the bar so the map/chips slide under it */
-  .actions::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 100%;
-    height: 24px;
-    background: linear-gradient(rgba(238, 249, 245, 0), #EEF9F5);
-    pointer-events: none;
+    padding: 16px 20px 24px;
   }
   .next-btn { width: 100%; }
-  .dialog { padding: 24px 20px; border-radius: 16px; }
+  .dialog { padding: 24px 20px; }
   .dialog-actions { flex-direction: column-reverse; }
   .dialog-actions button { width: 100%; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .state, .next-btn, .pick { transition: none; }
+  .states > .state, .next-btn, .unsure-btn, .menu-btn-icon { transition: none; }
   .leader.is-drawing, .dot.is-new, .label.is-new,
   .leader.is-undrawing, .dot.is-leaving, .label.is-leaving { animation: none; stroke-dasharray: none; }
 }

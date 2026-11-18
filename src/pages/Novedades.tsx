@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useState, type CSSProperties } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import { Link } from 'react-router'
 import SessionButton from './SessionButton.tsx'
 import { usePageTitle } from '../lib/usePageTitle.ts'
@@ -43,11 +43,6 @@ export default function Novedades() {
   const name = MAP_SHAPES.find((s) => s.id === stateId)?.name ?? ''
   usePageTitle((name || 'Novedades') + ' · Medical Network')
 
-  // The page's own background, colour and font on <body>, only while it is open
-  useLayoutEffect(() => {
-    document.body.classList.add(styles.pageBody)
-    return () => document.body.classList.remove(styles.pageBody)
-  }, [])
 
   /* ---------- News ---------- */
   const [attempt, setAttempt] = useState(0)
@@ -152,7 +147,7 @@ export default function Novedades() {
           </section>
 
           <div className={styles.session}>
-            <SessionButton redesign />
+            <SessionButton />
           </div>
         </div>
       </nav>

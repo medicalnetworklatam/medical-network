@@ -113,7 +113,7 @@ export default function Perfil() {
           />
         </div>
 
-        <p className={styles.notice}>
+        <p className={styles.notice + ' ' + styles.preview}>
           {preview
             ? <>Así te verán los demás miembros: <strong>{preview}</strong></>
             : <>Por ejemplo, «María Fernanda» y «García López» se verá como <strong>María G.</strong></>}

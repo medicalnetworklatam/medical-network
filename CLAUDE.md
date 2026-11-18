@@ -53,40 +53,27 @@ Out of scope:
 - legal texts (handled by a law firm)
 
 ## Look & feel
-During the redesign, two looks exist side by side (DECISIONS.md, "Changes on 17 Nov 2026 (evening)"): the **new look** on redesigned screens, the **old look** on all the others until each one is redesigned. A screen uses one look, never a mix. Redesigned so far: the home page (`/`) and Novedades (`/novedades`). Next: not decided yet.
+Every screen uses one look (DECISIONS.md, "Changes on 18 Nov 2026"), first built for the home page (`/`) and Novedades (`/novedades`). The palette is **Flatline**: black `#050505` on cream `#F3F0E9`.
 
-### New look (redesigned screens)
 - **Read first:** `design-hero/HERO-NOTES.md` (the look, the motion, the home page section by section) and `design-hero/DESIGN-RULES.md` (hard rules). `design-hero/` is Ivan's plain-HTML prototype, kept as a reference only: don't edit it or build on it.
 - **Colours:** only the tokens in `src/styles/redesign.css`, never a hard-coded colour.
-  - Three values make every palette: `--paper` (dark hero background), `--ink` (hero words, circles, light section backgrounds), `--accent-rgb` (text and lines on light sections, inverted cells, see-through words over photos).
+  - Three values make the palette: `--paper` (dark hero background), `--ink` (hero words, circles, light section backgrounds), `--accent-rgb` (text and lines on light sections, inverted cells, see-through words over photos).
   - Derived from them: `--accent`, `--tint`, `--rule`.
-  - The palette isn't chosen yet. **Temporary:** the home page's "Menú" button cycles the five candidates (`src/lib/palette.ts`, `src/pages/home/PaletteMenu.tsx`), set as `data-palette` on `<html>` and remembered in the browser, so it applies to every redesigned screen. **Flatline** is the default (the `:root` values) until then. Once one is chosen, it becomes the `:root` default and the switcher is removed.
+  - `global.css` makes the light sections' colours (`--ink` background, `--accent` text) and Space Grotesk the default for every page. The home page swaps in its dark background and Albert Sans while it's open (a class on `<body>`, see `Home.tsx`).
+  - Secondary text (hints, emails, "Sin estado") uses `color-mix(in srgb, var(--accent) 72%, transparent)`, never lighter, so it keeps at least 4.5:1 contrast.
 - **Fonts** (self-hosted, open licence; files and licences in `src/assets/fonts/`):
-  - **Albert Sans** (`--font`) for the big headlines, standing in for Aaux Next (commercial, needs a web licence first; its `@font-face` block is commented out in `redesign.css`)
+  - **Albert Sans** (`--font`) for the big headlines and the chips, standing in for Aaux Next (commercial, needs a web licence first; its `@font-face` block is commented out in `redesign.css`)
   - **Space Grotesk** (`--font-grotesk`) for everything else
 - **Ruled cells:** cells split by thin 1px lines (`--rule`), square corners, a small spaced uppercase label over a big bold lowercase title that ends with a full stop ("mi / historia.", "las 3 / fases."). Inverted cells ("después", "resultado") swap the colours.
-  - On dark cells (`--paper` background), draw the lines in the words' colour (`color-mix(in srgb, var(--ink) 28%, transparent)`, as Novedades' column does): `--rule` is made from the accent, which equals `--paper` in some palettes and would disappear.
+  - Page titles: the `<h1>` keeps its own words; lowercase and the full stop (`aria-hidden`) come from CSS and markup. Label words: "tu" over "comunidad." and over "chat." (no state), "chat de" over the state name, "administración" over the admin titles; the login screens split their title (INICIAR / sesión.).
+  - On dark cells (`--paper` background), draw the lines in the words' colour (`color-mix(in srgb, var(--ink) 28%, transparent)`, as Novedades' column does), not `--rule`, which is made from the accent and would disappear on a dark background.
+- **Buttons and messages:** square dark blocks for the main action, square outlines for the others, chips (`SessionButton`, "Menú", "← Novedades") in `--paper` and `--ink`. Errors are inverted cells (dark background, light text); there is no red. Notices are ruled cells.
 - **Long names in big titles** (state names, e.g. "mecklenburg- / vorpommern."): the size comes from the name's longest word, passed as a CSS variable from React's `style` prop (never a `style="..."` attribute, which the CSP blocks), measured with container query units (`cqi`) on the title's cell. Hyphenated names break after the hyphen. Every state name must fit at 375px (see `Novedades.tsx` and `.title-name` in `Novedades.module.css`).
 - **Design rules:** no photo is ever cut off by the edge of the screen at the scroll point where it's meant to be seen (crop photos to frames, let frames resize); grids of cells fit on one screen (split long ones into several screens).
 - **Motion** is tied to the scroll, reverses cleanly when scrolling up, and respects `prefers-reduced-motion`.
 - **Rejected directions** (never go back to them): ruled "expediente" cards with D-DIN Condensed + Figtree; rounded white cards with petrol blue and numbered circles.
-- **CSS that can't leak:** the site loads every page's CSS at once. A page's `.module.css` never targets `html`, `body`, `*` or `:root`; body-level rules go under a class the page adds to `<body>` while it's open (see `Home.tsx`). `redesign.css` holds only custom properties and `@font-face` rules.
-- `:focus-visible` outlines use the tokens (a ring in `--ink` inside the dark chips).
-
-### Old look (screens not redesigned yet, carried over from the mock-up)
-- **Colours:**
-  - page `#EEF9F5`, text `#121413`
-  - green `#489E85` (borders, sidebar), bright green `#7CDC92` (selected)
-  - pale teal `#CAE8E6`, dark green text `#2F7A64`, muted text `#3D4A46`
-  - cards and rows white `#FFFFFF`
-- **Fonts** (self-hosted files, open licence):
-  - **Anton** only for the big uppercase page titles
-  - **Figtree** for everything else
-  - Small section titles: Figtree 13px, weight 700, uppercase, `letter-spacing: 0.1em`
-- **Shapes:** rounded corners (12–20px), pill buttons, `:focus-visible` outlines in `#489E85`.
-- Both state maps stay exactly as they are.
-
-### Both looks
+- **CSS that can't leak:** the site loads every page's CSS at once. A page's `.module.css` never targets `html`, `body`, `*` or `:root`; body-level rules go in `global.css`, or under a class the page adds to `<body>` while it's open (only the home page does, see `Home.tsx`). `redesign.css` holds only custom properties and `@font-face` rules.
+- `:focus-visible` outlines use the tokens: a ring in the text colour, inside dark chips and inverted cells in `--ink`.
 - **Responsive:** phone layout at `max-width: 700px`, designed for iPad landscape and desktop too. Tap targets at least 44px. Hidden scrollbars.
 - **Language:** all text users see is in **Spanish**, and state names are in **German** (Bayern, Nordrhein-Westfalen, Thüringen…). Other German terms stay German too (Approbation, Hospitationen…), marked with `lang="de"`. Content in `[corchetes]` in the mock-up is placeholder text.
 - **Accessibility:** keep the roles and ARIA labels, keyboard support (Tab, Space/Enter, arrow keys in lists), and `aria-live` announcements in Spanish. Respect `prefers-reduced-motion`.
@@ -94,11 +81,13 @@ During the redesign, two looks exist side by side (DECISIONS.md, "Changes on 17 
 ## The mock-up and the state map
 - **`design-mockup/MOCKUP-NOTES.md` is the old CLAUDE.md of the plain-HTML mock-up, kept word for word.**
   - Read it when porting or changing a mock-up page. It has the page flow, every detail of the map (sizes, settings, animations, city search) and the saved-choice behaviour.
-  - Its look, behaviour and accessibility notes still apply.
+  - Its behaviour and accessibility notes still apply. Its look doesn't (since 18 Nov 2026 the state map uses the site's colours and fonts).
   - Its stack rules no longer apply: no framework, no build, ES5 style, Google Fonts, opening the files directly.
 - **Map rules that always apply:**
   - Never hand-edit the SVG path `d` attributes. The scripts that generated them are gone, so copy them exactly.
   - Neighbouring states must keep sharing exactly the same border.
+  - The map's size formula (`--map-*` in `Estados.module.css`), animation timings, city search and confirmation step stay as they are.
+  - On phones the "Siguiente" actions sit under the map, not stuck to the bottom of the screen, so they never cover the map.
 - **Saving the choice:** in the mock-up, chosen states were saved only in the browser (`localStorage`). In the app: one Bundesland per user, chosen once on the map, saved to the account.
 
 ## Commands and checks
@@ -115,8 +104,8 @@ During the redesign, two looks exist side by side (DECISIONS.md, "Changes on 17 
   - `src/pages/`: one `.tsx` file per page, plus its own `.module.css`.
   - `src/pages/PostBoard.tsx`: the list and form shared by the community board (`Comunidad.tsx`, posts with an empty state) and the state chat (`Chat.tsx`, one state's messages, refreshed every 20 seconds). Both use the styles in `Comunidad.module.css`.
   - `src/estados/`: map shapes, city search data and map animations.
-  - `src/pages/Home.tsx` and `src/pages/home/`: the home page (new look). Its scroll motion is in `src/pages/home/` (`fit.ts`, `reveal.ts`, `push.ts`, `phases.ts`, `story.ts`, one per prototype script). Each one runs only while the page is open and removes its listeners and animation frames when it's left. They find elements by the CSS module's class names, so a class used only by them must still be listed in `Home.module.css`.
-  - `src/styles/redesign.css`: fonts and colour tokens for the new look. `src/lib/palette.ts`: the temporary palette switcher.
+  - `src/pages/Home.tsx` and `src/pages/home/`: the home page. `HomeMenu.tsx` is "Menú" (Calendly link, plus "Entrar", or "Mi área" and "Cerrar sesión"). Its scroll motion is in `src/pages/home/` (`fit.ts`, `reveal.ts`, `push.ts`, `phases.ts`, `story.ts`, one per prototype script). Each one runs only while the page is open and removes its listeners and animation frames when it's left. They find elements by the CSS module's class names, so a class used only by them must still be listed in `Home.module.css`.
+  - `src/styles/redesign.css`: the fonts and colour tokens. `src/styles/global.css`: box-sizing, hidden scrollbars, the default `body` colours and font, `.sr-only`.
   - `src/lib/profile.ts` and `ProfileProvider.tsx`: the logged-in user's own profile (name, state, plan, admin), loaded once after login and shared with every page.
   - `src/lib/supabase.ts`: the one connection to Supabase. `src/lib/auth.ts` and `AuthProvider.tsx` share who is logged in; `src/pages/RequireLogin.tsx` guards the pages that need a login, and sends users without a first name to `/perfil` first.
   - `src/pages/Admin*.tsx` and `RequireAdmin.tsx`: the admin screens (`/admin`, `/admin/clientes/<id>`, `/admin/novedades`), drawn only when the loaded profile is an admin. They never offer `is_admin`, and each save sends only the one column it changes.

@@ -1,179 +1,274 @@
-/* Styles shared by the login screens: Iniciar sesión, Recuperar contraseña,
-   Nueva contraseña (and the short "Cargando…" message). Same colours,
-   header and pill buttons as the other pages. */
+/* ------------------------------------------------------------------
+   The login screens (Iniciar sesión, Recuperar contraseña, Nueva
+   contraseña), /perfil, the "Tu cuenta" screens and "Cargando…", in the
+   new look. Fonts and colour tokens come from src/styles/redesign.css
+   (never a hard-coded colour).
+
+   Desktop:  dark cell (header, INICIAR / sesión.) | light cell (the form,
+             one ruled row per field, the main button, the links).
+   Phone:    the dark cell on top, the light cell under it; the page
+             scrolls.
+
+   Rule for this file: the site loads every page's CSS at once, so
+   nothing here may target html, body, * or :root directly.
+------------------------------------------------------------------- */
 
 .page {
+  position: relative;
   min-height: 100vh;
-  padding: 28px 64px 56px;
+  min-height: 100dvh;
 }
 
-.container {
-  max-width: 1312px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 48px;
-}
-
-/* 1. Header (same as the home page) */
+/* Header: over the top of the dark cell */
 .site-header {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  width: 50%;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  min-height: 48px;
+  gap: 12px;
+  padding: var(--gutter);
+  color: var(--ink);
 }
-
 .brand {
-  font-size: 24px;
-  font-weight: 600;
-  letter-spacing: -0.2px;
-  color: #121413;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: inherit;
+  font: 400 clamp(18px, 1.4vw, 22px) / 1 var(--font);
   text-decoration: none;
 }
-.brand:focus-visible { outline: 3px solid #489E85; outline-offset: 4px; border-radius: 4px; }
-
-/* 2. The white card in the middle */
-.card {
-  width: 100%;
-  max-width: 480px;
-  margin: 0 auto;
-  padding: 40px;
-  background: #FFFFFF;
-  border-radius: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+.brand:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: .2em;
+}
+.brand:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 4px;
 }
 
+/* The two cells */
+.main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* Left: dark, like the home page's heroes; the title at the bottom */
+.head {
+  /* the title's size is measured on this cell's width (cqi units) */
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 120px var(--gutter) clamp(32px, 5vw, 72px);
+  background: var(--paper);
+  color: var(--ink);
+}
 .title {
   margin: 0;
-  font-family: 'Anton', sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 1.4vw, 22px);
   font-weight: 400;
-  font-size: clamp(34px, 5vw, 46px);
-  line-height: 1.05;
+}
+/* "INICIAR": small spaced capitals */
+.title-label {
+  font-family: var(--font-grotesk);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: .2em;
   text-transform: uppercase;
-  color: #2F7A64;
-  text-wrap: balance;
+}
+/* "sesión.": as big as fits the cell. AuthLayout.tsx sets --title-chars
+   (the word plus its full stop); --k is the width of one letter of this
+   font, in em, with a little to spare. */
+.title-word {
+  --k: .56;
+  display: block;
+  font-family: var(--font);
+  font-size: clamp(3rem, 7vw, 8rem);   /* browsers without cqi */
+  font-size: min(8rem, 100cqi / (var(--title-chars, 8) * var(--k)));
+  line-height: .95;
+  letter-spacing: -.04em;
+  text-transform: lowercase;
+  overflow-wrap: break-word;
+}
+
+/* Right: light, the content. Fields are full-width ruled rows. */
+.card {
+  --pad: clamp(20px, 4vw, 64px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 24px;
+  min-width: 0;
+  padding: clamp(40px, 6vw, 96px) var(--pad);
 }
 
 .intro {
   margin: 0;
+  max-width: 46ch;
   font-size: 17px;
-  line-height: 1.45;
-  color: #3D4A46;
+  line-height: 1.55;
 }
 
-/* 3. Form */
 .form {
   display: flex;
   flex-direction: column;
   gap: 18px;
+  margin-inline: calc(-1 * var(--pad));
+  border-top: 1px solid var(--rule);
 }
+.form > div:empty { display: none; }
 
+/* One row per field: small capitals over a square input */
 .field {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
+  padding: 18px var(--pad) 20px;
+  border-bottom: 1px solid var(--rule);
 }
-
 .label {
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: .16em;
+  text-transform: uppercase;
 }
-
 .hint {
   margin: -2px 0 0;
   font-size: 14px;
-  color: #3D4A46;
+  color: color-mix(in srgb, var(--accent) 72%, transparent);
 }
 
 .input {
   width: 100%;
   height: 52px;
-  padding: 0 16px;
-  background: #FFFFFF;
-  border: 1px solid #CAE8E6;
-  border-radius: 12px;
-  font-family: 'Figtree Variable', sans-serif;
+  padding: 0 14px;
+  border: 1px solid var(--accent);
+  border-radius: 0;
+  background: transparent;
+  color: var(--accent);
+  font-family: var(--font-grotesk);
   font-size: 16px; /* 16px or more: iPhones don't zoom in on focus */
-  color: #121413;
 }
-.input:hover { border-color: #489E85; }
-.input:focus-visible { outline: 2px solid #489E85; outline-offset: 2px; }
-.input[aria-invalid="true"] { border-color: #B42318; }
+.input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* the field with the problem gets a thicker border (the message says why) */
+.input[aria-invalid="true"] { box-shadow: inset 0 0 0 2px var(--accent); }
 
-/* Error and info messages. Red is only used here, for errors. */
+/* Messages: a notice is a ruled cell; an error is an inverted cell (dark,
+   light text), as on Novedades. There is no red (DECISIONS.md, 18 Nov). */
 .error,
 .notice {
   margin: 0;
   padding: 14px 16px;
-  border-radius: 12px;
   font-size: 16px;
-  line-height: 1.4;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
 }
-.error { background: #FDECEA; color: #B42318; font-weight: 600; }
-.notice { background: #CAE8E6; color: #121413; }
+.form .error,
+.form .notice { margin-inline: var(--pad); }
+.error {
+  background: var(--accent);
+  color: var(--ink);
+  font-weight: 700;
+}
+.notice { border: 1px solid var(--accent); }
 .error:empty, .notice:empty { display: none; }
 
-/* Main button: dark pill, like "Siguiente" on the state picker */
+/* /perfil: "Así te verán los demás miembros:" with the name big under it */
+.preview strong {
+  display: block;
+  margin-top: 6px;
+  font-size: clamp(24px, 2.4vw, 32px);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -.02em;
+}
+
+/* Main button: a square dark block (also the "Continuar" link) */
 .submit {
-  width: 100%;
-  min-height: 56px;
-  padding: 0 32px;
-  border: 0;
-  border-radius: 999px;
-  background: #121413;
-  color: #CAE8E6;
-  font-family: 'Anton', sans-serif;
-  font-size: 22px;
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
-  text-decoration: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  min-height: 56px;
+  padding: 0 28px;
+  border: 1px solid var(--accent);
+  border-radius: 0;
+  background: var(--accent);
+  color: var(--ink);
+  font-family: var(--font-grotesk);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  text-decoration: none;
   cursor: pointer;
-  transition: background-color 160ms ease, color 160ms ease;
+  transition: background-color .15s ease, color .15s ease;
 }
-.submit:hover:not(:disabled) { background: #2F7A64; color: #FFFFFF; }
-.submit:focus-visible { outline: 3px solid #489E85; outline-offset: 3px; }
-.submit:disabled { background: #CAE8E6; color: #3D4A46; cursor: wait; }
+.form .submit { margin: 6px var(--pad) 0; }
+.submit:hover:not(:disabled) {
+  background: transparent;
+  color: var(--accent);
+}
+.submit:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.submit:disabled { opacity: .55; cursor: wait; }
 
 /* Small links under the form ("¿Olvidaste tu contraseña?") */
 .links {
   margin: 0;
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
-  column-gap: 24px;
+  column-gap: 28px;
 }
 .link {
   min-height: 44px;
   display: inline-flex;
   align-items: center;
+  color: inherit;
   font-size: 16px;
-  font-weight: 600;
-  color: #2F7A64;
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: .25em;
 }
-.link:hover { color: #121413; }
-.link:focus-visible { outline: 3px solid #489E85; outline-offset: 2px; border-radius: 4px; }
+.link:hover { text-decoration-thickness: 2px; }
+.link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* "Cargando…" while the saved login is checked */
 .loading {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
-  font-weight: 600;
-  color: #3D4A46;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .2em;
+  text-transform: uppercase;
 }
 
+/* ------------------------------------------------------------------
+   Phone
+------------------------------------------------------------------- */
 @media (max-width: 700px) {
-  .page { padding: 20px 20px 40px; }
-  .container { gap: 28px; }
-  .card { padding: 28px 22px; border-radius: 16px; }
+  .site-header { width: 100%; }
+  .main { display: block; }
+  .head { padding: 96px var(--gutter) 28px; }
+  .title { gap: 12px; }
+  .title-label { font-size: 12px; }
+  .card { padding: 28px var(--gutter) 48px; gap: 20px; }
+  .card { --pad: var(--gutter); }
+  .intro { font-size: 16px; }
+  .submit { width: auto; }
 }
 
 @media (prefers-reduced-motion: reduce) {

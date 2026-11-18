@@ -1,384 +1,438 @@
-/* Admin pages: client overview, one client's screen, news form.
-   Same look as the community board (Comunidad.module.css): white cards,
-   pale teal borders, pill buttons. */
+/* ------------------------------------------------------------------
+   Admin screens (/admin, /admin/clientes/<id>, /admin/novedades), in the
+   new look: ruled cells split by thin 1px lines, small spaced labels, big
+   lowercase titles ending in a full stop, square buttons. Fonts and
+   colour tokens come from src/styles/redesign.css (never a hard-coded
+   colour).
+
+   Desktop:  dark top bar | tab cells | "ADMINISTRACIÓN / clientes." |
+             the page's cells (the client table across the whole width;
+             a client's settings | checklist; the news form | the list).
+   Up to 900px: one column; the client table turns every row into a
+             block of "label .... value" lines.
+
+   Rule for this file: the site loads every page's CSS at once, so
+   nothing here may target html, body, * or :root directly.
+------------------------------------------------------------------- */
 
 .page {
   min-height: 100vh;
   min-height: 100dvh;
 }
 
-.container {
-  max-width: 760px;
-  margin: 0 auto;
-  padding: 0 24px 60px;
-}
-/* The client table needs more room */
-.container.is-wide { max-width: 1160px; }
-
-/* ---------- Header: back to Novedades, "Cerrar sesión" ---------- */
+/* ---------- Top bar: back to Novedades, "Cerrar sesión" ---------- */
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 20px 0 8px;
+  padding: 8px calc(var(--gutter) - 14px);
+  background: var(--paper);
+  color: var(--ink);
 }
-
-/* Same look as the "Cerrar sesión" pill (SessionButton.module.css) */
-.pill,
-.tab {
-  height: 48px;
-  padding: 0 22px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: #FFFFFF;
-  border: 1px solid #CAE8E6;
-  border-radius: 999px;
-  font-size: 16px;
-  font-weight: 600;
-  color: #121413;
-  text-decoration: none;
-  white-space: nowrap;
-  transition: border-color 160ms ease, background-color 160ms ease;
-}
-.pill:hover,
-.tab:hover { border-color: #489E85; }
-.pill:focus-visible,
-.tab:focus-visible { outline: 3px solid #489E85; outline-offset: 2px; }
-
-/* ---------- The two admin sections ---------- */
-.tabs {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px 0 0;
-}
-/* The section you are in: bright green, like a selected item */
-.tab[aria-current="page"] {
-  background: #7CDC92;
-  border-color: #7CDC92;
-}
-
-/* ---------- Main ---------- */
-.main {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.page-title {
-  margin: 0;
-  padding: 20px 0 4px;
-  font-family: 'Anton', sans-serif;
-  font-weight: 400;
-  font-size: 88px;
-  line-height: 1;
-  text-align: center;
-  text-wrap: balance;
-}
-
-/* Small section titles: Figtree 13px, bold, spaced capitals */
-.section-title {
-  margin: 0;
-  font-size: 13px;
-  font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-/* "← Todos los clientes" */
-.back { margin: 0; }
-.back-link {
+/* "← Novedades": the home page's chip */
+.pill {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   min-height: 44px;
-  font-size: 16px;
+  padding: 10px 14px;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 clamp(17px, 1.25vw, 22px) / 1 var(--font);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.pill:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: .2em;
+}
+.pill:focus-visible { outline: 2px solid var(--ink); outline-offset: -6px; }
+
+/* ---------- Tabs: two cells, the open one inverted ---------- */
+.tabs {
+  display: flex;
+  border-bottom: 1px solid var(--rule);
+}
+.tab {
+  display: flex;
+  align-items: center;
+  min-height: 52px;
+  padding: 12px var(--gutter);
+  border-right: 1px solid var(--rule);
+  color: inherit;
+  font-size: 13px;
   font-weight: 700;
-  color: #2F7A64;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background-color .15s ease, color .15s ease;
 }
-.back-link:hover { color: #121413; }
-.back-link:focus-visible { outline: 3px solid #489E85; outline-offset: 2px; border-radius: 6px; }
+.tab:hover,
+.tab[aria-current="page"] {
+  background: var(--accent);
+  color: var(--ink);
+}
+.tab:focus-visible { outline: 2px solid currentColor; outline-offset: -5px; }
 
-/* Loading / empty / errors: one white box */
-.message {
+/* ---------- Title cell: "ADMINISTRACIÓN" over "clientes." ---------- */
+.main {
+  display: flex;
+  flex-direction: column;
+}
+.head {
+  /* the title's size is measured on this cell's width (cqi units) */
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 1.4vw, 22px);
+  padding: clamp(28px, 5vw, 64px) var(--gutter) clamp(16px, 1.8vw, 26px);
+  border-bottom: 1px solid var(--rule);
+}
+.head-label,
+.section-title,
+.setting-label,
+.label {
   margin: 0;
-  background: #FFFFFF;
-  border: 1px solid #CAE8E6;
-  border-radius: 16px;
-  padding: 24px 28px;
-  font-size: 17px;
-  line-height: 1.45;
-  color: #3D4A46;
-  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: .16em;
+  text-transform: uppercase;
 }
-.message p { margin: 0; }
-.message p + .message-btn { margin-top: 16px; }
-.message.is-error { background: #FDECEA; border-color: #FDECEA; color: #B42318; font-weight: 600; }
-
-/* Small explanations */
-.note {
+.head-label { letter-spacing: .2em; }
+/* As big as fits: the longest word (AdminLayout.tsx sets --title-chars)
+   must fit the cell's width */
+.page-title {
+  --k: .56;
   margin: 0;
-  font-size: 15px;
-  line-height: 1.5;
-  color: #3D4A46;
-  overflow-wrap: anywhere;
+  font-size: clamp(2.5rem, 6vw, 6rem);   /* browsers without cqi */
+  font-size: min(6rem, 100cqi / (var(--title-chars, 10) * var(--k)));
+  font-weight: 700;
+  line-height: .95;
+  letter-spacing: -.05em;
+  text-transform: lowercase;
+  overflow-wrap: break-word;
 }
 
-.error,
-.notice {
-  margin: 0;
-  padding: 12px 16px;
-  border-radius: 12px;
-  font-size: 15px;
-  line-height: 1.45;
-  overflow-wrap: anywhere;
+/* ---------- The page's cells ---------- */
+.body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-content: start;
 }
-.error { background: #FDECEA; color: #B42318; font-weight: 600; }
-.notice { background: #CAE8E6; color: #121413; }
+.body > * { grid-column: 1 / -1; }
+.body > .settings-card,
+.body > .news-form { grid-column: 1; }
+.body > .checklist-card,
+.body > .news-list { grid-column: 2; border-left: 1px solid var(--rule); }
+.body.is-wide { display: block; }
 
-/* ---------- Cards ---------- */
 .card {
-  background: #FFFFFF;
-  border: 1px solid #CAE8E6;
-  border-radius: 16px;
-  padding: 24px 28px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  min-width: 0;
+  padding: clamp(22px, 2.4vw, 34px) var(--gutter);
+  border-bottom: 1px solid var(--rule);
 }
-
 .list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  min-width: 0;
 }
-
 .list-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 0 2px;
+  padding: 12px var(--gutter);
+  border-bottom: 1px solid var(--rule);
 }
-.card > .list-head { padding: 0; }
+.card > .list-head { padding: 0; border: 0; }
 
-/* ---------- Buttons ---------- */
-/* Black pill, like the buttons on Novedades */
+/* "← Todos los clientes" */
+.back {
+  margin: 0;
+  border-bottom: 1px solid var(--rule);
+}
+.back-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 8px var(--gutter);
+  color: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background-color .15s ease, color .15s ease;
+}
+.back-link:hover { background: var(--accent); color: var(--ink); }
+.back-link:focus-visible { outline: 2px solid currentColor; outline-offset: -5px; }
+
+/* Loading / empty / errors: one cell; errors inverted, no red */
+.message {
+  margin: 0;
+  padding: clamp(20px, 2.4vw, 32px) var(--gutter);
+  border-bottom: 1px solid var(--rule);
+  font-size: 17px;
+  line-height: 1.5;
+}
+.message p { margin: 0; }
+.message p + .message-btn { margin-top: 16px; }
+.message.is-error {
+  background: var(--accent);
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.note {
+  margin: 0;
+  max-width: 72ch;
+  font-size: 15px;
+  line-height: 1.5;
+}
+/* above the table: the line runs the whole width, the text stays narrow */
+.list > .note {
+  max-width: none;
+  padding: 16px max(var(--gutter), 100% - 72ch - var(--gutter)) 16px var(--gutter);
+  border-bottom: 1px solid var(--rule);
+}
+
+.error,
+.notice {
+  margin: 0;
+  padding: 12px 14px;
+  font-size: 15px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.error { background: var(--accent); color: var(--ink); font-weight: 700; }
+.notice { border: 1px solid var(--accent); }
+
+/* ---------- Buttons: square ---------- */
 .primary-btn,
 .message-btn {
-  min-height: 48px;
-  padding: 0 28px;
-  border: 0;
-  border-radius: 999px;
-  background: #121413;
-  color: #CAE8E6;
-  font-family: 'Figtree Variable', sans-serif;
-  font-size: 16px;
-  font-weight: 700;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  min-height: 48px;
+  padding: 0 22px;
+  border: 1px solid var(--accent);
+  border-radius: 0;
+  background: var(--accent);
+  color: var(--ink);
+  font-family: var(--font-grotesk);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
   cursor: pointer;
-  transition: background-color 160ms ease, color 160ms ease;
+  transition: background-color .15s ease, color .15s ease;
 }
-.primary-btn:hover:not(:disabled),
-.message-btn:hover:not(:disabled) { background: #2F7A64; color: #FFFFFF; }
-.primary-btn:focus-visible,
-.message-btn:focus-visible { outline: 3px solid #489E85; outline-offset: 3px; }
+.primary-btn:hover:not(:disabled) { background: transparent; color: var(--accent); }
 .primary-btn:disabled,
-.message-btn:disabled { background: #CAE8E6; color: #3D4A46; cursor: default; }
+.message-btn:disabled { opacity: .45; cursor: default; }
+/* "Reintentar" on an inverted (error) cell: a light block */
+.message-btn {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--accent);
+}
+.message-btn:hover:not(:disabled) { background: transparent; color: var(--ink); }
 
-/* White pill: "Actualizar", "Cambiar", "Cancelar", "Editar" */
+/* Square outline: "Actualizar", "Cambiar", "Cancelar", "Editar" */
 .small-btn {
-  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: 44px;
-  padding: 0 18px;
-  border: 1px solid #CAE8E6;
-  border-radius: 999px;
-  background: #FFFFFF;
-  color: #121413;
-  font-family: 'Figtree Variable', sans-serif;
-  font-size: 15px;
-  font-weight: 600;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: border-color 160ms ease;
-}
-.small-btn:hover:not(:disabled) { border-color: #489E85; }
-.small-btn:focus-visible { outline: 3px solid #489E85; outline-offset: 2px; }
-.small-btn:disabled { color: #3D4A46; cursor: default; }
-
-/* ---------- Client overview: the table ---------- */
-.table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0 8px;   /* room between the rows */
-  margin: -8px 0;
-}
-.table th {
-  padding: 4px 16px;
-  text-align: left;
-  vertical-align: bottom;
+  padding: 0 16px;
+  border: 1px solid var(--accent);
+  border-radius: 0;
+  background: transparent;
+  color: var(--accent);
+  font-family: var(--font-grotesk);
   font-size: 13px;
   font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: 0.1em;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color .15s ease, color .15s ease;
+}
+.small-btn:hover:not(:disabled) { background: var(--accent); color: var(--ink); }
+.small-btn:disabled { opacity: .5; cursor: default; }
+
+.primary-btn:focus-visible,
+.small-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.message-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+
+/* ---------- Client table: a ruled grid ---------- */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.table th {
+  padding: 14px 12px;
+  border-bottom: 1px solid var(--rule);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: .14em;
+  text-align: left;
   text-transform: uppercase;
 }
-/* Each row is one white, rounded strip */
 .table td {
-  padding: 10px 16px;
-  background: #FFFFFF;
-  border-top: 1px solid #CAE8E6;
-  border-bottom: 1px solid #CAE8E6;
-  font-size: 16px;
-  line-height: 1.35;
-  vertical-align: middle;
+  padding: 16px 12px;
+  border-bottom: 1px solid var(--rule);
+  font-size: 15px;
+  line-height: 1.4;
+  vertical-align: top;
 }
-/* Names and routes break inside a word only when a word is wider than its
-   column; plan, progress and dates stay on one line */
+.table th:first-child,
+.table td:first-child { padding-left: var(--gutter); }
+.table th:last-child,
+.table td:last-child { padding-right: var(--gutter); }
 .table .name-cell,
 .table .wrap-cell { overflow-wrap: break-word; }
 .table .nowrap-cell { white-space: nowrap; }
 .table th:first-child { width: 24%; }
-.table td:first-child { border-left: 1px solid #CAE8E6; border-radius: 16px 0 0 16px; }
-.table td:last-child { border-right: 1px solid #CAE8E6; border-radius: 0 16px 16px 0; }
 
-/* The name opens the client's screen */
 .client-link {
   display: inline-flex;
   flex-direction: column;
   justify-content: center;
   min-height: 44px;
-  font-weight: 700;
-  color: #2F7A64;
+  margin: -8px 0;
+  color: inherit;
   text-decoration: none;
 }
-.client-name { text-decoration: underline; }
-.client-link:hover { color: #121413; }
-.client-link:focus-visible { outline: 3px solid #489E85; outline-offset: 2px; border-radius: 6px; }
+.client-name {
+  font-size: 17px;
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: .2em;
+}
+.client-link:hover .client-name { text-decoration-thickness: 2px; }
+.client-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-/* Only for clients without a name yet */
+/* the email under "Sin nombre" */
 .email {
   display: block;
-  font-size: 13px;
+  margin-top: 2px;
+  font-size: 14px;
   font-weight: 400;
-  color: #3D4A46;
+  color: color-mix(in srgb, var(--accent) 72%, transparent);
   overflow-wrap: anywhere;
 }
-
 /* "Sin estado", "Sin ruta" */
-.none { color: #3D4A46; }
-
-/* Dates and percentages: digits of equal width, so columns line up */
+.none { color: color-mix(in srgb, var(--accent) 72%, transparent); }
 .nowrap-cell { font-variant-numeric: tabular-nums; }
 
-/* "Gratis" */
+/* "Gratis": a small outlined label */
 .tag {
   display: inline-block;
-  padding: 3px 12px;
-  border-radius: 999px;
-  background: #CAE8E6;
-  font-size: 14px;
-  font-weight: 700;
-  color: #121413;
-}
-
-/* ---------- One client's screen ---------- */
-.client-title {
-  margin: 0;
-  min-width: 0;
-  font-size: 24px;
+  padding: 3px 7px;
+  border: 1px solid var(--accent);
+  font-size: 11px;
   font-weight: 700;
   line-height: 1.2;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+/* ---------- One client ---------- */
+.client-title {
+  margin: 0;
+  font-size: clamp(26px, 2.8vw, 40px);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -.03em;
   overflow-wrap: anywhere;
 }
-.client-title .email { margin-top: 4px; font-size: 15px; }
+.client-title .email { margin-top: 6px; font-size: 15px; letter-spacing: 0; }
+/* the name may take two lines (name + email): "Actualizar" stays at the top */
+.client-card .list-head { align-items: flex-start; }
 
-/* One thing to change: Estado, Ruta or Plan */
+/* Estado, Ruta, Plan: one ruled row each */
 .setting {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding-top: 16px;
-  border-top: 1px solid #CAE8E6;
+  margin-inline: calc(-1 * var(--gutter));
+  padding: 18px var(--gutter) 20px;
+  border-top: 1px solid var(--rule);
 }
-.setting-label {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 700;
-}
+.setting:last-child { padding-bottom: 0; }
 .setting-value {
   margin: 0;
   font-size: 16px;
-  line-height: 1.4;
-  color: #3D4A46;
-  overflow-wrap: anywhere;
 }
-.setting-value strong { color: #121413; }
+.setting-value strong { font-weight: 700; }
 .setting-row {
   display: flex;
-  align-items: center;
   gap: 8px;
 }
 .setting-row .select { flex: 1 1 auto; }
 
-/* The question asked inside the page before a change is saved */
+/* "¿Cambiar el plan…?": an inverted strip */
 .confirm {
   display: flex;
   flex-direction: column;
   gap: 12px;
   padding: 14px 16px;
-  background: #EEF9F5;
-  border-radius: 12px;
+  background: var(--accent);
+  color: var(--ink);
 }
 .confirm-text {
   margin: 0;
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.45;
-  overflow-wrap: anywhere;
 }
 .confirm-btns {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
+.confirm .primary-btn { border-color: var(--ink); background: var(--ink); color: var(--accent); }
+.confirm .primary-btn:hover:not(:disabled) { background: transparent; color: var(--ink); }
+.confirm .small-btn { border-color: var(--ink); color: var(--ink); }
+.confirm .small-btn:hover:not(:disabled) { background: var(--ink); color: var(--accent); }
+.confirm .primary-btn:focus-visible,
+.confirm .small-btn:focus-visible { outline-color: var(--ink); }
 
-/* The checklist, read-only */
+/* Checklist, read-only: a square mark cell | title, text, status */
 .checklist {
   list-style: none;
-  margin: 0;
+  margin: 0 calc(-1 * var(--gutter));
   padding: 0;
-  display: flex;
-  flex-direction: column;
 }
 .check-item {
   display: flex;
   gap: 14px;
-  padding: 14px 0;
-  border-top: 1px solid #CAE8E6;
+  padding: 16px var(--gutter);
+  border-top: 1px solid var(--rule);
 }
-/* A drawn tick box (not a real one: nothing here can be changed) */
 .check-mark {
-  flex: 0 0 26px;
-  width: 26px;
-  height: 26px;
-  border: 2px solid #489E85;
-  border-radius: 8px;
-  display: inline-flex;
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  display: flex;
   align-items: center;
   justify-content: center;
+  border: 1px solid var(--accent);
   font-size: 16px;
   font-weight: 700;
-  line-height: 1;
-  color: #121413;
 }
-.is-done .check-mark { background: #7CDC92; border-color: #7CDC92; }
+.is-done .check-mark { background: var(--accent); color: var(--ink); }
 .check-body {
   min-width: 0;
   display: flex;
@@ -390,8 +444,12 @@
 .check-status { margin: 0; overflow-wrap: anywhere; }
 .check-title { font-size: 16px; font-weight: 700; line-height: 1.35; }
 .check-text { font-size: 15px; line-height: 1.5; white-space: pre-wrap; }
-.check-status { font-size: 14px; color: #3D4A46; }
-.is-done .check-status { color: #2F7A64; font-weight: 600; }
+.check-status {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
 
 /* ---------- Form fields (news form, and the lists on a client's screen) ---------- */
 .form {
@@ -414,21 +472,13 @@
   flex-direction: column;
   gap: 8px;
 }
-.label {
-  padding: 0;
-  font-size: 15px;
-  font-weight: 700;
-}
-legend.label { margin-bottom: 8px; }
-.sub-label {
-  font-size: 14px;
-  color: #3D4A46;
-}
+legend.label { margin-bottom: 8px; padding: 0; }
+.sub-label { font-size: 14px; }
 .hint {
   margin: 0;
   font-size: 14px;
   line-height: 1.45;
-  color: #3D4A46;
+  color: color-mix(in srgb, var(--accent) 72%, transparent);
 }
 
 .input,
@@ -436,40 +486,41 @@ legend.label { margin-bottom: 8px; }
 .textarea {
   width: 100%;
   min-width: 0;
-  padding: 0 16px;
-  background: #FFFFFF;
-  border: 1px solid #CAE8E6;
-  border-radius: 12px;
-  font-family: 'Figtree Variable', sans-serif;
+  padding: 0 14px;
+  border: 1px solid var(--accent);
+  border-radius: 0;
+  background-color: transparent;
+  color: var(--accent);
+  font-family: var(--font-grotesk);
   font-size: 16px; /* 16px or more: iPhones don't zoom in when typing */
-  color: #121413;
 }
 .input,
-.select { height: 52px; }
+.select { height: 48px; }
 .textarea {
   min-height: 160px;
-  padding: 14px 16px;
+  padding: 12px 14px;
   line-height: 1.5;
   resize: vertical;
 }
-.input:hover:not(:disabled),
-.select:hover:not(:disabled),
-.textarea:hover { border-color: #489E85; }
 .input:focus-visible,
 .select:focus-visible,
-.textarea:focus-visible { outline: 2px solid #489E85; outline-offset: 2px; }
-.input[aria-invalid="true"] { border-color: #B42318; }
-.select:disabled { color: #3D4A46; }
+.textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.input[aria-invalid="true"] { box-shadow: inset 0 0 0 2px var(--accent); }
+.select:disabled { opacity: .55; }
 
-/* Our own arrow on the lists, so they look the same on every device */
+/* Our own arrow on the lists, so they look the same on every device:
+   drawn by two gradients in the text colour (no image) */
 .select {
   -webkit-appearance: none;
   appearance: none;
   padding-right: 44px;
   text-overflow: ellipsis;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9' fill='none' stroke='%23121413' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1.5l6 6 6-6'/%3E%3C/svg%3E");
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--accent) 50%),
+    linear-gradient(135deg, var(--accent) 50%, transparent 50%);
+  background-position: calc(100% - 22px) 50%, calc(100% - 16px) 50%;
+  background-size: 6px 6px;
   background-repeat: no-repeat;
-  background-position: right 16px center;
   cursor: pointer;
 }
 .select:disabled { cursor: default; }
@@ -481,7 +532,7 @@ legend.label { margin-bottom: 8px; }
   -webkit-appearance: none;
   appearance: none;
   display: block;
-  line-height: 50px;
+  line-height: 46px;
   text-align: left;
 }
 .input::-webkit-date-and-time-value { text-align: left; }
@@ -508,16 +559,16 @@ legend.label { margin-bottom: 8px; }
   width: 24px;
   height: 24px;
   margin: 0;
-  accent-color: #489E85;
+  accent-color: var(--accent);
   cursor: pointer;
 }
-.check input:focus-visible { outline: 3px solid #489E85; outline-offset: 2px; }
+.check input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .check-hint {
   display: block;
   font-size: 14px;
   font-weight: 400;
   line-height: 1.45;
-  color: #3D4A46;
+  color: color-mix(in srgb, var(--accent) 72%, transparent);
 }
 
 .form-btns {
@@ -527,18 +578,16 @@ legend.label { margin-bottom: 8px; }
   gap: 8px;
 }
 
-/* ---------- News list ---------- */
+/* ---------- News list: one ruled row per post ---------- */
 .post {
-  background: #FFFFFF;
-  border: 1px solid #CAE8E6;
-  border-radius: 16px;
-  padding: 20px 28px;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  padding: clamp(18px, 2vw, 26px) var(--gutter);
+  border-bottom: 1px solid var(--rule);
 }
-/* The post that is in the form right now */
-.post.is-editing { border-color: #489E85; box-shadow: 0 0 0 1px #489E85; }
+/* The post that is in the form right now: a thick bar on its left */
+.post.is-editing { box-shadow: inset 6px 0 0 var(--accent); }
 
 .post-meta {
   margin: 0;
@@ -546,35 +595,39 @@ legend.label { margin-bottom: 8px; }
   flex-wrap: wrap;
   align-items: center;
   gap: 6px 14px;
-  font-size: 14px;
-  color: #3D4A46;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
   font-variant-numeric: tabular-nums;
 }
 
-/* "Borrador", "Programada", "Publicada" */
+/* "Borrador" outlined, "Programada" dashed, "Publicada" inverted */
 .status {
   display: inline-block;
-  padding: 3px 12px;
-  border-radius: 999px;
-  font-size: 14px;
+  padding: 3px 7px;
+  border: 1px solid var(--accent);
+  font-size: 11px;
   font-weight: 700;
-  color: #121413;
+  line-height: 1.2;
+  letter-spacing: .16em;
+  text-transform: uppercase;
   white-space: nowrap;
 }
-.status.is-draft { background: #FFFFFF; box-shadow: inset 0 0 0 1px #3D4A46; }
-.status.is-scheduled { background: #CAE8E6; }
-.status.is-published { background: #7CDC92; }
+.status.is-draft { border-style: solid; }
+.status.is-scheduled { border-style: dashed; }
+.status.is-published { background: var(--accent); color: var(--ink); }
 
 /* News is plain text: keep its line breaks, and let very long words or web
-   addresses wrap instead of overflowing the card */
+   addresses wrap instead of overflowing the row */
 .post-title,
 .post-text {
   margin: 0;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
-.post-title { font-size: 20px; font-weight: 700; line-height: 1.25; }
-.post-text { font-size: 16px; line-height: 1.5; }
+.post-title { font-size: 20px; font-weight: 700; line-height: 1.25; letter-spacing: -.01em; }
+.post-text { font-size: 16px; line-height: 1.55; }
 
 .post-actions {
   display: flex;
@@ -582,18 +635,20 @@ legend.label { margin-bottom: 8px; }
 }
 
 /* Screen-reader message areas (aria-live) must always be there, but while
-   empty they shouldn't add the flex gap above them */
-.form > .live:empty { margin-top: -18px; }
-.setting > .live:empty { margin-top: -10px; }
+   empty they shouldn't take any room */
+.live:empty { display: none; }
 
-/* ---------- Narrow screens: every client becomes a card ---------- */
-/* (Six columns need about 900px; an iPad held upright gets the cards too) */
+/* ---------- Up to 900px: one column; every client becomes a block ---------- */
+/* (Six columns need about 900px; an iPad held upright gets the blocks too) */
 @media (max-width: 900px) {
+  .body { display: block; }
+  .body > .checklist-card,
+  .body > .news-list { border-left: 0; }
+
   .table,
   .table tbody,
   .table tr,
   .table td { display: block; }
-  .table { margin: 0; }
   /* The column titles are still read by screen readers */
   .table thead {
     position: absolute;
@@ -605,60 +660,53 @@ legend.label { margin-bottom: 8px; }
     white-space: nowrap;
   }
   .table tr {
-    padding: 12px 20px 14px;
-    background: #FFFFFF;
-    border: 1px solid #CAE8E6;
-    border-radius: 16px;
+    padding: 14px var(--gutter) 10px;
+    border-bottom: 1px solid var(--rule);
   }
-  .table tr + tr { margin-top: 12px; }
   .table td,
   .table td:first-child,
   .table td:last-child {
-    padding: 6px 0;
+    padding: 8px 0;
     border: 0;
-    border-radius: 0;
-    background: transparent;
   }
-  /* "Estado ......... Bayern" */
+  /* "ESTADO ......... Bayern" */
   .table td[data-label] {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
     gap: 16px;
     text-align: right;
-    border-top: 1px solid #EEF9F5;
+    border-top: 1px solid var(--rule);
   }
   .table .nowrap-cell { white-space: normal; }
   .table td[data-label]::before {
     content: attr(data-label);
     flex: 0 0 auto;
-    font-size: 14px;
-    color: #3D4A46;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
     text-align: left;
   }
-  .client-link { font-size: 18px; }
+  .client-name { font-size: 18px; }
 }
 
 /* ---------- Phone ---------- */
 @media (max-width: 700px) {
-  .container { padding: 0 16px 40px; }
-  .header { padding-top: 14px; }
-  .pill { padding: 0 18px; }
-  .tabs { padding-top: 8px; }
-  .tab { padding: 0 18px; }
-  .main { gap: 16px; }
-  .page-title { padding-top: 12px; font-size: 64px; }
-  .card { padding: 18px 20px; }
-  .post { padding: 18px 20px; }
+  .header { padding: 6px calc(var(--gutter) - 12px); }
+  .pill { padding: 8px 12px; }
+  .tab { flex: 1 1 0; padding: 10px var(--gutter); letter-spacing: .1em; }
+  .tab:last-child { border-right: 0; }
+  .head { padding: 28px var(--gutter) 18px; gap: 12px; }
+  .head-label { font-size: 12px; }
   .post-text { font-size: 15px; }
-  .client-title { font-size: 22px; }
   .setting-row { flex-wrap: wrap; }
   .setting-row .select { flex-basis: 100%; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pill,
   .tab,
+  .back-link,
   .primary-btn,
   .message-btn,
   .small-btn { transition: none; }

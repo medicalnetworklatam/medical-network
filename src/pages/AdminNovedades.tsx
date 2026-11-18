@@ -233,10 +233,10 @@ export default function AdminNovedades() {
     : 'Publicar'
 
   return (
-    <AdminLayout title="PUBLICAR NOVEDADES">
+    <AdminLayout title="Publicar novedades">
 
       {/* Form */}
-      <section className={styles.card} aria-labelledby="news-form-heading">
+      <section className={styles.card + ' ' + styles.newsForm} aria-labelledby="news-form-heading">
         <h2 className={styles.sectionTitle} id="news-form-heading">
           {editing ? 'Editar novedad' : 'Nueva novedad'}
         </h2>
@@ -353,7 +353,7 @@ export default function AdminNovedades() {
       </section>
 
       {/* Every post, newest first */}
-      <section className={styles.list} aria-labelledby="news-list-heading" aria-busy={listLoading}>
+      <section className={styles.list + ' ' + styles.newsList} aria-labelledby="news-list-heading" aria-busy={listLoading}>
         <div className={styles.listHead}>
           <h2 className={styles.sectionTitle} id="news-list-heading">
             {posts ? `Todas las novedades (${posts.length})` : 'Todas las novedades'}

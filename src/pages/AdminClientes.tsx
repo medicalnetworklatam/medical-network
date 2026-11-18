@@ -63,7 +63,7 @@ export default function AdminClientes() {
   }, [shown])
 
   return (
-    <AdminLayout title="CLIENTES" wide>
+    <AdminLayout title="Clientes" wide>
       <section className={styles.list} aria-labelledby="clients-heading" aria-busy={loading}>
         <div className={styles.listHead}>
           <h2 className={styles.sectionTitle} id="clients-heading">

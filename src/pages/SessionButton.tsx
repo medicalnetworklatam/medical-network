@@ -4,21 +4,19 @@ import { supabase } from '../lib/supabase.ts'
 import { useAuth } from '../lib/auth.ts'
 import styles from './SessionButton.module.css'
 
-/** The "Entrar" / "Cerrar sesión" pill. `onGreen` = inside the green sidebar.
-    `redesign` = the new look, on redesigned screens (the home page); it only
-    changes the look, never what the button does. */
+/** The "Entrar" / "Cerrar sesión" button: a square chip in the page's
+    colours, like the home page's "Menú" and "Mi área". */
 export default function SessionButton({
-  onGreen = false,
-  redesign = false,
+  className,
 }: {
-  onGreen?: boolean
-  redesign?: boolean
+  /** Its own look instead of the chip (e.g. a row of the home page's
+      menu). Then it always says the full "Cerrar sesión". */
+  className?: string
 }) {
   const { session, loading } = useAuth()
   const [busy, setBusy] = useState(false)
   const [justSignedOut, setJustSignedOut] = useState(false)
-  const className =
-    styles.pill + (onGreen ? ' ' + styles.onGreen : '') + (redesign ? ' ' + styles.redesign : '')
+  const look = className ?? styles.chip
 
   async function signOut() {
     if (!supabase) return
@@ -36,12 +34,16 @@ export default function SessionButton({
           login screen instead, which says it too */}
       <span className="sr-only" role="status">{justSignedOut && !session ? 'Has cerrado sesión.' : ''}</span>
       {loading ? null : session ? (
-        <button type="button" className={className} onClick={signOut} disabled={busy}>
-          <span className={styles.long}>Cerrar sesión</span>
-          <span className={styles.short}>Salir</span>
+        <button type="button" className={look} onClick={signOut} disabled={busy}>
+          {className ? 'Cerrar sesión' : (
+            <>
+              <span className={styles.long}>Cerrar sesión</span>
+              <span className={styles.short}>Salir</span>
+            </>
+          )}
         </button>
       ) : (
-        <Link className={className} to="/iniciar-sesion">Entrar</Link>
+        <Link className={look} to="/iniciar-sesion">Entrar</Link>
       )}
     </>
   )

@@ -1,7 +1,7 @@
 /* ------------------------------------------------------------------
-   The new look, shared by every REDESIGNED screen (the home page now,
-   Novedades next). Screens that aren't redesigned yet keep the old look
-   (global.css + their own module) and never use anything from this file.
+   The site's look: fonts and colour tokens, used by every screen.
+   global.css makes them the default for <body>; each page's own styles
+   are in src/pages/<Page>.module.css.
 
    Only custom properties and fonts live here: nothing in this file
    targets an element, so it can't change the look of the other pages.
@@ -62,15 +62,16 @@
 }
 
 /* ------------------------------------------------------------------
-   Tokens. Never hard-code a colour on a redesigned screen: use these.
+   Tokens. Never hard-code a colour: use these.
 ------------------------------------------------------------------- */
 :root {
-  /* Three colours make every palette:
+  /* Three colours make the palette:
        --paper       background of the dark heroes
        --ink         words on the heroes, the circle, the pale sections
        --accent-rgb  text and lines in the pale sections, the "después"
                      cell, and (see-through) the words crossing a photo
-     Default "Flatline" (flatlineagency.com): black on cream. */
+     The palette is "Flatline" (flatlineagency.com): black on cream,
+     chosen on 18 Nov 2026 (DECISIONS.md). */
   --paper: #050505;
   --ink: #f3f0e9;
   --accent-rgb: 5 5 5;     /* #050505 */
@@ -91,31 +92,4 @@
 }
 @media (max-width: 700px) {
   :root { --media-inset: 14% 8% 16% 8%; }
-}
-
-/* TEMPORARY: the five candidate palettes, until the owner chooses one
-   (DECISIONS.md, 17 Nov 2026 evening). The home page's "Menú" button
-   cycles them (src/lib/palette.ts sets data-palette on <html>). Once one
-   is chosen: make it the :root default above, delete the others, and
-   delete src/lib/palette.ts and src/pages/home/PaletteMenu.tsx.
-   Exact colours sampled from the reference images. */
-:root[data-palette="negativo"] {   /* the photographic negative of the first pass */
-  --paper: #101118;
-  --ink: #e1eaec;
-  --accent-rgb: 71 51 56;           /* #473338 */
-}
-:root[data-palette="bello"] {      /* mijobello.com: sage and oxblood */
-  --paper: #6a0c06;
-  --ink: #b2c7ab;
-  --accent-rgb: 106 12 6;           /* #6a0c06 */
-}
-:root[data-palette="impasto"] {    /* impastofornoantico.com: espresso and flour */
-  --paper: #312426;
-  --ink: #efefe7;
-  --accent-rgb: 49 36 38;           /* #312426 */
-}
-:root[data-palette="mnl"] {        /* the current MNL site: mint, black and green */
-  --paper: #121413;
-  --ink: #eef9f5;
-  --accent-rgb: 72 158 133;         /* #489e85 */
 }

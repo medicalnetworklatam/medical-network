@@ -1,7 +1,6 @@
 /* ------------------------------------------------------------------
    Home page (/), from Ivan's prototype in design-hero/ (styles.css).
-   The fonts, colour tokens and palettes are shared with the other
-   redesigned screens: src/styles/redesign.css.
+   The fonts and colour tokens are shared with the other screens: src/styles/redesign.css.
 
    The class names are the prototype's, so the two files can be compared
    side by side. In code a class like .hero__words is styles.heroWords
@@ -12,7 +11,8 @@
 ------------------------------------------------------------------- */
 
 /* Added to <body> only while the home page is open (Home.tsx), and
-   removed when it is left: the prototype's body rules. */
+   removed when it is left: the prototype's body rules (a dark page in
+   Albert Sans, instead of the site's light default in global.css). */
 .page-body {
   background: var(--paper);
   color: var(--ink);
@@ -99,19 +99,58 @@
 }
 .menu-btn:hover .menu-btn__icon { height: 12px; }
 
-.palette-note {
+.menu-btn[aria-expanded="true"] {
+  background: var(--ink);
+  color: var(--paper);
+}
+.menu-btn[aria-expanded="true"]:focus-visible { outline-color: var(--paper); }
+
+/* The list under "Menú" (HomeMenu.tsx): a dark panel of ruled rows, in
+   the chips' colours, so it reads over dark and light sections alike */
+.menu-list {
+  --rule: color-mix(in srgb, var(--ink) 28%, transparent);
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: max-content;
+  min-width: 280px;
+  max-width: calc(100vw - 2 * var(--gutter));
   margin: 0;
-  padding: 6px 10px;
+  padding: 0;
+  list-style: none;
   background: var(--paper);
   color: var(--ink);
-  font: 400 12px / 1.2 var(--font-grotesk);
-  letter-spacing: .12em;
-  text-transform: uppercase;
-  opacity: 0;
-  transition: opacity .3s ease;
-  pointer-events: none;
+  border: 1px solid var(--rule);
 }
-.palette-note.is-shown { opacity: 1; }
+.menu-list[hidden] { display: none; }
+.menu-list li + li { border-top: 1px solid var(--rule); }
+.menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  width: 100%;
+  min-height: 56px;              /* tap target (CLAUDE.md) */
+  padding: 14px 18px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: 400 clamp(18px, 1.3vw, 22px) / 1.2 var(--font);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color .15s ease, color .15s ease;
+}
+.menu-item:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+.menu-item:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: -5px;
+}
+.menu-item:disabled { opacity: .6; cursor: wait; }
+.menu-item-arrow { font-family: var(--font-grotesk); }
 
 /* ------------------------------------------------------------------
    Hero
@@ -492,7 +531,7 @@
    Phone row:   number | title + checklist, photo full width below
    From dark to light: phase 01 is nearly the hero's dark, 02 a middle
    tone, 03 the page's light. All three are mixed from the palette's
-   --paper and --ink, so they follow whichever palette is chosen.
+   --paper and --ink.
 ------------------------------------------------------------------- */
 .phases {
   --tone-1: color-mix(in oklab, var(--paper), var(--ink) 12%);
@@ -863,6 +902,11 @@
 /* ------------------------------------------------------------------
    Entrance: words rise in, photo opens from its centre
 ------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .menu-item,
+  .menu-btn__icon { transition: none; }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .hero__words .line {
     animation: rise 1.1s cubic-bezier(.2, .7, .1, 1) both;

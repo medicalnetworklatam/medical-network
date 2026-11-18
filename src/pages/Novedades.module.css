@@ -2,8 +2,7 @@
    Novedades (the state page), in the new look: ruled cells split by
    thin 1px lines, small spaced labels over big lowercase titles that
    end in a full stop. Fonts and colour tokens come from
-   src/styles/redesign.css (never a hard-coded colour), so the palette
-   chosen with the home page's "Menú" applies here too.
+   src/styles/redesign.css (never a hard-coded colour).
 
    Desktop:  dark column (profile, links, calendar, "Cerrar sesión")
              | light side: title cell, then one row per news post
@@ -14,16 +13,6 @@
    Rule for this file: the site loads every page's CSS at once, so
    nothing here may target html, body, * or :root directly.
 ------------------------------------------------------------------- */
-
-/* Added to <body> only while the page is open (Novedades.tsx), and
-   removed when it is left. */
-.page-body {
-  background: var(--ink);
-  color: var(--accent);
-  font-family: var(--font-grotesk);
-  -webkit-font-smoothing: antialiased;
-  -webkit-text-size-adjust: 100%;
-}
 
 /* ------------------------------------------------------------------
    Layout: the column on the left, the news on the right. The whole
@@ -219,8 +208,8 @@
   background: currentColor;
 }
 
-/* "Cerrar sesión": SessionButton's new look (a chip in the column's
-   own colours), its text lined up with the rows above */
+/* "Cerrar sesión": SessionButton's chip (in the column's own colours),
+   its text lined up with the rows above */
 .session {
   display: flex;
   padding: 10px calc(var(--pad) - 14px);
