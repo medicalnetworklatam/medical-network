@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
 import { supabase } from '../lib/supabase.ts'
 import { CHECK_FAILED, dataErrorMessage, NOT_ALLOWED } from '../lib/dataErrors.ts'
 import { linkify } from '../lib/linkify.tsx'
@@ -584,6 +584,8 @@ function PostCard({ post, confirmText, canDelete, confirming, deleting, error, o
   onCancel: () => void
   onConfirm: () => void
 }) {
+  // Found once per post, not again on every key press in the form
+  const text = useMemo(() => linkify(post.body), [post.body])
   const deleteRef = useRef<HTMLButtonElement>(null)
   const cancelRef = useRef<HTMLButtonElement>(null)
   // Move the focus only after a click here, not when the card first appears
@@ -607,7 +609,7 @@ function PostCard({ post, confirmText, canDelete, confirming, deleting, error, o
         {post.is_staff && <span className={styles.staffBadge}>Equipo MNL</span>}
         <time className={styles.postDate} dateTime={post.created_at}>{formatDateTime(post.created_at)}</time>
       </p>
-      <p className={styles.postText}>{linkify(post.body)}</p>
+      <p className={styles.postText}>{text}</p>
 
       {canDelete && (
         confirming ? (

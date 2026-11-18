@@ -8,6 +8,7 @@
    Each case gives a text and what should come out: plain parts as
    strings, links as ['link', text], plus the address the link opens when
    the browser's parser tidies it (a "/" added after a bare host).
+   bare('kammer.de') is a link to "https://" + the address.
 
    Node.js 22 runs this TypeScript file directly. */
 
@@ -31,6 +32,12 @@ function check(name: string, text: string, want: Want[]): void {
   const joined = linkParts(text).map((p) => p.text).join('')
   if (joined === text) passed++
   else failures.push(`${name}: the parts don't add up to the text\n    got ${JSON.stringify(joined)}`)
+}
+
+/** An address without http(s)://: the text as written, the link to
+    "https://" + the address */
+function bare(address: string): Want {
+  return ['link', address, new URL('https://' + address).href]
 }
 
 /* ===========================================================================
@@ -77,7 +84,6 @@ check('angle brackets', '<https://a.com>', ['<', ['link', 'https://a.com'], '>']
    What never becomes a link
    =========================================================================== */
 
-check('www. alone', 'www.medicalnetworklatam.com', ['www.medicalnetworklatam.com'])
 check('javascript:', 'javascript:alert(1)', ['javascript:alert(1)'])
 check('javascript: with //', 'javascript://a.com/%0Aalert(1)', ['javascript://a.com/%0Aalert(1)'])
 check('mailto:', 'mailto:hola@a.com', ['mailto:hola@a.com'])
@@ -88,8 +94,79 @@ check('glued, then a real one', 'xhttps://a.com https://b.com', ['xhttps://a.com
 check('scheme with nothing after', 'https://', ['https://'])
 check('scheme and a full stop', 'https://.', ['https://.'])
 check('no host, only a path', 'https:///path', ['https:///path'])
-check('a space ends the address', 'https://a b.com', [['link', 'https://a'], ' b.com'])
+check('a space ends the address', 'https://a b.com', [['link', 'https://a'], ' ', bare('b.com')])
 check('HTML stays text', '<a href="https://a.com">x</a>', ['<a href="', ['link', 'https://a.com'], '">x</a>'])
+
+/* ===========================================================================
+   Addresses starting with "www."
+   =========================================================================== */
+
+check('www. address', 'www.medicalnetworklatam.com', [bare('www.medicalnetworklatam.com')])
+check('www. href', 'www.example.com', [['link', 'www.example.com', 'https://www.example.com/']])
+check('www. with any ending', 'www.example.io', [bare('www.example.io')])
+check('www. with a path', 'Mira www.kammer.de/approbation?x=1#a.', ['Mira ', bare('www.kammer.de/approbation?x=1#a'), '.'])
+check('www. in capitals keeps its text', 'WWW.Example.Com', [['link', 'WWW.Example.Com', 'https://www.example.com/']])
+check('www. in brackets', '(www.example.com)', ['(', bare('www.example.com'), ')'])
+check('www. alone, no dot after', 'www.ejemplo', ['www.ejemplo'])
+check('www. glued to a word', 'xwww.a.io', ['xwww.a.io'])
+
+/* ===========================================================================
+   Bare domains with an ending from the list
+   =========================================================================== */
+
+for (const ending of ['com', 'org', 'net', 'info', 'eu', 'de', 'at', 'ch', 'es', 'ec', 'pe', 'co',
+  'mx', 'ar', 'cl', 'bo', 've', 'uy', 'py', 'gob', 'gov', 'edu']) {
+  check('ending .' + ending, 'ejemplo.' + ending, [bare('ejemplo.' + ending)])
+}
+check('bare domain href', 'kammer.de', [['link', 'kammer.de', 'https://kammer.de/']])
+check('three parts', 'ministerio.gob.ec', [bare('ministerio.gob.ec')])
+check('four parts', 'a.b.example.com', [bare('a.b.example.com')])
+check('with a path and query', 'example.com/ruta?x=1', [bare('example.com/ruta?x=1')])
+check('with a port', 'example.com:8443/x', [bare('example.com:8443/x')])
+check('a hyphen inside', 'Ver bundes-aerztekammer.de hoy', ['Ver ', bare('bundes-aerztekammer.de'), ' hoy'])
+check('accented host', 'münchen.de', [['link', 'münchen.de', 'https://xn--mnchen-3ya.de/']])
+check('full stop after', 'Escribe en kammer.de.', ['Escribe en ', bare('kammer.de'), '.'])
+check('question mark after', '¿Conoces kammer.de?', ['¿Conoces ', bare('kammer.de'), '?'])
+check('comma after a path', 'example.com/ruta, luego', [bare('example.com/ruta'), ', luego'])
+check('colon after', 'Web: kammer.de: ahí', ['Web: ', bare('kammer.de'), ': ahí'])
+check('in brackets with a full stop', '(ver kammer.de).', ['(ver ', bare('kammer.de'), ').'])
+check('its own brackets stay', 'es.wikipedia.org/wiki/A_(b)', [bare('es.wikipedia.org/wiki/A_(b)')])
+check('Spanish quotes', '«kammer.de»', ['«', bare('kammer.de'), '»'])
+check('after a line break', 'Hola\nkammer.de', ['Hola\n', bare('kammer.de')])
+check('next to an http one', 'kammer.de y https://a.com', [bare('kammer.de'), ' y ', ['link', 'https://a.com']])
+check('with http:// stays as written', 'http://kammer.de', [['link', 'http://kammer.de', 'http://kammer.de/']])
+
+/* ===========================================================================
+   Words with dots that stay plain text
+   =========================================================================== */
+
+check('p.ej.', 'p.ej. esto', ['p.ej. esto'])
+check('Dr.Med', 'Dr.Med García', ['Dr.Med García'])
+check('Node.js', 'Uso Node.js', ['Uso Node.js'])
+check('informe.final', 'informe.final', ['informe.final'])
+check('3.5', 'nota 3.5', ['nota 3.5'])
+check('version numbers', 'v1.2.3', ['v1.2.3'])
+check('EE.UU.', 'EE.UU. y S.A.', ['EE.UU. y S.A.'])
+check('ending not on the list', 'ejemplo.museum ejemplo.io', ['ejemplo.museum ejemplo.io'])
+check('ending in capitals (a missing space)', 'en Alemania.De hecho', ['en Alemania.De hecho'])
+check('domain in capitals', 'EJEMPLO.COM', ['EJEMPLO.COM'])
+check('longer ending', 'example.comercial', ['example.comercial'])
+check('glued after the ending', 'example.com-x example.com_x', ['example.com-x example.com_x'])
+check('after a slash', 'ruta/example.com', ['ruta/example.com'])
+check('a domain whose first part is a word', 'fin.example.com', [bare('fin.example.com')])
+check('after a comma, no space', 'hola,kammer.de', ['hola,kammer.de'])
+check('ftp:// with a bare domain inside', 'ftp://a.com/file', ['ftp://a.com/file'])
+
+/* ===========================================================================
+   Emails are never links
+   =========================================================================== */
+
+check('an email', 'name@example.com', ['name@example.com'])
+check('an email with dots before @', 'maria.es@gmail.com', ['maria.es@gmail.com'])
+check('an email at the end of a sentence', 'Escribe a info@kammer.de.', ['Escribe a info@kammer.de.'])
+check('an email with www.', 'hola@www.example.com', ['hola@www.example.com'])
+check('mailto: with a domain', 'mailto:hola@ministerio.gob.ec', ['mailto:hola@ministerio.gob.ec'])
+check('an email next to a link', 'info@kammer.de o kammer.de', ['info@kammer.de o ', bare('kammer.de')])
 
 /* ===========================================================================
    A user name or password before the host: plain text
@@ -102,6 +179,8 @@ check('name and password', 'https://user:pass@a.com/x', ['https://user:pass@a.co
 check('only an @', 'https://@a.com', ['https://@a.com'])
 check('@ with a path after', 'Entra en https://mnl.com@evil.com/login.', ['Entra en https://mnl.com@evil.com/login.'])
 check('@ in the path is fine', 'https://a.com/@usuario', [['link', 'https://a.com/@usuario']])
+check('bare: @ in the path is fine', 'example.com/@usuario', [bare('example.com/@usuario')])
+check('bare: name before the host', 'medicalnetworklatam.com@other.com', ['medicalnetworklatam.com@other.com'])
 check('@ in the query is fine', 'https://a.com/?mail=x@y.com', [['link', 'https://a.com/?mail=x@y.com']])
 check('@ after a backslash stays in the path', 'https://a.com\\@b.com',
   [['link', 'https://a.com\\@b.com', 'https://a.com/@b.com']])

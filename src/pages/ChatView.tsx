@@ -1,5 +1,5 @@
 import {
-  useEffect, useLayoutEffect, useRef, useState,
+  useEffect, useLayoutEffect, useMemo, useRef, useState,
   type FormEvent, type KeyboardEvent, type RefObject,
 } from 'react'
 import { linkify } from '../lib/linkify.tsx'
@@ -428,6 +428,8 @@ function ChatRow({
   onCancel: () => void
   onConfirm: () => void
 }) {
+  // Found once per message, not again on every key press in the box
+  const text = useMemo(() => linkify(post.body), [post.body])
   const deleteRef = useRef<HTMLButtonElement>(null)
   const cancelRef = useRef<HTMLButtonElement>(null)
   // Move the focus only after a click here, not when the message first appears
@@ -477,7 +479,7 @@ function ChatRow({
         )}
 
         <div className={styles.bubble}>
-          <p className={styles.msgText}>{linkify(post.body)}</p>
+          <p className={styles.msgText}>{text}</p>
           <p className={styles.msgFoot}>
             <time dateTime={post.created_at}>{TIME.format(date)}</time>
             {canDelete && !confirming && (
