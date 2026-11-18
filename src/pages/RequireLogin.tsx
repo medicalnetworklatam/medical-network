@@ -30,7 +30,7 @@ export default function RequireLogin() {
   if (status === 'error') return <ProfileError />
   if (status === 'missing' || !profile) {
     return (
-      <AuthLayout title="Tu cuenta" headerAction={<SessionButton />}>
+      <AuthLayout title="Tu cuenta" headerAction={<SessionButton redesign />}>
         <p className={styles.error} role="alert">Tu cuenta no está lista. Contáctanos.</p>
       </AuthLayout>
     )
@@ -54,7 +54,7 @@ function ProfileError() {
   }
 
   return (
-    <AuthLayout title="Tu cuenta" headerAction={<SessionButton />}>
+    <AuthLayout title="Tu cuenta" headerAction={<SessionButton redesign />}>
       <p className={styles.intro}>No pudimos cargar tus datos.</p>
       <div aria-live="assertive">
         <p className={styles.error}>{error}</p>
