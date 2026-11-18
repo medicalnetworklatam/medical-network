@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react'
 import { Link } from 'react-router'
 import PostBoard from './PostBoard.tsx'
-import SessionButton from './SessionButton.tsx'
+import AreaLayout from './AreaLayout.tsx'
 import { usePageTitle } from '../lib/usePageTitle.ts'
 import { useAuth } from '../lib/auth.ts'
 import { authorName, useProfile } from '../lib/profile.ts'
@@ -10,7 +10,7 @@ import styles from './Comunidad.module.css'
 /** The community board: one board for all members (text only). Paid members
     and admins read and write; free users only see a short message. */
 export default function Comunidad() {
-  usePageTitle('Comunidad · Medical Network')
+  usePageTitle('Comunidad MNL · Medical Network')
   const { session } = useAuth()
   const { profile } = useProfile()
   const userId = session?.user.id ?? null
@@ -24,14 +24,7 @@ export default function Comunidad() {
   const titleStyle = { '--title-chars': 10 } as CSSProperties
 
   return (
-    <div className={styles.page}>
-      <header className={styles.header}>
-        <Link className={styles.pill} to="/novedades">
-          <span aria-hidden="true">←</span> Novedades
-        </Link>
-        <SessionButton />
-      </header>
-
+    <AreaLayout current="comunidad">
       <main className={styles.main}>
         <div className={styles.head}>
           <p className={styles.label}>tu</p>
@@ -60,6 +53,6 @@ export default function Comunidad() {
           <p className={styles.message}>La comunidad es para miembros con el paquete completo.</p>
         )}
       </main>
-    </div>
+    </AreaLayout>
   )
 }

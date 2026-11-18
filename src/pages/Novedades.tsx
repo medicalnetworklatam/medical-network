@@ -1,6 +1,6 @@
 import { useEffect, useState, type CSSProperties } from 'react'
 import { Link } from 'react-router'
-import SessionButton from './SessionButton.tsx'
+import AreaLayout from './AreaLayout.tsx'
 import { usePageTitle } from '../lib/usePageTitle.ts'
 import { useProfile } from '../lib/profile.ts'
 import { supabase } from '../lib/supabase.ts'
@@ -14,14 +14,19 @@ interface NewsPost {
   title: string
   body: string
   published_at: string
+  /** The Bundesland the post is for, or null for all states */
+  state: string | null
 }
 
-/* "12 nov 2026", in German time */
+/* A post's date in German time, in parts: { day: "12", month: "nov",
+   year: "2026", text: "12 nov 2026" } */
 const DATE = new Intl.DateTimeFormat('es-ES', {
   day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Europe/Berlin',
 })
-function formatDate(iso: string): string {
-  return DATE.format(new Date(iso)).replace('.', '')
+function dateParts(iso: string): { day: string; month: string; year: string; text: string } {
+  const date = new Date(iso)
+  const part = (type: string) => DATE.formatToParts(date).find((p) => p.type === type)?.value.replace('.', '') ?? ''
+  return { day: part('day'), month: part('month'), year: part('year'), text: DATE.format(date).replace('.', '') }
 }
 
 /* The answer of one news request. `key` says which request it answers
@@ -30,14 +35,12 @@ type NewsResult =
   | { key: string; ok: true; posts: NewsPost[] }
   | { key: string; ok: false; error: string }
 
-/** The user's state page: the news for their one Bundesland, links to the
-    community board and to the state's chat (/chat), and the calendar as a
-    preview only. In the new look (src/styles/redesign.css): ruled cells, a
-    dark column on the left (on a phone, a bar with a menu) and the news on
-    the light side. */
+/** The user's state page: the news for their one Bundesland. In the new
+    look (src/styles/redesign.css): the shared dark column on the left
+    (AreaLayout.tsx: links, calendar preview, "Cerrar sesión") and the news
+    on the light side, each post in its own ruled frame. */
 export default function Novedades() {
   const { profile } = useProfile()
-  const firstName = profile?.first_name?.trim().split(/\s+/)[0] ?? ''
   const stateId = profile?.main_state ?? null
   /* German name of the state, '' when none is chosen yet */
   const name = MAP_SHAPES.find((s) => s.id === stateId)?.name ?? ''
@@ -62,7 +65,7 @@ export default function Novedades() {
         // state: published, date has come, this state or all states.
         const { data, error } = await client
           .from('news_posts')
-          .select('id, title, body, published_at')
+          .select('id, title, body, published_at, state')
           .eq('published', true)
           .lte('published_at', new Date().toISOString())
           .or('state.is.null,state.eq.' + stateId)
@@ -79,13 +82,6 @@ export default function Novedades() {
   }, [stateId, attempt])
   const current = news?.key === newsKey ? news : null  // null = still loading
 
-  /* The menu: open or closed on a phone (it starts closed). On larger
-     screens the column is always open and the button is hidden. */
-  const [menuOpen, setMenuOpen] = useState(false)
-
-  /* The link to the state's chat: "Chat de Bayern", or just "Chat" */
-  const chatLabel = name ? <>Chat de <span lang="de">{name}</span></> : 'Chat'
-
   /* The title's size comes from its longest word ("Mecklenburg-" counts
      12, "Niedersachsen." 14), so it always fits its column; the CSS
      turns this number into a size. Set from code (React's style prop),
@@ -96,63 +92,8 @@ export default function Novedades() {
   const titleStyle = { '--title-chars': titleChars } as CSSProperties
 
   return (
-    <div className={styles.layout}>
-
-      {/* Left: the column (on a phone, a bar with the menu below it) */}
-      <nav className={styles.column + (menuOpen ? ' ' + styles.isOpen : '')} aria-label="Menú">
-        <div className={styles.bar}>
-          <Link className={styles.profile} to="/perfil">
-            <span className={styles.label}>Mi perfil</span>
-            <span className={styles.profileName}>{firstName}</span>
-          </Link>
-          <button
-            type="button" className={styles.menuBtn}
-            aria-expanded={menuOpen} aria-controls="novedades-menu"
-            onClick={() => setMenuOpen((open) => !open)}
-          >
-            <span>Menú</span>
-            <span className={styles.menuBtnIcon} aria-hidden="true"></span>
-          </button>
-        </div>
-
-        <div className={styles.menuBody} id="novedades-menu">
-          <Link className={styles.row} to="/comunidad">Comunidad</Link>
-          <Link className={styles.row} to="/chat"><span>{chatLabel}</span></Link>
-
-          {/* Admins only. Hiding the link is not the protection: the admin
-              pages check again, and the database decides (RLS). */}
-          {profile?.is_admin === true && (
-            <Link className={styles.row} to="/admin">Administración</Link>
-          )}
-
-          {/* Calendar: preview only, it doesn't work yet */}
-          <section className={styles.calendar} aria-labelledby="cal-heading">
-            <div className={styles.calHead}>
-              <h2 className={styles.label} id="cal-heading">Calendario</h2>
-              <p className={styles.calSoon}>Próximamente</p>
-            </div>
-            <p className={styles.calMonth}>Noviembre 2026</p>
-            <div className={styles.calWeekdays}>
-              <span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span>
-            </div>
-            <div className={styles.calDays}>
-              <span></span><span></span><span></span><span></span><span></span><span></span>
-              <span>1</span>
-              <span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span>
-              <span>9</span><span>10</span><span>11</span><span className={styles.today} aria-current="date">12</span><span>13</span><span>14</span><span className={styles.event}>15</span>
-              <span>16</span><span>17</span><span>18</span><span>19</span><span>20</span><span>21</span><span>22</span>
-              <span>23</span><span>24</span><span>25</span><span>26</span><span>27</span><span>28</span><span>29</span>
-              <span>30</span><span></span><span></span><span></span><span></span><span></span><span></span>
-            </div>
-          </section>
-
-          <div className={styles.session}>
-            <SessionButton />
-          </div>
-        </div>
-      </nav>
-
-      {/* Right: the news */}
+    <AreaLayout current="novedades">
+      {/* The news */}
       <main className={styles.main}>
         <header className={styles.head}>
           {/* Read as one heading: "Novedades de Bayern" / "Mis novedades" */}
@@ -190,25 +131,41 @@ export default function Novedades() {
             Todavía no hay novedades para <span lang="de">{name}</span>.
           </p>
         ) : (
-          current.posts.map((post) => (
-            <article key={post.id} className={styles.post}>
-              <p className={styles.postDate}>
-                <time dateTime={post.published_at}>{formatDate(post.published_at)}</time>
-              </p>
-              <div className={styles.postBody}>
-                {/* Plain text only (never HTML); line breaks kept by CSS */}
-                <h2 className={styles.postTitle}>{post.title}</h2>
-                {post.body && <p className={styles.postText}>{post.body}</p>}
-              </div>
-            </article>
-          ))
+          <div className={styles.posts}>
+            {current.posts.map((post) => <Post key={post.id} post={post} />)}
+          </div>
         )}
       </main>
+    </AreaLayout>
+  )
+}
 
-      {/* Phone only: floating link to the state's chat */}
-      <Link className={styles.chatFab} to="/chat">
-        <span className={styles.chatFabLabel}>{chatLabel}</span>
-      </Link>
-    </div>
+/** One news post, in its own frame: the date and the post's tag ("Todos
+    los estados" or the Bundesland) in one cell, the title and text in the
+    other. Title and body are plain text only (never HTML). */
+function Post({ post }: { post: NewsPost }) {
+  const date = dateParts(post.published_at)
+  const stateName = post.state ? MAP_SHAPES.find((s) => s.id === post.state)?.name ?? '' : ''
+  return (
+    <article className={styles.post}>
+      <div className={styles.postMeta}>
+        {/* Seen as "NOV 2026" over "18."; heard once as "18 nov 2026" */}
+        <time className={styles.postDate} dateTime={post.published_at}>
+          <span className={styles.postMonth} aria-hidden="true">{date.month} {date.year}</span>
+          <span className={styles.postDay} aria-hidden="true">{date.day}.</span>
+          <span className="sr-only">{date.text}</span>
+        </time>
+        {stateName
+          ? <p className={styles.postTag} lang="de">{stateName}</p>
+          : <p className={styles.postTag}>Todos los estados</p>}
+      </div>
+      <div className={styles.postBody}>
+        {/* Line breaks kept by CSS */}
+        <h2 className={styles.postTitle}>{post.title}</h2>
+        {post.body && <p className={styles.postText}>{post.body}</p>}
+        {/* Photos, PDFs and links go here, after the text (next pull
+            request, migration 5) */}
+      </div>
+    </article>
   )
 }

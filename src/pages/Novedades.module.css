@@ -4,30 +4,19 @@
    end in a full stop. Fonts and colour tokens come from
    src/styles/redesign.css (never a hard-coded colour).
 
-   Desktop:  dark column (profile, links, calendar, "Cerrar sesión")
-             | light side: title cell, then one row per news post
-             (date | title + text).
-   Phone:    a sticky dark bar (profile + "Menú"), the menu opening
-             under it, the news below, and a floating link to the chat.
+   The dark column, the phone's "Menú" bar and the floating chat link
+   are shared with Comunidad and Chat: AreaLayout.module.css.
+
+   Desktop:  the title cell, then the posts, each in its own frame
+             with room around it: date + tag | title + text.
+   Narrow:   (phone, iPad upright) the same frames, the date and tag
+             in a strip on top.
 
    Rule for this file: the site loads every page's CSS at once, so
    nothing here may target html, body, * or :root directly.
 ------------------------------------------------------------------- */
 
-/* ------------------------------------------------------------------
-   Layout: the column on the left, the news on the right. The whole
-   page scrolls; the column stays pinned at the height of the screen.
-------------------------------------------------------------------- */
-.layout {
-  --col-w: 300px;
-  --pad: 20px;                  /* the column's side padding */
-  display: grid;
-  grid-template-columns: var(--col-w) minmax(0, 1fr);
-  min-height: 100vh;
-  min-height: 100dvh;
-}
-
-/* Small spaced capitals ("MI PERFIL", "NOVEDADES DE", "CALENDARIO") */
+/* Small spaced capitals ("NOVEDADES DE", "MIS") */
 .label {
   display: block;
   margin: 0;
@@ -36,183 +25,6 @@
   line-height: 1.2;
   letter-spacing: .2em;
   text-transform: uppercase;
-}
-
-/* ------------------------------------------------------------------
-   The column: dark, like the home page's heroes. Its lines are drawn
-   in the words' colour (the light sections draw them in the accent).
-------------------------------------------------------------------- */
-.column {
-  --rule: color-mix(in srgb, var(--ink) 28%, transparent);
-  position: sticky;
-  top: 0;
-  align-self: start;
-  height: 100vh;
-  height: 100dvh;
-  overflow-y: auto;
-  /* At its end, a swipe stops here instead of scrolling the whole page */
-  overscroll-behavior: contain;
-  display: flex;
-  flex-direction: column;
-  background: var(--paper);
-  color: var(--ink);
-}
-
-.bar {
-  display: flex;
-  align-items: stretch;
-  border-bottom: 1px solid var(--rule);
-}
-
-/* "Mi perfil" over the first name: the whole cell is the link */
-.profile {
-  flex: 1 1 auto;
-  min-width: 0;
-  min-height: 44px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 10px;
-  padding: 26px var(--pad) 22px;
-  color: inherit;
-  text-decoration: none;
-}
-.profile-name {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  font-size: 28px;
-  font-weight: 700;
-  line-height: 1.1;
-  letter-spacing: -.03em;
-}
-
-/* "Menú": phone only (see the phone rules at the end) */
-.menu-btn { display: none; }
-
-.menu-body {
-  flex: 1 0 auto;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Comunidad, Chat de <Bundesland>, Administración: one full-width row
-   each. A long state name wraps inside its row. */
-.row {
-  display: flex;
-  align-items: center;
-  min-height: 56px;
-  padding: 14px var(--pad);
-  border-bottom: 1px solid var(--rule);
-  color: inherit;
-  font-size: 18px;
-  line-height: 1.25;
-  text-decoration: none;
-}
-
-/* Hovering a cell swaps its colours, like the home page's inverted cells */
-.profile,
-.row {
-  transition: background-color .15s ease, color .15s ease;
-}
-.profile:hover,
-.row:hover {
-  background: var(--ink);
-  color: var(--paper);
-}
-/* a ring inside the cell, in the cell's text colour */
-.profile:focus-visible,
-.row:focus-visible {
-  outline: 2px solid currentColor;
-  outline-offset: -5px;
-}
-
-/* ------------------------------------------------------------------
-   Calendar: a preview only. The month is a grid of ruled cells; today
-   is an inverted cell, a day with an event has a small mark.
-------------------------------------------------------------------- */
-.calendar {
-  flex: 1 0 auto;               /* takes the room left above "Cerrar sesión" */
-  padding: 22px var(--pad) 24px;
-  border-bottom: 1px solid var(--rule);
-}
-.cal-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px 12px;
-}
-/* "Próximamente": a small inverted cell */
-.cal-soon {
-  margin: 0;
-  padding: 4px 7px;
-  background: var(--ink);
-  color: var(--paper);
-  font-size: 11px;
-  font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: .16em;
-  text-transform: uppercase;
-}
-.cal-month {
-  margin: 16px 0 12px;
-  font-size: 22px;
-  font-weight: 700;
-  line-height: 1.1;
-  letter-spacing: -.02em;
-  text-transform: lowercase;
-}
-.cal-weekdays,
-.cal-days {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-}
-.cal-weekdays {
-  margin-bottom: 6px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: .12em;
-}
-/* the lines between the days: 1px gaps showing the colour behind */
-.cal-days {
-  gap: 1px;
-  border: 1px solid var(--rule);
-  background: var(--rule);
-}
-.cal-days span {
-  position: relative;
-  height: 34px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--paper);
-  font-size: 13px;
-}
-.cal-days .today {
-  background: var(--ink);
-  color: var(--paper);
-  font-weight: 700;
-}
-.cal-days .event { font-weight: 700; }
-.cal-days .event::after {
-  content: "";
-  position: absolute;
-  bottom: 5px;
-  left: 50%;
-  width: 5px;
-  height: 5px;
-  margin-left: -2.5px;
-  background: currentColor;
-}
-
-/* "Cerrar sesión": SessionButton's chip (in the column's own colours),
-   its text lined up with the rows above */
-.session {
-  display: flex;
-  padding: 10px calc(var(--pad) - 14px);
 }
 
 /* ------------------------------------------------------------------
@@ -254,40 +66,97 @@
   overflow-wrap: break-word;
 }
 
-/* One row per news post: date | title + text */
-.post {
-  display: grid;
-  grid-template-columns: minmax(150px, 14rem) minmax(0, 1fr);
-  border-bottom: 1px solid var(--rule);
-}
-.post-date {
-  margin: 0;
-  padding: clamp(24px, 2.4vw, 38px) var(--gutter);
-  border-right: 1px solid var(--rule);
-  font-size: 13px;
-  font-weight: 700;
-  line-height: 1.5;
-  letter-spacing: .16em;
-  text-transform: uppercase;
-  font-variant-numeric: tabular-nums;
-}
-.post-body {
+/* ------------------------------------------------------------------
+   The posts. Each one is its own frame (a 1px line all round, square
+   corners, no shadow) with cream space between them, so each reads as
+   a separate notice, not as a line of a log.
+------------------------------------------------------------------- */
+.posts {
+  /* the posts change shape by the room they have (narrow: see the end) */
+  container: posts / inline-size;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: clamp(20px, 2.2vw, 34px) var(--gutter) clamp(28px, 3vw, 44px);
+  gap: clamp(32px, 3.6vw, 56px);
+  padding: clamp(32px, 3.6vw, 56px) var(--gutter) clamp(48px, 5vw, 80px);
+}
+.post {
+  display: grid;
+  grid-template-columns: minmax(150px, 13rem) minmax(0, 1fr);
+  max-width: 64rem;
+  border: 1px solid var(--accent);
+}
+
+/* Left cell: "NOV 2026" over a big "18.", then the tag */
+.post-meta {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+  padding: clamp(20px, 2vw, 28px) clamp(18px, 1.8vw, 26px);
+  border-right: 1px solid var(--rule);
+}
+.post-date {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.post-month {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+}
+.post-day {
+  font-size: clamp(44px, 4.4vw, 64px);
+  font-weight: 700;
+  line-height: .9;
+  letter-spacing: -.05em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* "TODOS LOS ESTADOS" (outlined) or the post's Bundesland (inverted).
+   A long name breaks after its hyphen ("MECKLENBURG- / VORPOMMERN"). */
+.post-tag {
+  max-width: 100%;
+  margin: 0;
+  padding: 5px 8px;
+  border: 1px solid var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  overflow-wrap: break-word;
+}
+.post-tag:lang(de) {
+  background: var(--accent);
+  color: var(--ink);
+}
+
+/* Right cell: the title, the text, and later (next pull request) the
+   post's photos, PDFs and links, after the text */
+.post-body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: clamp(22px, 2.2vw, 30px) clamp(20px, 2.4vw, 36px) clamp(26px, 2.6vw, 38px);
 }
 .post-title {
   margin: 0;
-  max-width: 34ch;
-  font-size: clamp(22px, 2vw, 30px);
-  font-weight: 700;
-  line-height: 1.2;
+  max-width: 28ch;
+  font-family: var(--font);
+  font-size: clamp(26px, 2.4vw, 38px);
+  font-weight: 400;
+  line-height: 1.1;
   letter-spacing: -.02em;
 }
+/* About 65 characters a line */
 .post-text {
   margin: 0;
-  max-width: 68ch;
+  max-width: 31em;
   font-size: clamp(16px, 1.15vw, 18px);
   line-height: 1.6;
   letter-spacing: .01em;
@@ -355,128 +224,45 @@
   outline-offset: 3px;
 }
 
-/* Phone only: the floating link to the chat */
-.chat-fab { display: none; }
-
 /* ------------------------------------------------------------------
    Phone
 ------------------------------------------------------------------- */
 @media (max-width: 700px) {
-  .layout { display: block; }
-
-  /* The column becomes a sticky bar; the menu opens under it */
-  .column {
-    z-index: 3;
-    height: auto;
-    max-height: 100vh;
-    max-height: 100dvh;
-  }
-  .column:not(.is-open) .menu-body { display: none; }
-
-  .bar { align-items: center; }
-  .profile {
-    gap: 4px;
-    padding: 10px var(--gutter);
-  }
-  .profile .label { font-size: 11px; }
-  .profile-name { font-size: 20px; }
-
-  /* "Menú": the home page's chip (Home.module.css, .menu-btn) */
-  .menu-btn {
-    flex: 0 0 auto;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    min-height: 44px;
-    margin-right: calc(var(--gutter) - 12px);
-    padding: 8px 12px;
-    border: 0;
-    background: var(--paper);
-    color: var(--ink);
-    font: 400 17px / 1 var(--font);
-    cursor: pointer;
-  }
-  .menu-btn[aria-expanded="true"] {
-    background: var(--ink);
-    color: var(--paper);
-  }
-  .menu-btn:focus-visible {
-    outline: 2px solid currentColor;
-    outline-offset: -6px;
-  }
-  .menu-btn-icon {
-    width: 30px;
-    height: 8px;
-    border-block: 2px solid currentColor;
-  }
-
-  .row { padding-inline: var(--gutter); }
-  .calendar {
-    flex: 0 0 auto;
-    padding-inline: var(--gutter);
-  }
-  .session { padding: 8px calc(var(--gutter) - 12px); }
-
-  /* room at the bottom, so the chat link never covers the last post */
-  .main { padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px)); }
   .head { padding: 32px var(--gutter) 18px; }
   .title { gap: 12px; }
   .title .label { font-size: 12px; }
 
-  /* A post: the date above the title */
-  .post { display: block; }
-  .post-date {
-    padding: 22px var(--gutter) 0;
-    border-right: 0;
-    font-size: 12px;
+  .posts {
+    gap: 28px;
+    padding: 24px var(--gutter) 32px;
   }
-  .post-body {
-    gap: 10px;
-    padding: 10px var(--gutter) 26px;
-  }
-  .post-title { font-size: 22px; }
-  .post-text { font-size: 16px; line-height: 1.55; }
+}
 
-  /* Floating "Chat de Bayern": a dark square chip */
-  .chat-fab {
-    position: fixed;
-    right: var(--gutter);
-    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-    z-index: 4;
-    display: flex;
-    align-items: center;
-    min-height: 52px;
-    max-width: calc(100vw - 2 * var(--gutter));
-    padding: 0 18px;
-    background: var(--paper);
-    color: var(--ink);
-    font-size: 16px;
-    font-weight: 700;
-    text-decoration: none;
+/* A narrow post (phones, and the iPad held upright): the date and the
+   tag in a strip on top, then the title and the text at full width */
+@container posts (max-width: 640px) {
+  .post { display: block; }
+  .post-meta {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px 16px;
+    padding: 16px 16px 14px;
+    border-right: 0;
+    border-bottom: 1px solid var(--rule);
   }
-  /* very long state names end in "…" instead of leaving the screen */
-  .chat-fab-label {
-    min-width: 0;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
+  .post-date { gap: 6px; }
+  .post-month { font-size: 12px; }
+  .post-day { font-size: 40px; }
+  .post-body {
+    gap: 12px;
+    padding: 18px 16px 22px;
   }
-  .chat-fab:hover .chat-fab-label {
-    text-decoration: underline;
-    text-decoration-thickness: 1px;
-    text-underline-offset: .2em;
-  }
-  .chat-fab:focus-visible {
-    outline: 2px solid var(--ink);
-    outline-offset: -6px;
-  }
-  /* while the menu is open it would cover the menu's last rows (and the
-     menu has the same link) */
-  .column.is-open ~ .chat-fab { display: none; }
+  .post-title { font-size: 25px; }
+  .post-text { font-size: 16px; line-height: 1.55; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .profile,
-  .row,
   .message-btn { transition: none; }
 }

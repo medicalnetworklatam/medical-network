@@ -1,7 +1,7 @@
 import { useState, type CSSProperties } from 'react'
 import { Link } from 'react-router'
 import PostBoard from './PostBoard.tsx'
-import SessionButton from './SessionButton.tsx'
+import AreaLayout from './AreaLayout.tsx'
 import { usePageTitle } from '../lib/usePageTitle.ts'
 import { useAuth } from '../lib/auth.ts'
 import { authorName, useProfile } from '../lib/profile.ts'
@@ -41,14 +41,7 @@ export default function Chat() {
   const titleStyle = { '--title-chars': titleChars } as CSSProperties
 
   return (
-    <div className={board.page}>
-      <header className={board.header}>
-        <Link className={board.pill} to="/novedades">
-          <span aria-hidden="true">←</span> Novedades
-        </Link>
-        <SessionButton />
-      </header>
-
+    <AreaLayout current="chat">
       <main className={board.main}>
         <div className={board.head}>
           {/* Read as one heading: "Chat de Bayern" / "Chat" */}
@@ -105,6 +98,6 @@ export default function Chat() {
           </div>
         )}
       </main>
-    </div>
+    </AreaLayout>
   )
 }
