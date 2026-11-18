@@ -13,6 +13,12 @@ import { all, clamp, lerp, one, smooth } from './dom.ts'
     step 2  phase 02 rises; phase 01 shrinks to its number and title
     step 3  phase 03 rises; phase 02 shrinks too
 
+  After phases 01 and 02 have settled, the scroll rests for a moment
+  (nothing moves) before the next one rises; phase 03's rest is the start
+  of the closing scroll. While the title cell rises, the space behind the
+  cells goes from see-through to solid (--e0), so the hero's words fade out
+  behind it instead of showing between the cells.
+
   At the end the title, two shrunk rows and phase 03 at full size fill the
   screen exactly. A shrunk row keeps its text, greyed out, faded at the
   bottom where it does not fit (Home.module.css). The phase in focus always
@@ -40,9 +46,12 @@ import { all, clamp, lerp, one, smooth } from './dom.ts'
   tabindex and styles set here are removed.
 */
 
-// share of the spacer each step takes: title, 01, 02, 03
+// share of the spacer each step takes to move (title, 01, 02, 03), and the
+// rest after each step (01 and 02). The spacer is TOTAL svh tall
+// (.push-track__phases in Home.module.css): keep the two in step.
 const STEPS = [50, 70, 70, 70]
-const TOTAL = STEPS.reduce((a, b) => a + b, 0)
+const RESTS = [0, 50, 50, 0]
+const TOTAL = [...STEPS, ...RESTS].reduce((a, b) => a + b, 0)
 const CLOSE_REST = 50 / 170 // first share of the closing scroll: a rest on the finished phases
 const CLOSE_HOLD = 0.15 // last share of the circle's scroll spent at rest
 const ABSORB = 0.12 // how much the phases shrink while the circle closes
@@ -75,16 +84,21 @@ export function usePhases(rootRef: RefObject<HTMLElement | null>): void {
     phases.classList.add(styles.isStaged)
     track.classList.add(styles.isStaged) // shows the spacer
 
-    // scroll position (page y) at which each step is complete; [0] is the start
-    function points(): number[] {
+    // scroll positions (page y) at which each step starts moving (from) and
+    // is complete (to); between one step's "to" and the next "from" is its rest
+    function points(): { from: number[]; to: number[] } {
       const base = track!.getBoundingClientRect().top + window.scrollY + push!.offsetHeight
-      const out = [base]
-      let sum = 0
-      STEPS.forEach((s) => {
-        sum += s
-        out.push(base + (spacer!.offsetHeight * sum) / TOTAL)
+      const unit = spacer!.offsetHeight / TOTAL
+      const from: number[] = []
+      const to: number[] = []
+      let at = base
+      STEPS.forEach((s, i) => {
+        from.push(at)
+        at += s * unit
+        to.push(at)
+        at += RESTS[i] * unit
       })
-      return out
+      return { from, to }
     }
 
     // A text cell's own height: padding + its children + the gaps between
@@ -158,12 +172,15 @@ export function usePhases(rootRef: RefObject<HTMLElement | null>): void {
       const L = layouts(H, hHead)
 
       // progress through each step
-      const p = points()
+      const { from, to } = points()
+      const end = to[3] // all three in place
       const y = window.scrollY
-      const e = STEPS.map((_, i) => smooth(clamp((y - p[i]) / (p[i + 1] - p[i]))))
+      const e = STEPS.map((_, i) => smooth(clamp((y - from[i]) / (to[i] - from[i]))))
 
       // the title cell's colour follows each phase as it arrives (Home.module.css)
       for (let i = 1; i <= 3; i++) head!.style.setProperty('--e' + i, e[i].toFixed(3))
+      // the space behind the cells turns solid as the title cell rises
+      phases!.style.setProperty('--e0', e[0].toFixed(3))
 
       // Choosing: once all three are in, the chosen phase is full size and the
       // others shrink. Until then (or when scrolling back) it is phase 03.
@@ -197,7 +214,7 @@ export function usePhases(rootRef: RefObject<HTMLElement | null>): void {
       let extra = Math.max(0, Math.round(hHead + hs.reduce((a, b) => a + b, 0) - H))
       if (extra <= 6) extra = 0
       if (more && Math.abs(more.offsetHeight - extra) > 1) more.style.height = extra + 'px'
-      const shift = Math.min(extra, Math.max(0, y - p[4]))
+      const shift = Math.min(extra, Math.max(0, y - end))
       head!.style.setProperty('--y', (lerp(H, 0, e[0]) - shift).toFixed(1) + 'px')
 
       let settled = hHead // where each row settles: right under the one above
@@ -211,9 +228,9 @@ export function usePhases(rootRef: RefObject<HTMLElement | null>): void {
 
       // Closing: once the phases fill the screen the closing slide can sit
       // behind them; past the extra scroll and a rest, the circle closes on them.
-      track!.classList.toggle(styles.isClosing, y >= p[4] - 1)
+      track!.classList.toggle(styles.isClosing, y >= end - 1)
       const rest = close ? close.offsetHeight * CLOSE_REST : 0
-      const c0 = p[4] + extra + rest
+      const c0 = end + extra + rest
       const tc = close ? clamp((y - c0) / ((close.offsetHeight - rest) * (1 - CLOSE_HOLD))) : 0
       if (tc <= 0) {
         phases!.style.clipPath = ''
@@ -272,6 +289,7 @@ export function usePhases(rootRef: RefObject<HTMLElement | null>): void {
       })
       phases.style.clipPath = ''
       phases.style.transform = ''
+      phases.style.removeProperty('--e0')
       if (more) more.style.height = ''
     }
   }, [rootRef])

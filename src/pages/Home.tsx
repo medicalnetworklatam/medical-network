@@ -70,6 +70,11 @@ export default function Home() {
                 <Line>es un laberinto</Line>
               </div>
             </div>
+
+            {/* 4. an arrow at the bottom: scroll down (decoration only) */}
+            <svg className={styles.heroScroll} viewBox="0 0 24 56" aria-hidden="true" focusable="false">
+              <path d="M12 1v52M3 44l9 9 9-9" />
+            </svg>
           </section>
 
           {/* Revealed through the circle (reveal.ts), then scrolls on normally. */}
@@ -110,11 +115,6 @@ export default function Home() {
 
             <div className={styles.storyStack}>
               <div className={`${styles.storyBody} ${styles.storyBodyThen}`}>
-                <div className={`${styles.storyShift} ${styles.storyShiftThen}`}>
-                  <p className={styles.label}>antes</p>
-                  <p>No tenía idea de por dónde empezar ni qué hacer.</p>
-                </div>
-
                 <div className={styles.storyBio}>
                   <p>Soy Ivan Bruckner Calahorrano, médico ecuatoriano. Me gradué en 2015
                   y ese mismo año llegué a Alemania. En 2017 obtuve la <span lang="de">Approbation</span>, hice
@@ -135,6 +135,11 @@ export default function Home() {
                   </div>
                   <figcaption>Mis inicios</figcaption>
                 </figure>
+
+                <div className={`${styles.storyShift} ${styles.storyShiftThen}`}>
+                  <p className={styles.label}>antes</p>
+                  <p>No tenía idea de por dónde empezar ni qué hacer.</p>
+                </div>
               </div>
 
               <div className={`${styles.storyBody} ${styles.storyBodyNow}`}>

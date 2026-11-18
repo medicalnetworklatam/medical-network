@@ -193,6 +193,22 @@
   pointer-events: none;
 }
 
+/* First slide only: a thin arrow at the bottom, pointing down (scroll on).
+   It sits in the hero's bottom padding, under the words and the photo. */
+.hero__scroll {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: clamp(20px, 4svh, 40px);
+  margin-inline: auto;
+  width: 24px;
+  height: 56px;
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.5;
+  pointer-events: none;
+}
+
 /* ------------------------------------------------------------------
    Intro: revealed through a circle in the letters' colour.
    It sits pinned on top of the hero; reveal.ts grows the circle
@@ -219,7 +235,7 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  gap: clamp(10px, 1.4vw, 22px);
+  gap: clamp(4px, .8vw, 12px);  /* the same gap as "mi / historia." (.story__head) */
   padding: 0 var(--gutter) clamp(10px, 1.2vw, 18px);
   border-bottom: 1px solid var(--rule);
 }
@@ -281,6 +297,10 @@
 }
 .intro__title {
   align-self: flex-start;       /* box as wide as the word, so it centres on the word */
+  /* "ruta." has no tall letter (like the h of "historia."), so its letters
+     start lower in their box: pulled up so the gap you see under "yo soy tu"
+     matches the one under "mi" */
+  margin-top: -.07em;
   transform: translate(var(--tx, 0px), var(--ty, 0px));
   will-change: transform;
 }
@@ -312,6 +332,7 @@
    Desktop:  head (pinned)          head (pinned)
              bio   | photo    →     photo | después
              antes | photo
+   Phone:    bio, photo, antes  →   photo, después
 ------------------------------------------------------------------- */
 .story {
   --story-head: clamp(120px, 18svh, 170px);
@@ -366,14 +387,15 @@
 }
 .story.is-now .story__body--then,
 .story:not(.is-now) .story__body--now { pointer-events: none; }
-/* left column 42% (30% thinner than the old 60%); "antes" gets 37% of the
-   height (120% taller than its old ~17%) and never less than its text */
+/* left column 42% (30% thinner than the old 60%); the bio on top, "antes"
+   under it with 37% of the height (120% taller than its old ~17%) and
+   never less than its text */
 .story__body--then {
   grid-template-columns: minmax(0, 42fr) minmax(0, 58fr);
-  grid-template-rows: minmax(auto, 37fr) minmax(0, 63fr);
+  grid-template-rows: minmax(0, 63fr) minmax(auto, 37fr);
   grid-template-areas:
-    "was   photo"
-    "bio   photo";
+    "bio   photo"
+    "was   photo";
 }
 .story__body--now {
   grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
@@ -655,7 +677,7 @@
 .push-track__close { display: none; }
 /* 85svh of pushing, then a 75svh rest before the phases (push.ts) */
 .push-track.is-pushing .push-track__push { display: block; height: 160svh; }
-.push-track.is-staged .push-track__phases { display: block; height: 260svh; }
+.push-track.is-staged .push-track__phases { display: block; height: 360svh; } /* TOTAL in phases.ts */
 /* a rest on the finished phases (first 50svh), then the closing circle */
 .push-track.is-staged .push-track__close { display: block; height: 170svh; }
 
@@ -697,7 +719,9 @@
 }
 
 /* The phases staged over the second hero (phases.ts): one screen, pinned,
-   see-through, with every cell placed by JS. --y: a cell's top on the
+   with every cell placed by JS. Its background starts see-through and turns
+   solid (the hero's dark) while the title cell rises: --e0, 0 to 1, so the
+   hero's words fade out behind the cells. --y: a cell's top on the
    screen; --h: a phase row's height; --k: 0 = in focus (full size),
    1 = shrunk: everything greyed out, and what does not fit fades out at
    the bottom of the row (never squeezed). Once all three are in, a phase
@@ -708,7 +732,7 @@
   height: 100svh;
   margin-top: -100svh;          /* lie exactly over the pinned hero */
   overflow: hidden;
-  background: none;
+  background: color-mix(in srgb, var(--paper) calc(var(--e0, 0) * 100%), transparent);
   border-top: 0;
 }
 .phases.is-staged .phases__head,
@@ -850,6 +874,12 @@
   .hero__words--over {
     animation: fade-in .6s ease .9s both;
   }
+  /* the arrow appears after the photo has opened, then nudges down gently */
+  .hero__scroll {
+    animation:
+      fade-in .6s ease 1.5s both,
+      nudge 2.4s ease-in-out 2.1s infinite;
+  }
 }
 
 @keyframes rise {
@@ -863,6 +893,10 @@
 @keyframes fade-in {
   from { opacity: 0; }
   to   { opacity: 1; }
+}
+@keyframes nudge {
+  0%, 100% { transform: none; }
+  50%      { transform: translateY(8px); }
 }
 
 /* ------------------------------------------------------------------
@@ -881,16 +915,16 @@
   }
 
   /* Mi historia on a phone: a shorter pinned head.
-     First layout: antes, bio, then photo.  Second: photo, después. */
+     First layout: bio, photo, then antes.  Second: photo, después. */
   .story { --story-head: clamp(88px, 14svh, 120px); }
   .story__head .display { font-size: clamp(28px, 9vw, 40px); }
   .story__body--then {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto auto minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto;
     grid-template-areas:
-      "was"
       "bio"
-      "photo";
+      "photo"
+      "was";
   }
   .story__body--now {
     grid-template-columns: minmax(0, 1fr);
