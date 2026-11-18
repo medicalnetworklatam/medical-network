@@ -107,23 +107,32 @@ check('removing an old photo deletes only the photo (no empty entry)',
   storagePaths({ path: post + '/p.jpg', thumb_path: null }), [post + '/p.jpg'])
 check('removing a PDF deletes only the PDF', storagePaths({ path: post + '/d.pdf', thumb_path: null }), [post + '/d.pdf'])
 
-/* ---------- The preview's tiles (2×2) on the Novedades list ---------- */
+/* ---------- The preview's file area on the Novedades list ---------- */
 const photo = (n: number) => ({ kind: 'image' as const, thumb_path: 't' + n + '.jpg' })
 const oldPhoto = { kind: 'image' as const, thumb_path: null }
 const pdf = { kind: 'pdf' as const, thumb_path: null }
+const many = (n: number) => Array.from({ length: n }, (_, i) => photo(i + 1))
 check('no files: no tiles', previewTiles([]), [])
-check('1 file: the file and 3 empty cells', previewTiles([photo(1)]),
-  [{ kind: 'thumb', path: 't1.jpg' }, { kind: 'empty' }, { kind: 'empty' }, { kind: 'empty' }])
-check('3 files in their order, old photo and PDF', previewTiles([pdf, oldPhoto, photo(1)]),
-  [{ kind: 'pdf' }, { kind: 'photo' }, { kind: 'thumb', path: 't1.jpg' }, { kind: 'empty' }])
-check('4 files: all four shown, no "+N"', previewTiles([photo(1), photo(2), photo(3), pdf]),
+check('1 file: one tile (fills the square)', previewTiles([photo(1)]), [{ kind: 'thumb', path: 't1.jpg' }])
+check('1 old photo: a "Foto" tile', previewTiles([oldPhoto]), [{ kind: 'photo' }])
+check('1 PDF: a "PDF" tile', previewTiles([pdf]), [{ kind: 'pdf' }])
+check('2 files: two tiles (a column), in their order', previewTiles([pdf, photo(1)]),
+  [{ kind: 'pdf' }, { kind: 'thumb', path: 't1.jpg' }])
+check('3 files: the three files, then a black tile with "3"', previewTiles([pdf, oldPhoto, photo(1)]),
+  [{ kind: 'pdf' }, { kind: 'photo' }, { kind: 'thumb', path: 't1.jpg' }, { kind: 'count', count: 3 }])
+check('4 files: all four, no number', previewTiles([photo(1), photo(2), photo(3), pdf]),
   [{ kind: 'thumb', path: 't1.jpg' }, { kind: 'thumb', path: 't2.jpg' }, { kind: 'thumb', path: 't3.jpg' }, { kind: 'pdf' }])
-check('5 files: three shown, then "+2"', previewTiles([photo(1), photo(2), photo(3), photo(4), pdf]),
+check('5 files: the first three, then "5"', previewTiles(many(5)),
   [{ kind: 'thumb', path: 't1.jpg' }, { kind: 'thumb', path: 't2.jpg' }, { kind: 'thumb', path: 't3.jpg' },
-    { kind: 'more', count: 2 }])
-check('6 files: "+3"', previewTiles([pdf, pdf, pdf, pdf, pdf, pdf])[3], { kind: 'more', count: 3 })
-check('10 files: "+7"', previewTiles(Array.from({ length: 10 }, (_, i) => photo(i)))[3], { kind: 'more', count: 7 })
-check('always 4 cells', [1, 2, 3, 4, 5, 6].every((n) => previewTiles(Array.from({ length: n }, () => pdf)).length === 4), true)
+    { kind: 'count', count: 5 }])
+check('6 files: the first three, then the total "6" (not "+N")', previewTiles([photo(1), oldPhoto, pdf, photo(4), photo(5), pdf]),
+  [{ kind: 'thumb', path: 't1.jpg' }, { kind: 'photo' }, { kind: 'pdf' }, { kind: 'count', count: 6 }])
+check('10 files: "10"', previewTiles(many(10))[3], { kind: 'count', count: 10 })
+check('tiles per number of files: 0, 1, 2, 4, 4, 4, 4',
+  [0, 1, 2, 3, 4, 5, 6].map((n) => previewTiles(many(n)).length), [0, 1, 2, 4, 4, 4, 4])
+check('small copies asked for: at most 3 with more than 4 files',
+  previewTiles(many(6)).filter((t) => t.kind === 'thumb').length, 3)
+check('small copies asked for: 4 with 4 files', previewTiles(many(4)).filter((t) => t.kind === 'thumb').length, 4)
 
 /* ---------- What screen readers hear instead of the tiles ---------- */
 check('no files: nothing', filesSummary([]), '')

@@ -143,40 +143,41 @@ export function storagePaths(file: Pick<Attachment, 'path' | 'thumb_path'>): str
   return file.thumb_path ? [file.path, file.thumb_path] : [file.path]
 }
 
-/* ---------- The preview's tiles on the Novedades list ---------- */
+/* ---------- The preview's file area on the Novedades list ---------- */
 
-/** One cell of the 2×2 grid in a post's preview:
+/** One tile of a post's file area:
     - thumb: a photo's small copy (path in storage)
     - photo: a photo without a small copy (uploaded before migration 6)
     - pdf: a PDF
-    - more: "+N", the files not shown (counting this cell)
-    - empty: an empty ruled cell */
+    - count: the black tile with a number (3 files: "3"; more than 4: the
+      total number of files) */
 export type Tile =
   | { kind: 'thumb'; path: string }
   | { kind: 'photo' }
   | { kind: 'pdf' }
-  | { kind: 'more'; count: number }
-  | { kind: 'empty' }
+  | { kind: 'count'; count: number }
 
-/** How many cells the grid has */
-export const TILE_COUNT = 4
-
-/** The 4 cells of a post's grid, for its files in their order. With more
-    than 4 files, the 4th cell is "+N" (N = the files not shown, counting
-    the 4th). With fewer, the rest are empty. No files: no cells. */
+/** The tiles of a post's file area, for its files in their order. The
+    square keeps its size; what fills it depends on the number of files
+    (DECISIONS.md, 18 Nov 2026, evening):
+    - 1 file: one tile filling the square
+    - 2 files: a column of two tiles
+    - 3 files: three tiles (top left, top right, bottom left) and a black
+      tile with "3" (bottom right)
+    - 4 files: the 2×2 grid
+    - more than 4: the first three files and a black tile with the total
+      number of files
+    So there are 0, 1, 2 or 4 tiles; the page picks the layout from that
+    number. No files: no tiles. */
 export function previewTiles(files: readonly Pick<Attachment, 'kind' | 'thumb_path'>[]): Tile[] {
-  if (files.length === 0) return []
-  const tiles: Tile[] = []
-  const overflow = files.length > TILE_COUNT
-  const shown = overflow ? TILE_COUNT - 1 : files.length
-  for (const file of files.slice(0, shown)) {
-    if (file.kind === 'pdf') tiles.push({ kind: 'pdf' })
-    else if (file.thumb_path) tiles.push({ kind: 'thumb', path: file.thumb_path })
-    else tiles.push({ kind: 'photo' })
+  const fileTile = (file: Pick<Attachment, 'kind' | 'thumb_path'>): Tile =>
+    file.kind === 'pdf' ? { kind: 'pdf' }
+      : file.thumb_path ? { kind: 'thumb', path: file.thumb_path }
+        : { kind: 'photo' }
+  if (files.length === 3 || files.length > 4) {
+    return [...files.slice(0, 3).map(fileTile), { kind: 'count', count: files.length }]
   }
-  if (overflow) tiles.push({ kind: 'more', count: files.length - shown })
-  while (tiles.length < TILE_COUNT) tiles.push({ kind: 'empty' })
-  return tiles
+  return files.map(fileTile)
 }
 
 /** What screen readers hear instead of the tiles: "Archivos: 3 fotos y

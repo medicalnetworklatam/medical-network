@@ -202,10 +202,12 @@ async function thumbLinks(client: NonNullable<typeof supabase>, posts: NewsPost[
 /** One news post as a preview, in its own frame: the date and the tag in
     one cell; in the other, the title, the start of the text (plain text,
     no links: the whole preview is one link already) and, when the post has
-    files, a 2×2 grid of tiles on the right.
+    files, a square file area on the right, filled by the number of files
+    (see previewTiles in newsFiles.ts).
 
     The title is the only link (its accessible name is the title); CSS
-    stretches it over the whole frame, so tapping anywhere opens the post. */
+    stretches its ::after layer over the whole frame, above every other part
+    of the card, so clicking or tapping anywhere opens the post. */
 function Post({ post, links, onOpen }: { post: NewsPost; links: Links; onOpen: () => void }) {
   const files = useMemo(() => sortAttachments(post.news_attachments ?? []), [post.news_attachments])
   const tiles = useMemo(() => previewTiles(files), [files])
@@ -223,8 +225,10 @@ function Post({ post, links, onOpen }: { post: NewsPost; links: Links; onOpen: (
         {tiles.length > 0 && (
           <>
             {/* Screen readers hear "Archivos: 3 fotos y 1 PDF" instead */}
-            <div className={styles.tiles} aria-hidden="true">
-              {tiles.map((tile, i) => <TileCell key={i} tile={tile} links={links} />)}
+            <div className={styles.fileArea} aria-hidden="true">
+              <div className={styles.tiles + ' ' + TILES_LAYOUT[tiles.length]}>
+                {tiles.map((tile, i) => <TileCell key={i} tile={tile} links={links} />)}
+              </div>
             </div>
             <p className="sr-only">{filesSummary(files)}</p>
           </>
@@ -257,9 +261,18 @@ function PreviewText({ text }: { text: string }) {
   )
 }
 
-/** One cell of the 2×2 grid: a photo's small copy (cropped to the square),
-    "FOTO" for a photo without one (or whose link failed), "PDF", "+N", or
-    an empty ruled cell. Decoration only: the summary is read instead. */
+/** The file area's layout by the number of tiles (previewTiles gives 1, 2
+    or 4): one tile filling the square, a column of two, or the 2×2 grid */
+const TILES_LAYOUT: Record<number, string> = {
+  1: styles.tilesOne,
+  2: styles.tilesColumn,
+  4: styles.tilesGrid,
+}
+
+/** One tile of the file area: a photo's small copy (cropped to its tile),
+    "FOTO" for a photo without one (or whose link failed), "PDF", or the
+    black tile with a number. Decoration only: the summary is read
+    instead. */
 function TileCell({ tile, links }: { tile: Tile; links: Links }) {
   if (tile.kind === 'thumb' && links[tile.path]) {
     return (
@@ -272,6 +285,5 @@ function TileCell({ tile, links }: { tile: Tile; links: Links }) {
     return <span className={styles.tile + ' ' + styles.tileWord}>Foto</span>
   }
   if (tile.kind === 'pdf') return <span className={styles.tile + ' ' + styles.tilePdf}>PDF</span>
-  if (tile.kind === 'more') return <span className={styles.tile + ' ' + styles.tileMore}>+{tile.count}</span>
-  return <span className={styles.tile} />
+  return <span className={styles.tile + ' ' + styles.tileCount}>{tile.count}</span>
 }

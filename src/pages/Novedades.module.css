@@ -6,7 +6,7 @@
    colour).
 
    The list shows each post as a preview (title, the start of the text
-   and a 2×2 grid of file tiles), which opens the full post. The full
+   and a square file area), which opens the full post. The full
    post shows the whole text, the photos and the PDFs.
 
    The dark column, the phone's "Menú" bar and the floating chat link
@@ -188,13 +188,13 @@
 
 /* ------------------------------------------------------------------
    The list: each post is a preview. The title is the post's one link,
-   stretched over the whole frame by its ::after, so tapping anywhere
-   opens the post (no link inside a link). The keyboard's focus ring is
-   drawn around the whole frame.
+   stretched over the whole frame by its ::after, so clicking or tapping
+   anywhere opens the post (no link inside a link). The keyboard's focus
+   ring is drawn around the whole frame.
 ------------------------------------------------------------------- */
 .is-preview {
   position: relative;
-  /* the tiles: about 88 px on a 375 px phone, up to about 190 px */
+  /* the file area: about 88 px on a 375 px phone, up to about 190 px */
   --tiles-size: clamp(88px, 17cqi, 190px);
 }
 .preview {
@@ -206,8 +206,8 @@
   row-gap: 16px;
   padding: clamp(22px, 2.2vw, 30px) clamp(20px, 2.4vw, 36px) clamp(26px, 2.6vw, 38px);
 }
-/* With files: the 2×2 grid on the right, from the title's first line;
-   the title and the text on its left */
+/* With files: the square file area on the right, from the title's first
+   line; the title and the text on its left */
 .preview.has-files {
   grid-template-columns: minmax(0, 1fr) var(--tiles-size);
   column-gap: clamp(16px, 2.4vw, 36px);
@@ -223,6 +223,11 @@
   content: "";
   position: absolute;
   inset: 0;
+  /* Above every other part of the card. Parts that make their own layer
+     (the faded text's mask, the file area) would otherwise sit on top of
+     it and not open the post. */
+  z-index: 1;
+  cursor: pointer;
 }
 .post-link:hover {
   text-decoration: underline;
@@ -257,22 +262,41 @@
   mask-image: linear-gradient(to bottom, var(--accent) calc(100% - 1.8 * var(--line)), transparent);
 }
 
-/* The 2×2 grid of square tiles, split by 1px ruled lines (the gaps let
-   the --rule background through). Decoration only: screen readers hear
-   the summary next to it. */
-.tiles {
+/* The file area: a square that keeps its size whatever the number of
+   files; inside it, the tiles (newsFiles.ts, previewTiles):
+   - one tile filling the square (1 file)
+   - a column of two tiles, as wide as one tile of the grid (2 files)
+   - the 2×2 grid (3 files plus "3", 4 files, or 3 files plus the total)
+   Tiles are split by 1px ruled lines (the gaps let the --rule background
+   through). Decoration only: screen readers hear the summary next to it. */
+.file-area {
   grid-column: 2;
   grid-row: 1 / span 2;
+  /* its labels are sized on the square's width (cqi) */
   container-type: inline-size;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-rows: repeat(2, minmax(0, 1fr));
-  gap: 1px;
   width: var(--tiles-size);
   aspect-ratio: 1;
+}
+.tiles {
+  display: grid;
+  gap: 1px;
+  height: 100%;
   border: 1px solid var(--rule);
   background: var(--rule);
   background-clip: padding-box;
+}
+.tiles-one {
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+}
+/* As wide as one tile of the 2×2 grid: (square − 3 lines) / 2, plus its
+   two side lines. (A percentage of the square, not --tiles-size: inside
+   the square, that size's cqi would be measured on the square itself.) */
+.tiles-column {
+  grid-template: repeat(2, minmax(0, 1fr)) / minmax(0, 1fr);
+  width: calc((100% + 1px) / 2);
+}
+.tiles-grid {
+  grid-template: repeat(2, minmax(0, 1fr)) / repeat(2, minmax(0, 1fr));
 }
 .tile {
   min-width: 0;
@@ -285,7 +309,7 @@
   font-weight: 700;
   line-height: 1;
 }
-/* A photo's small copy, cropped to the square (only here: the full post
+/* A photo's small copy, cropped to its tile (only here: the full post
    shows photos whole) */
 .tile-img {
   display: block;
@@ -300,13 +324,14 @@
   letter-spacing: .12em;
   text-transform: uppercase;
 }
+/* "PDF" and the number: inverted (dark) tiles */
 .tile-pdf,
-.tile-more {
+.tile-count {
   background: var(--accent);
   color: var(--ink);
 }
-/* "+N": the files not shown */
-.tile-more {
+/* The number: "3" with 3 files, the total with more than 4 */
+.tile-count {
   font-size: clamp(15px, 18cqi, 40px);
   letter-spacing: -.02em;
   font-variant-numeric: tabular-nums;
