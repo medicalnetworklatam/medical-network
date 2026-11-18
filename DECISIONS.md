@@ -15,6 +15,20 @@ Last updated: 18 Nov 2026. This is the source of truth for the project. When a d
   - Spanish only, web only
 - **Admins:** Ivan and his cousin.
 
+## Changes on 18 Nov 2026 (afternoon): attachments, links, the shared column, posts and chat
+
+- **Novedades posts can carry photos and PDFs** (Ivan's decision). This replaces "no photos" in news and settles the open decision on what a news post includes. Only admins attach files, in the news form; clients still never upload anything.
+  - Photos (JPEG, PNG, WebP) and PDFs only. Never SVG or HTML.
+  - Files live in a **private** Supabase Storage bucket. Each file is visible to exactly the people who can see its post (same state, paid-only and publish-date rules), enforced by the database (RLS on storage), never only by the website. The site shows them through short-lived signed links.
+  - Photos are shrunk and re-saved in the browser before upload, which also removes hidden data such as the phone's GPS location.
+  - Built in migration 5, with new checks in `rls_check.sql`. The Content-Security-Policy gets the Supabase project address in `img-src`.
+- **Links in text:** web addresses (`http://` and `https://` only) in Novedades, Comunidad and Chat become links. Built as React elements, never as HTML; they open in a new tab with `rel="noopener noreferrer nofollow"` and show the full address, so members see where a link goes. This settles the open decision on links.
+- **The dark column is shared** by Novedades, Comunidad and Chat, in this order: Mi perfil, Novedades, Comunidad MNL, Chat de <Bundesland>, Administración (admins only), Calendario, Cerrar sesión. The current page is marked. The "← Novedades" links on Comunidad and Chat go. (Ivan gave the order; using the column on all three pages is Claude's reading of his answer, to be confirmed on the preview.)
+- **"Comunidad" is called "Comunidad MNL"** in the column and the browser tab title. The page heading stays "tu" over "comunidad.".
+- **Calendar:** still a non-working preview labelled "Próximamente". It shows the current month and today's date (German time) and a few example events of one type, "Webinars / reuniones", in one event colour, with a small legend that says they are examples. This one colour is the only exception to "every colour comes from three values", and it is used only in the calendar.
+- **Novedades posts are redesigned** so each one reads as a separate post, not as lines of a log or chat. What the page shows and who sees what stay the same.
+- **The state chat looks like a chat:** oldest at the top, newest at the bottom, the page opens at the newest message, the writing box stays at the bottom, own messages on the right and everyone else's on the left, older messages loaded at the top. This replaces "messages are newest first like the board" for the chat only. Comunidad stays a board, newest first. Every chat rule (length, deleting, speed limit, 20-second refresh, "Equipo MNL") stays the same.
+
 ## Changes on 18 Nov 2026: Flatline, and the whole site in the new look
 
 - **Palette: Flatline is final** (black `#050505` on cream `#F3F0E9`). The palette switcher and the other four palettes are removed, and "Menú" on the home page becomes a real menu.
@@ -177,7 +191,7 @@ These replace the morning's "look and feel" bullet below where they differ.
   - Free users see only "La comunidad es para miembros con el paquete completo." The page makes no request for posts (the database refuses them anyway).
   - Posts are listed newest first, 30 at a time, with "Ver más" for older ones. "Ver más" asks for posts older than the last one shown (by `created_at`, then `id` for posts with the very same time), using `created_at` exactly as the database sent it, so no post is skipped or shown twice.
   - No realtime: the list loads when the page opens, after publishing, and with an "Actualizar" button. After publishing, the new post shows at the top and the list goes back to the newest 30.
-  - Each post shows the author name, the date and time in the reader's own time zone (news dates stay in German time), and the body as plain text with its line breaks. No automatic links.
+  - Each post shows the author name, the date and time in the reader's own time zone (news dates stay in German time), and the body as plain text with its line breaks. Web addresses become safe links since 18 Nov 2026 (afternoon, see above).
   - The form's counter ("0 / 2000") follows the database's rule exactly: it removes only spaces, tabs, carriage returns and line breaks at both ends, and counts an emoji as one character. "Publicar" is disabled when the text is empty, over 2,000 characters, or while sending. The page sends only the body.
   - "Eliminar" is shown on the user's own posts, and on every post for admins. It asks for confirmation inside the post ("¿Eliminar esta publicación?" with "Sí, eliminar" and "Cancelar"), not with the browser's own pop-up, so every word stays in Spanish.
 
@@ -191,7 +205,7 @@ These replace the morning's "look and feel" bullet below where they differ.
 - **Live updates:** no real-time connection. The page refreshes by itself every 20 seconds while it is open and visible, plus an "Actualizar" button. Real-time can be added later (it would need the table in Supabase's realtime list and a new address in `_headers`).
 - **Page:** `/chat`, login only. The chat preview on Novedades becomes a link to it.
 - **Messages:** plain text, 1 to 2,000 characters, members delete their own, admins delete any, no editing.
-- **Build details** (decided 17 Nov 2026, from the build plan): Novedades loses the fake chat column and gets a "Chat de <Bundesland>" link in the green column; the phone's floating chat button links to `/chat`. Messages are newest first like the board (where new messages go is a look-and-feel question for later). "Actualizar" reloads the newest 30, so deleted messages disappear. The speed limit counts posts that still exist, counting all of a member's own posts regardless of what they can see now. Old admin posts were marked "Equipo MNL" too. Known gap, accepted: two posts in the same chat within milliseconds can be missed by another member's automatic refresh until "Actualizar".
+- **Build details** (decided 17 Nov 2026, from the build plan): Novedades loses the fake chat column and gets a "Chat de <Bundesland>" link in the green column; the phone's floating chat button links to `/chat`. Messages were newest first like the board; since 18 Nov 2026 (afternoon) the chat shows the newest at the bottom, like a chat (see above). "Actualizar" reloads the newest 30, so deleted messages disappear. The speed limit counts posts that still exist, counting all of a member's own posts regardless of what they can see now. Old admin posts were marked "Equipo MNL" too. Known gap, accepted: two posts in the same chat within milliseconds can be missed by another member's automatic refresh until "Actualizar".
 - **Migration 4** also removes execute rights on Supabase's `public.rls_auto_enable()` from the website's roles.
 
 ### Admin screens (decided 16 Nov 2026)
@@ -240,7 +254,7 @@ These replace the morning's "look and feel" bullet below where they differ.
   - `community_posts` (migration 2): id, author_id (deleted together with the author's account), author_name, body (plain text, 1 to 2,000 characters, trimmed), created date. The website sends only the body; the database sets everything else. Listed newest first. Migration 4 adds `state` (the Bundesland; empty = the board, sent by the website for chat messages) and `is_staff` ("Equipo MNL", set by the database): see "State chat".
   - `checklist_items`: permanent automatic ID (what progress uses), optional unique readable code (like `by-kp-010`, for humans and spreadsheet imports), Bundesland, route, title, text, sort order, archived
   - `progress`: user_id, item_id, done_at (set by the database)
-  - `news_posts`: title, body (plain text), Bundesland (empty = all states), publish date, published, paid_only (ticked by default)
+  - `news_posts`: title, body (plain text), Bundesland (empty = all states), publish date, published, paid_only (ticked by default). Photos and PDFs attached to a post come with migration 5 (18 Nov 2026).
   - Bundesländer are stored as the map's 16 short codes (`by`, `nw`, `th`…); the database refuses anything else.
   - Adding tables or columns later is normal. Restructuring is cheap until real clients have data.
 - **Migration 2** (applied 15 Nov 2026, `supabase/migrations/20261115120000_one_state_news_community.sql`):
@@ -307,7 +321,7 @@ These replace the morning's "look and feel" bullet below where they differ.
 
 **Out of the first version:**
 - payment inside the site (clients pay through an external link; an admin switches the plan to paid by hand)
-- file uploads (users will never upload files, not even in the community)
+- file uploads by users (users will never upload files, not even in the community). Admins attaching photos and PDFs to news is in scope since 18 Nov 2026.
 - private messages between members
 - automatic account creation on payment
 - legal texts (the law firm's job)
@@ -326,7 +340,7 @@ These replace the morning's "look and feel" bullet below where they differ.
   - The new home page prototype lives in `design-hero/` (17 Nov 2026). Everything in it is public, photos included.
   - The React + Vite + TypeScript version is merged into `main` (pull request #3) and live on Cloudflare Pages. GitHub Pages is turned off.
 
-- **What a news post can include:** the fields are decided (see Data design). Still open: links inside the text (suggested: the site turns web addresses into links safely); no comments, likes or photos. The same safe link rule would apply to community posts too.
+- **What a news post can include:** decided 18 Nov 2026 (afternoon): title, plain text with automatic links, photos and PDFs. No comments or likes.
 - **Replies to community posts** (none in the prototype; replies can be added later)
 - **Alerts** (none in the first version)
 - **Calendar** (deferred)
