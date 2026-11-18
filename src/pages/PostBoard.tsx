@@ -1,10 +1,12 @@
-import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
 import { supabase } from '../lib/supabase.ts'
 import { CHECK_FAILED, dataErrorMessage, NOT_ALLOWED } from '../lib/dataErrors.ts'
+import { linkify } from '../lib/linkify.tsx'
+import ChatView from './ChatView.tsx'
 import styles from './Comunidad.module.css'
 
 /** One community post as the page gets it (all plain text) */
-interface Post {
+export interface Post {
   id: string
   author_id: string
   author_name: string
@@ -49,7 +51,7 @@ const CHAT_TEXTS: typeof BOARD_TEXTS = {
   loadError: 'No se pudieron cargar los mensajes.',
   notAllowed: 'No tienes permiso para escribir en este chat. Si crees que es un error, contáctanos.',
   badLength: 'El mensaje debe tener entre 1 y 2000 caracteres.',
-  published: 'Mensaje publicado.',
+  published: 'Mensaje enviado.',
   deleted: 'Mensaje eliminado.',
   confirmDelete: '¿Eliminar este mensaje?',
 }
@@ -74,6 +76,14 @@ function formatDateTime(iso: string): string {
   return DATE_TIME.format(new Date(iso)).replace('.', '')
 }
 
+/** What screen readers hear when one new message from someone else arrives
+    in a chat: the name and the start of the text, on one line */
+function newMessageText(post: Post): string {
+  const chars = Array.from(post.body.replace(/\s+/g, ' '))
+  const text = chars.length > 140 ? chars.slice(0, 140).join('') + '…' : chars.join('')
+  return 'Nuevo mensaje de ' + post.author_name + (post.is_staff ? ', Equipo MNL' : '') + ': ' + text
+}
+
 /** Spanish message when the database refuses a new post. (The speed limit
     has its own message in dataErrorMessage.) */
 function publishErrorMessage(error: unknown, t: typeof BOARD_TEXTS): string {
@@ -93,7 +103,9 @@ type ListResult = { rows: Post[] } | { error: string }
     "th"…) = that state's chat. The database (RLS) decides what a user may
     really read and post; this only asks for the right posts.
 
-    A chat also looks for new messages by itself every 20 seconds.
+    A chat also looks for new messages by itself every 20 seconds, and is
+    drawn by ChatView.tsx (oldest at the top, a writing box at the bottom).
+    The board is drawn here.
 
     The page gives it a `key` (user, and state), so a different user or
     state always gets a new PostBoard that starts from nothing. */
@@ -235,8 +247,8 @@ export default function PostBoard({ userId, isAdmin, shownName, state = null }: 
 
   /* ---------- Chat only: new messages every 20 seconds ---------- */
 
-  /** Asks once for the messages newer than the newest one listed and puts
-      them on top */
+  /** Asks once for the messages newer than the newest one listed and adds
+      them at the newest end (shown at the bottom of the chat) */
   async function fetchNewer() {
     const newest = newestListed.current
     const result = newest
@@ -261,15 +273,15 @@ export default function PostBoard({ userId, isAdmin, shownName, state = null }: 
       setHasMore(rows.length > PAGE)
       return
     }
-    // New messages on top, each one only once
+    // New messages at the newest end, each one only once
     const list = postsRef.current ?? []
     const known = new Set(list.map((p) => p.id))
     const got = new Set(rows.map((p) => p.id))
     show([...rows, ...list.filter((p) => !got.has(p.id))])
-    const others = rows.filter((p) => !known.has(p.id) && p.author_id !== userId).length
-    if (others > 0) {
-      setAnnouncement(others === 1 ? '1 mensaje nuevo.' : others + ' mensajes nuevos.')
-    }
+    // Screen readers hear only what others wrote, never the whole list
+    const others = rows.filter((p) => !known.has(p.id) && p.author_id !== userId)
+    if (others.length === 1) setAnnouncement(newMessageText(others[0]))
+    else if (others.length > 1) setAnnouncement(others.length + ' mensajes nuevos.')
   }
 
   /** The chat's refresh. Does nothing while any list request is running:
@@ -339,6 +351,9 @@ export default function PostBoard({ userId, isAdmin, shownName, state = null }: 
   const [draft, setDraft] = useState('')
   const [sending, setSending] = useState(false)
   const [formError, setFormError] = useState('')
+  // Chat only: goes up by one after each sent message (ChatView then goes
+  // to the bottom)
+  const [sentNo, setSentNo] = useState(0)
   const textRef = useRef<HTMLTextAreaElement>(null)
   const body = dbTrim(draft)
   const count = countChars(body)
@@ -366,6 +381,7 @@ export default function PostBoard({ userId, isAdmin, shownName, state = null }: 
         return
       }
       setDraft('')
+      setSentNo((n) => n + 1)
       show([data, ...(postsRef.current ?? []).filter((p) => p.id !== data.id)])
       setAnnouncement(t.published)
       if (isChat) {
@@ -421,7 +437,49 @@ export default function PostBoard({ userId, isAdmin, shownName, state = null }: 
     setConfirmingId(null)
     show((postsRef.current ?? []).filter((p) => p.id !== post.id))
     setAnnouncement(t.deleted)
-    listHeadingRef.current?.focus()
+    // (in a chat without scrolling the page up to the heading)
+    listHeadingRef.current?.focus({ preventScroll: isChat })
+  }
+
+  if (isChat) {
+    return (
+      <>
+        <span className="sr-only" role="status">{announcement}</span>
+        <ChatView
+          userId={userId}
+          isAdmin={isAdmin}
+          shownName={shownName}
+          t={t}
+          posts={posts}
+          hasMore={hasMore}
+          listBusy={listBusy}
+          listError={listError}
+          onRefresh={() => void loadFirst()}
+          onLoadMore={() => void loadMore()}
+          form={{
+            draft,
+            onDraft: (text) => { setDraft(text); setFormError('') },
+            sending,
+            error: formError,
+            count,
+            tooLong,
+            canPublish,
+            onSubmit: (e) => void onPublish(e),
+          }}
+          textRef={textRef}
+          sentNo={sentNo}
+          del={{
+            confirmingId,
+            deletingId,
+            error: deleteError,
+            onAsk: (id) => { setConfirmingId(id); setDeleteError(null) },
+            onCancel: () => { setConfirmingId(null); setDeleteError(null) },
+            onConfirm: (post) => void onDelete(post),
+          }}
+          headingRef={listHeadingRef}
+        />
+      </>
+    )
   }
 
   return (
@@ -513,8 +571,8 @@ export default function PostBoard({ userId, isAdmin, shownName, state = null }: 
   )
 }
 
-/** One post. The body is plain text (never HTML, no automatic links); CSS
-    keeps its line breaks. */
+/** One post. The body is plain text with its web addresses as links
+    (linkify, never HTML); CSS keeps its line breaks. */
 function PostCard({ post, confirmText, canDelete, confirming, deleting, error, onAsk, onCancel, onConfirm }: {
   post: Post
   confirmText: string
@@ -526,6 +584,8 @@ function PostCard({ post, confirmText, canDelete, confirming, deleting, error, o
   onCancel: () => void
   onConfirm: () => void
 }) {
+  // Found once per post, not again on every key press in the form
+  const text = useMemo(() => linkify(post.body), [post.body])
   const deleteRef = useRef<HTMLButtonElement>(null)
   const cancelRef = useRef<HTMLButtonElement>(null)
   // Move the focus only after a click here, not when the card first appears
@@ -549,7 +609,7 @@ function PostCard({ post, confirmText, canDelete, confirming, deleting, error, o
         {post.is_staff && <span className={styles.staffBadge}>Equipo MNL</span>}
         <time className={styles.postDate} dateTime={post.created_at}>{formatDateTime(post.created_at)}</time>
       </p>
-      <p className={styles.postText}>{post.body}</p>
+      <p className={styles.postText}>{text}</p>
 
       {canDelete && (
         confirming ? (
