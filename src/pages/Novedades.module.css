@@ -121,9 +121,19 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* The tag, and on phones the box with the number of files above it */
+.post-labels {
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
 /* "TODOS LOS ESTADOS" (outlined) or the post's Bundesland (inverted).
    A long name breaks after its hyphen ("MECKLENBURG- / VORPOMMERN"). */
-.post-tag {
+.post-tag,
+.post-files-note {
   max-width: 100%;
   margin: 0;
   padding: 5px 8px;
@@ -139,6 +149,8 @@
   background: var(--accent);
   color: var(--ink);
 }
+/* "3 FOTOS Y 1 PDF": phones only (see the end of this file) */
+.post-files-note { display: none; }
 
 /* Right cell: the title, the text (with its links), then the post's
    photos and PDFs */
@@ -559,6 +571,7 @@
     border-right: 0;
     border-bottom: 1px solid var(--rule);
   }
+  .post-labels { align-items: flex-end; }
   .post-date { gap: 6px; }
   .post-month { font-size: 12px; }
   .post-day { font-size: 40px; }
@@ -578,6 +591,16 @@
   .post-files { gap: 12px; }
   .pdf-name { font-size: 15px; padding: 10px 12px; }
   .pdf-open { padding: 0 12px; }
+}
+
+/* Phone: no file area in the previews (DECISIONS.md, 18 Nov 2026,
+   evening). The title and the text take the whole width, and a box
+   above the tag says how many files the post has. */
+@media (max-width: 700px) {
+  .file-area { display: none; }
+  .preview.has-files { grid-template-columns: minmax(0, 1fr); }
+  .preview.has-files > .post-title { font-size: 25px; }
+  .post-files-note { display: block; }
 }
 
 @media (prefers-reduced-motion: reduce) {

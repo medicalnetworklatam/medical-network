@@ -13,7 +13,7 @@
    Node.js 22 runs this TypeScript file directly. */
 
 import {
-  altText, filePath, filesSummary, fileTypeError, fitSize, looksLikePdf, moveItem, nextSortOrder, orderChanges,
+  altText, filePath, filesCount, filesSummary, fileTypeError, fitSize, looksLikePdf, moveItem, nextSortOrder, orderChanges,
   previewTiles, shortName, sortAttachments, storageErrorMessage, storagePaths, thumbPath, thumbSize, typeOf,
   HEIC, MAX_NAME, THUMB_SIDE, WRONG_TYPE,
 } from '../src/lib/newsFiles.ts'
@@ -136,6 +136,10 @@ check('small copies asked for: 4 with 4 files', previewTiles(many(4)).filter((t)
 
 /* ---------- What screen readers hear instead of the tiles ---------- */
 check('no files: nothing', filesSummary([]), '')
+check('phone box: no files, no box', filesCount([]), '')
+check('phone box: 1 foto', filesCount([photo(1)]), '1 foto')
+check('phone box: 3 fotos y 1 PDF', filesCount([photo(1), pdf, photo(2), oldPhoto]), '3 fotos y 1 PDF')
+check('phone box: 2 PDF', filesCount([pdf, pdf]), '2 PDF')
 check('1 foto', filesSummary([photo(1)]), 'Archivos: 1 foto')
 check('2 fotos', filesSummary([photo(1), oldPhoto]), 'Archivos: 2 fotos')
 check('1 PDF', filesSummary([pdf]), 'Archivos: 1 PDF')

@@ -180,16 +180,25 @@ export function previewTiles(files: readonly Pick<Attachment, 'kind' | 'thumb_pa
   return files.map(fileTile)
 }
 
-/** What screen readers hear instead of the tiles: "Archivos: 3 fotos y
-    1 PDF", "Archivos: 1 foto", "Archivos: 2 PDF". '' when there are no
-    files. ("PDF" stays the same in the plural.) */
-export function filesSummary(files: readonly Pick<Attachment, 'kind'>[]): string {
+/** How many files a post has, in words: "3 fotos y 1 PDF", "1 foto",
+    "2 PDF". '' when there are no files. ("PDF" stays the same in the
+    plural.) Shown on phones in a box above the post's tag, instead of the
+    file area. */
+export function filesCount(files: readonly Pick<Attachment, 'kind'>[]): string {
   const photos = files.filter((f) => f.kind === 'image').length
   const pdfs = files.length - photos
   const parts: string[] = []
   if (photos > 0) parts.push(photos + (photos === 1 ? ' foto' : ' fotos'))
   if (pdfs > 0) parts.push(pdfs + ' PDF')
-  return parts.length ? 'Archivos: ' + parts.join(' y ') : ''
+  return parts.join(' y ')
+}
+
+/** What screen readers hear instead of the tiles: "Archivos: 3 fotos y
+    1 PDF", "Archivos: 1 foto", "Archivos: 2 PDF". '' when there are no
+    files. */
+export function filesSummary(files: readonly Pick<Attachment, 'kind'>[]): string {
+  const count = filesCount(files)
+  return count ? 'Archivos: ' + count : ''
 }
 
 /** A photo's alt text: its description, or "Foto de la novedad «title»".

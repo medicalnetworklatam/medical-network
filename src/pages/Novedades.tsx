@@ -7,7 +7,7 @@ import { useProfile } from '../lib/profile.ts'
 import { supabase } from '../lib/supabase.ts'
 import { dataErrorMessage } from '../lib/dataErrors.ts'
 import {
-  filesSummary, previewTiles, sortAttachments, BUCKET, LINK_SECONDS, type Attachment, type Tile,
+  filesCount, filesSummary, previewTiles, sortAttachments, BUCKET, LINK_SECONDS, type Attachment, type Tile,
 } from '../lib/newsFiles.ts'
 import { readListScroll, saveListScroll, type FromList } from '../lib/listScroll.ts'
 import { MAP_SHAPES } from '../estados/mapShapes.ts'
@@ -203,7 +203,8 @@ async function thumbLinks(client: NonNullable<typeof supabase>, posts: NewsPost[
     one cell; in the other, the title, the start of the text (plain text,
     no links: the whole preview is one link already) and, when the post has
     files, a square file area on the right, filled by the number of files
-    (see previewTiles in newsFiles.ts).
+    (see previewTiles in newsFiles.ts). On phones there is no file area:
+    a box above the tag says how many files there are instead.
 
     The title is the only link (its accessible name is the title); CSS
     stretches its ::after layer over the whole frame, above every other part
@@ -214,7 +215,7 @@ function Post({ post, links, onOpen }: { post: NewsPost; links: Links; onOpen: (
   const state: FromList = { fromList: true }
   return (
     <article className={styles.post + ' ' + styles.isPreview}>
-      <NewsMeta publishedAt={post.published_at} state={post.state} />
+      <NewsMeta publishedAt={post.published_at} state={post.state} filesNote={filesCount(files)} />
       <div className={styles.preview + (tiles.length ? ' ' + styles.hasFiles : '')}>
         <h2 className={styles.postTitle}>
           <Link className={styles.postLink} to={'/novedades/' + post.id} state={state} onClick={onOpen}>

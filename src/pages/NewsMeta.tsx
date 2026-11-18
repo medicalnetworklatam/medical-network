@@ -14,8 +14,17 @@ function dateParts(iso: string): { day: string; month: string; year: string; tex
 
 /** The left cell of a news post's frame, shared by the Novedades list and
     the full post (NovedadPost.tsx): "NOV 2026" over a big "18.", then the
-    post's tag, "Todos los estados" or its Bundesland (in German). */
-export default function NewsMeta({ publishedAt, state }: { publishedAt: string; state: string | null }) {
+    post's tag, "Todos los estados" or its Bundesland (in German).
+
+    filesNote (the list only): how many files the post has, "3 fotos y
+    1 PDF", in a box above the tag. CSS shows it on phones only, where the
+    preview has no file area. Screen readers hear the preview's own
+    summary instead, so the box is hidden from them. */
+export default function NewsMeta({ publishedAt, state, filesNote = '' }: {
+  publishedAt: string
+  state: string | null
+  filesNote?: string
+}) {
   const date = dateParts(publishedAt)
   const stateName = state ? MAP_SHAPES.find((s) => s.id === state)?.name ?? '' : ''
   return (
@@ -26,9 +35,12 @@ export default function NewsMeta({ publishedAt, state }: { publishedAt: string; 
         <span className={styles.postDay} aria-hidden="true">{date.day}.</span>
         <span className="sr-only">{date.text}</span>
       </time>
-      {stateName
-        ? <p className={styles.postTag} lang="de">{stateName}</p>
-        : <p className={styles.postTag}>Todos los estados</p>}
+      <div className={styles.postLabels}>
+        {filesNote && <p className={styles.postFilesNote} aria-hidden="true">{filesNote}</p>}
+        {stateName
+          ? <p className={styles.postTag} lang="de">{stateName}</p>
+          : <p className={styles.postTag}>Todos los estados</p>}
+      </div>
     </div>
   )
 }
