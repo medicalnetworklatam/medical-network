@@ -240,8 +240,8 @@ export default function Home() {
                   </ul>
                   <div className={styles.phaseResult}>
                     <p className={styles.label}>resultado</p>
-                    <p>Tu documentación queda lista y bien hecha, sin perder meses, y preparas
-                    tu llegada con mi ayuda en cada paso.</p>
+                    <p>Dejamos tu documentación lista y en regla, sin meses de espera
+                    innecesarios, y te acompañamos en cada paso de tu llegada.</p>
                   </div>
                 </div>
                 <figure className={styles.phaseMedia}>
@@ -264,7 +264,7 @@ export default function Home() {
                   </ul>
                   <div className={styles.phaseResult}>
                     <p className={styles.label}>resultado</p>
-                    <p>Das cada paso con un plan claro, y yo te acompaño hasta tu
+                    <p>Das cada paso con un plan claro y yo te acompaño hasta tu
                     homologación.</p>
                   </div>
                 </div>
