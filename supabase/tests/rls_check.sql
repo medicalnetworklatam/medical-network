@@ -1,5 +1,5 @@
 -- =============================================================================
--- RLS check: proves the access rules from migrations 1 to 5 work.
+-- RLS check: proves the access rules from migrations 1 to 6 work.
 -- =============================================================================
 -- Paste this whole file into Supabase's SQL Editor and press "Run".
 -- Run it after every migration, and again after any change to policies or
@@ -14,7 +14,8 @@
 --      fake login, so it can be found and removed. The admin also uploads
 --      a few test files into the "news-files" bucket (rows in
 --      storage.objects, no real file content), each in a test news post's
---      folder, and removes them again at the end.
+--      folder, plus small copies of the test photos (migration 6), and
+--      removes them all again at the end.
 --   3. Pretends to be each of them in turn, the same way the website would be
 --      after a login, and checks what they can and can't see or change.
 --   4. Deletes everything it created.
@@ -67,6 +68,20 @@ declare
   -- ...and one in the paid Bayern post's folder with NO row
   f_orphan       text;
   test_files     text[];   -- the seven test files above
+  -- small copies of photos (migration 6), in the same folders: one for each
+  -- test photo above (free, paid, draft, Thüringen)...
+  t_free         text;
+  t_paid         text;
+  t_draft        text;
+  t_other        text;
+  -- ...a photo with a small copy in the future post (its other file is a PDF)...
+  fp_future      text;
+  t_future       text;
+  -- ...and a photo with a small copy in the paid Bayern post whose row the
+  -- admin removes, leaving both files behind
+  f_removed      text;
+  t_removed      text;
+  thumb_files    text[];   -- the eight files of migration 6 above
   names          text[];
   -- the 16 state codes (the same list as public.state_code in migration 1)
   states  text[] := array['bw', 'by', 'be', 'bb', 'hb', 'hh', 'he', 'mv',
@@ -260,6 +275,17 @@ begin
   end if;
   ok := ok + 1;
 
+  -- CHECK (migration 6): the website may send a small copy's path when it
+  -- adds a row, but never change it afterwards
+  if not has_column_privilege('authenticated', 'public.news_attachments', 'thumb_path', 'INSERT') then
+    raise exception 'FAIL: the website may not send thumb_path when it adds an attachment';
+  end if;
+  if has_column_privilege('authenticated', 'public.news_attachments', 'thumb_path', 'UPDATE')
+  or has_column_privilege('anon', 'public.news_attachments', 'thumb_path', 'INSERT') then
+    raise exception 'FAIL: thumb_path can be changed, or sent by a logged-out visitor';
+  end if;
+  ok := ok + 1;
+
   -- CHECK: the bucket news-files is private, at most 10 MB per file, and
   -- takes only JPEG, PNG, WebP and PDF
   select count(*) into cnt from storage.buckets
@@ -431,22 +457,59 @@ begin
   f_other  := n_other::text  || '/' || gen_random_uuid()::text || '.jpg';
   f_orphan := n_paid::text   || '/' || gen_random_uuid()::text || '.jpg';
   test_files := array[f_free, f_paid, f_draft, f_future, f_all, f_other, f_orphan];
+  -- Small copies are always ".jpg" (migration 6)
+  t_free    := n_free::text   || '/' || gen_random_uuid()::text || '.jpg';
+  t_paid    := n_paid::text   || '/' || gen_random_uuid()::text || '.jpg';
+  t_draft   := n_draft::text  || '/' || gen_random_uuid()::text || '.jpg';
+  t_other   := n_other::text  || '/' || gen_random_uuid()::text || '.jpg';
+  fp_future := n_future::text || '/' || gen_random_uuid()::text || '.jpg';
+  t_future  := n_future::text || '/' || gen_random_uuid()::text || '.jpg';
+  f_removed := n_paid::text   || '/' || gen_random_uuid()::text || '.jpg';
+  t_removed := n_paid::text   || '/' || gen_random_uuid()::text || '.jpg';
+  thumb_files := array[t_free, t_paid, t_draft, t_other, fp_future, t_future, f_removed, t_removed];
 
   -- CHECK: admin can upload files to the bucket and add their rows
   insert into storage.objects (bucket_id, name)
     select 'news-files', unnest(test_files);
   get diagnostics rc = row_count;
   if rc <> 7 then raise exception 'FAIL: admin uploaded % of 7 test files', rc; end if;
-  insert into public.news_attachments (post_id, kind, path, file_name, description, sort_order)
-  values (n_free,   'image', f_free,   'foto.jpg',      'Una foto de prueba', 0),
-         (n_paid,   'image', f_paid,   'captura.png',   null, 0),
-         (n_draft,  'image', f_draft,  'borrador.webp', null, 0),
-         (n_future, 'pdf',   f_future, 'futuro.pdf',    null, 0),
-         (n_all,    'pdf',   f_all,    'todos.pdf',     null, 0),
-         (n_other,  'image', f_other,  'thueringen.jpg', null, 0);
+  -- The small copies of the photos (migration 6) are uploaded too, before
+  -- the rows, the way the website does it: photo, small copy, then the row
+  insert into storage.objects (bucket_id, name)
+    select 'news-files', unnest(thumb_files);
+  get diagnostics rc = row_count;
+  if rc <> 8 then raise exception 'FAIL: admin uploaded % of 8 test files of migration 6', rc; end if;
+  insert into public.news_attachments (post_id, kind, path, file_name, description, sort_order, thumb_path)
+  values (n_free,   'image', f_free,   'foto.jpg',      'Una foto de prueba', 0, t_free),
+         (n_paid,   'image', f_paid,   'captura.png',   null, 0, t_paid),
+         (n_draft,  'image', f_draft,  'borrador.webp', null, 0, t_draft),
+         (n_future, 'pdf',   f_future, 'futuro.pdf',    null, 0, null),
+         (n_all,    'pdf',   f_all,    'todos.pdf',     null, 0, null),
+         (n_other,  'image', f_other,  'thueringen.jpg', null, 0, t_other);
   get diagnostics rc = row_count;
   if rc <> 6 then raise exception 'FAIL: admin added % of 6 attachment rows', rc; end if;
   ok := ok + 1;
+
+  -- CHECK (migration 6): admin adds a photo with a small copy to the future
+  -- post, and one to the paid Bayern post; then removes the second one's
+  -- row the way the website starts removing a photo (row first). Its two
+  -- files stay behind, like when deleting the files fails.
+  insert into public.news_attachments (post_id, kind, path, file_name, sort_order, thumb_path)
+  values (n_future, 'image', fp_future, 'futura.jpg',  1, t_future),
+         (n_paid,   'image', f_removed, 'quitada.jpg', 1, t_removed);
+  get diagnostics rc = row_count;
+  if rc <> 2 then raise exception 'FAIL: admin added % of 2 photo rows with a small copy', rc; end if;
+  delete from public.news_attachments where path = f_removed;
+  get diagnostics rc = row_count;
+  if rc <> 1 then raise exception 'FAIL: admin could not remove the row of a photo with a small copy'; end if;
+  ok := ok + 1;
+
+  -- CHECK (migration 6): not even an admin can change a small copy's path
+  begin
+    update public.news_attachments set thumb_path = null where path = f_free;
+    raise exception 'FAIL: admin changed the small copy of an attachment';
+  exception when insufficient_privilege then ok := ok + 1;
+  end;
 
   -- CHECK: admin can change the order of a post's files, but nothing else
   -- of an attachment row (not its post, path, kind or name)
@@ -513,6 +576,39 @@ begin
             values (n_free, 'image', n_free::text || '/' || gen_random_uuid()::text || '.jpg', 'x.jpg', '');
       end case;
       raise exception 'FAIL: news_attachments accepted bad row number % of this check', i;
+    exception when check_violation then null;
+    end;
+  end loop;
+  ok := ok + 1;
+
+  -- CHECK (migration 6): a small copy only belongs to a photo, in its own
+  -- post's folder, as "<uuid>.jpg" in lowercase, and is never the photo
+  -- itself
+  for i in 1 .. 5 loop
+    begin
+      case i
+        when 1 then  -- a PDF with a small copy
+          insert into public.news_attachments (post_id, kind, path, file_name, thumb_path)
+            values (n_free, 'pdf', n_free::text || '/' || gen_random_uuid()::text || '.pdf', 'x.pdf',
+                    n_free::text || '/' || gen_random_uuid()::text || '.jpg');
+        when 2 then  -- the small copy in another post's folder
+          insert into public.news_attachments (post_id, kind, path, file_name, thumb_path)
+            values (n_free, 'image', n_free::text || '/' || gen_random_uuid()::text || '.jpg', 'x.jpg',
+                    n_paid::text || '/' || gen_random_uuid()::text || '.jpg');
+        when 3 then  -- the small copy is the photo itself
+          txt := n_free::text || '/' || gen_random_uuid()::text || '.jpg';
+          insert into public.news_attachments (post_id, kind, path, file_name, thumb_path)
+            values (n_free, 'image', txt, 'x.jpg', txt);
+        when 4 then  -- a small copy that isn't a .jpg
+          insert into public.news_attachments (post_id, kind, path, file_name, thumb_path)
+            values (n_free, 'image', n_free::text || '/' || gen_random_uuid()::text || '.jpg', 'x.jpg',
+                    n_free::text || '/' || gen_random_uuid()::text || '.png');
+        when 5 then  -- a small copy in capitals
+          insert into public.news_attachments (post_id, kind, path, file_name, thumb_path)
+            values (n_free, 'image', n_free::text || '/' || gen_random_uuid()::text || '.jpg', 'x.jpg',
+                    n_free::text || '/' || upper(gen_random_uuid()::text) || '.jpg');
+      end case;
+      raise exception 'FAIL: news_attachments accepted bad small copy number % of this check', i;
     exception when check_violation then null;
     end;
   end loop;
@@ -620,6 +716,16 @@ begin
   if cnt <> 0 then raise exception 'FAIL: free client A reads the attachment row of a paid-only post'; end if;
   select count(*) into cnt from storage.objects where bucket_id = 'news-files' and name = f_paid;
   if cnt <> 0 then raise exception 'FAIL: free client A reads the file of a paid-only post'; end if;
+  ok := ok + 1;
+
+  -- CHECK (migration 6): A reads the small copy of exactly the photo A can
+  -- read (the free Bayern post's), not the paid-only post's
+  select count(*) into cnt from storage.objects where bucket_id = 'news-files' and name = any (thumb_files);
+  if cnt <> 1 then raise exception 'FAIL: free client A reads % small copies instead of 1', cnt; end if;
+  select count(*) into cnt from storage.objects where bucket_id = 'news-files' and name = t_free;
+  if cnt <> 1 then raise exception 'FAIL: free client A cannot read the small copy of a photo they can see'; end if;
+  select count(*) into cnt from storage.objects where bucket_id = 'news-files' and name = t_paid;
+  if cnt <> 0 then raise exception 'FAIL: free client A reads the small copy of a paid-only photo'; end if;
   ok := ok + 1;
 
   -- CHECK: A cannot change their profile's email copy or create/delete profiles
@@ -805,12 +911,37 @@ begin
   ok := ok + 1;
 
   -- CHECK: listing the paid Bayern post's folder (what the Storage service
-  -- does for "list") shows B only the file that has a row
-  select coalesce(array_agg(name), '{}') into names from storage.objects
+  -- does for "list") shows B only the files of a row: the photo and its
+  -- small copy (migration 6); not the file with no row, and not the two
+  -- files whose row was removed
+  select coalesce(array_agg(name order by name), '{}') into names from storage.objects
    where bucket_id = 'news-files' and name like n_paid::text || '/%';
-  if names <> array[f_paid] then
-    raise exception 'FAIL: listing a post''s folder shows paid client B % files instead of only the one with a row', cardinality(names);
+  if names <> (select array_agg(x order by x) from unnest(array[f_paid, t_paid]) as x) then
+    raise exception 'FAIL: listing a post''s folder shows paid client B % files instead of only the 2 with a row', cardinality(names);
   end if;
+  ok := ok + 1;
+
+  -- CHECK (migration 6): B (paid, Bayern) reads the small copies of exactly
+  -- the photos B can read: the free and the paid Bayern post's; not
+  -- Thüringen's
+  select count(*) into cnt from storage.objects where bucket_id = 'news-files' and name = any (thumb_files);
+  if cnt <> 2 then raise exception 'FAIL: paid client B reads % small copies instead of 2', cnt; end if;
+  select count(*) into cnt from storage.objects where bucket_id = 'news-files' and name in (t_free, t_paid);
+  if cnt <> 2 then raise exception 'FAIL: paid client B cannot read the small copies of the photos they can see'; end if;
+  ok := ok + 1;
+
+  -- CHECK (migration 6): the small copies of a draft's photo and of a
+  -- scheduled (future) post's photo are hidden from B, like the photos
+  select count(*) into cnt from storage.objects
+   where bucket_id = 'news-files' and name in (t_draft, fp_future, t_future);
+  if cnt <> 0 then raise exception 'FAIL: paid client B reads % files of a draft or future photo', cnt; end if;
+  ok := ok + 1;
+
+  -- CHECK (migration 6): once a photo's row is removed, its small copy (and
+  -- the photo) are invisible to B, although B can see the post
+  select count(*) into cnt from storage.objects
+   where bucket_id = 'news-files' and name in (f_removed, t_removed);
+  if cnt <> 0 then raise exception 'FAIL: paid client B reads % files of a removed photo row', cnt; end if;
   ok := ok + 1;
 
   -- CHECK: B cannot upload a file or add an attachment row...
@@ -1212,6 +1343,14 @@ begin
   if cnt <> 0 then raise exception 'FAIL: client D (Thüringen) reads % files of Bayern posts', cnt; end if;
   ok := ok + 1;
 
+  -- CHECK (migration 6): D (Thüringen) reads the small copy of Thüringen's
+  -- photo, and no small copy of a Bayern photo
+  select count(*) into cnt from storage.objects where bucket_id = 'news-files' and name = any (thumb_files);
+  if cnt <> 1 then raise exception 'FAIL: client D (Thüringen) reads % small copies instead of 1', cnt; end if;
+  select count(*) into cnt from storage.objects where bucket_id = 'news-files' and name = t_other;
+  if cnt <> 1 then raise exception 'FAIL: client D cannot read the small copy of Thüringen''s photo'; end if;
+  ok := ok + 1;
+
   -- CHECK: D posts in Thüringen's chat, but not in Bayern's
   insert into public.community_posts (body, state) values ('Hola, Thüringen', 'th')
     returning id into p_d_chat;
@@ -1492,14 +1631,29 @@ begin
   if cnt <> 0 then raise exception 'FAIL: deleting a news post did not delete its attachment rows'; end if;
   ok := ok + 1;
 
-  -- CHECK: admin removes a file the way the website does: first its row,
-  -- then the file
+  -- CHECK (migration 6): admin reads every small copy and every photo of
+  -- migration 6, also those whose row is gone (the removed photo's, and
+  -- the future post's, whose rows went with the post deleted above)
+  select count(*) into cnt from storage.objects where bucket_id = 'news-files' and name = any (thumb_files);
+  if cnt <> 8 then raise exception 'FAIL: admin reads % of the 8 test files of migration 6', cnt; end if;
+  select count(*) into cnt from storage.objects where bucket_id = 'news-files' and name in (f_removed, t_removed);
+  if cnt <> 2 then raise exception 'FAIL: admin cannot read the files of a removed photo row'; end if;
+  ok := ok + 1;
+
+  -- CHECK: admin removes a photo the way the website does: first its row,
+  -- then the photo and its small copy together
   delete from public.news_attachments where path = f_draft;
   get diagnostics rc = row_count;
   if rc <> 1 then raise exception 'FAIL: admin could not delete an attachment row'; end if;
-  delete from storage.objects where bucket_id = 'news-files' and name = f_draft;
+  delete from storage.objects where bucket_id = 'news-files' and name in (f_draft, t_draft);
   get diagnostics rc = row_count;
-  if rc <> 1 then raise exception 'FAIL: admin could not delete a file'; end if;
+  if rc <> 2 then raise exception 'FAIL: admin deleted % of a photo''s 2 files', rc; end if;
+  ok := ok + 1;
+
+  -- CHECK (migration 6): admin can delete the files of a removed photo row
+  delete from storage.objects where bucket_id = 'news-files' and name in (f_removed, t_removed);
+  get diagnostics rc = row_count;
+  if rc <> 2 then raise exception 'FAIL: admin deleted % of the 2 files of a removed photo row', rc; end if;
   ok := ok + 1;
 
   -- CHECK: admin can delete files that have no row (f_orphan, the future
@@ -1507,6 +1661,9 @@ begin
   delete from storage.objects where bucket_id = 'news-files' and name = any (test_files);
   get diagnostics rc = row_count;
   if rc <> 6 then raise exception 'FAIL: admin deleted % of the 6 remaining test files', rc; end if;
+  delete from storage.objects where bucket_id = 'news-files' and name = any (thumb_files);
+  get diagnostics rc = row_count;
+  if rc <> 5 then raise exception 'FAIL: admin deleted % of the 5 remaining test files of migration 6', rc; end if;
   ok := ok + 1;
 
   -- ---------------------------------------------------------------------------
@@ -1518,7 +1675,7 @@ begin
   -- Deleting the logins also deletes their profiles, progress and posts.
   delete from auth.users where id in (a, b, c, d, adm);
   delete from public.news_posts where title like '[rls-test]%';  -- and their attachment rows
-  delete from storage.objects where bucket_id = 'news-files' and name = any (test_files);
+  delete from storage.objects where bucket_id = 'news-files' and name = any (test_files || thumb_files);
   delete from public.checklist_items where code like 'rls-test-%';
   delete from public.routes where code like 'rls-test-%';
 
@@ -1529,8 +1686,10 @@ begin
        + (select count(*) from public.community_posts where author_id in (a, b, c, d, adm))
        + (select count(*) from public.checklist_items where code like 'rls-test-%')
        + (select count(*) from public.news_posts where title like '[rls-test]%')
-       + (select count(*) from public.news_attachments where path = any (test_files))
-       + (select count(*) from storage.objects where bucket_id = 'news-files' and name = any (test_files))
+       + (select count(*) from public.news_attachments
+           where path = any (test_files || thumb_files) or thumb_path = any (thumb_files))
+       + (select count(*) from storage.objects
+           where bucket_id = 'news-files' and name = any (test_files || thumb_files))
        + (select count(*) from public.routes where code like 'rls-test-%')
     into cnt;
   if cnt <> 0 then raise exception 'FAIL: % test rows were left behind', cnt; end if;

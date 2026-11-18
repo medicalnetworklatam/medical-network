@@ -13,6 +13,7 @@ import RequireLogin from './pages/RequireLogin.tsx'
 import Home from './pages/Home.tsx'
 import Estados from './pages/Estados.tsx'
 import Novedades from './pages/Novedades.tsx'
+import NovedadPost from './pages/NovedadPost.tsx'
 import IniciarSesion from './pages/IniciarSesion.tsx'
 import RecuperarContrasena from './pages/RecuperarContrasena.tsx'
 import NuevaContrasena from './pages/NuevaContrasena.tsx'
@@ -59,6 +60,7 @@ createRoot(document.getElementById('root')!).render(
               <Route path="/perfil" element={<Perfil />} />
               <Route path="/estados" element={<Estados />} />
               <Route path="/novedades" element={<Novedades />} />
+              <Route path="/novedades/:id" element={<NovedadPost />} />
               <Route path="/comunidad" element={<Comunidad />} />
               <Route path="/chat" element={<Chat />} />
 

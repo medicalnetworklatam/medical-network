@@ -15,6 +15,14 @@ Last updated: 18 Nov 2026. This is the source of truth for the project. When a d
   - Spanish only, web only
 - **Admins:** Ivan and his cousin.
 
+## Changes on 18 Nov 2026 (evening): Novedades as previews, full post on its own page
+
+- **The Novedades list shows previews.** Each post shows its date, tag, title and the start of its text, which fades out when the text is longer. The whole preview opens the full post. The text in a preview has no links (a link inside a link isn't allowed); the full post has them.
+- **Full post on its own page,** `/novedades/<id>`, inside the shared column, with "← Novedades". It uses the same visibility as the list (RLS decides). A post the reader can't see and a post that doesn't exist show the same message, "No encontramos esta novedad.", so nothing is given away.
+- **Files in the preview:** a 2×2 grid on the right of the preview, on phones too (smaller): small photos, "PDF" tiles, and "+N" on the last tile when there are more than 4 files. Photos are cropped to squares in the grid only; the full post shows them whole.
+- **Small copies of photos, made automatically:** when an admin uploads a photo, the form also saves a small copy (about 480 px). The admin does nothing extra. Built in migration 6 (`thumb_path`); a small copy is readable exactly when its photo is. Supabase's on-the-fly resizing was considered and not chosen: it only works on the Pro plan (Ivan, 18 Nov 2026).
+- Photos uploaded before migration 6 have no small copy and show a "Foto" tile.
+
 ## Changes on 18 Nov 2026 (afternoon): attachments, links, the shared column, posts and chat
 
 - **Novedades posts can carry photos and PDFs** (Ivan's decision). This replaces "no photos" in news and settles the open decision on what a news post includes. Only admins attach files, in the news form; clients still never upload anything.
