@@ -1,0 +1,514 @@
+{
+  "meta": {
+    "plantilla": "Expediente Baden-Württemberg · Médico · título de fuera de la UE (Drittstaat)",
+    "reglas": "Reforma del 01/11/2026",
+    "basada_en": "generador-bw-reforma.py (versión del 18/11/2026)",
+    "generada": "2026-11-20",
+    "datos_de_clientes": "ninguno",
+    "nota_alcance": "Esta es la única ruta construida con las reglas posteriores al 01/11/2026. Las demás rutas y Länder del generador general son anteriores a la reforma.",
+    "marcadores": {
+      "{pais}": "País donde vive, estudió y ejerció el cliente (en este generador es un solo país para todo).",
+      "{genero:masculino|femenino}": "Se elige una de las dos formas según el género del cliente. El generador real no tiene un campo de género: este marcador es nuevo.",
+      "{nota_personal}": "Texto escrito a mano para ese cliente. En el generador real: idioma_flag (i1), caduca_flag (p0), trad_flag (t1), gs_flag (p3), ciudad de destino en BW (n1) y nombre de la universidad (f1, f3). Si el cliente no tiene nota, el campo queda vacío (null).",
+      "{nombre}": "Nombre completo del cliente (solo en la portada). Fuera de los tres marcadores pedidos, pero hace falta.",
+      "{perfil}": "Línea del encabezado, p. ej. «Médico · Título de {pais} (año) · Vive en [ciudad]». Fuera de los tres marcadores pedidos, pero hace falta."
+    },
+    "reglas_de_no_aplica": {
+      "bw4": "Fijo en no aplica salvo cambio de nombre.",
+      "bw5": "Fijo en no aplica salvo que el nombre esté escrito distinto en los documentos.",
+      "bw16": "No aplica con Kenntnisprüfung; aplica si el cliente elige Gutachten.",
+      "p3": "Aplica salvo que se sepa que NO ejerció 6 meses o más en los últimos 3 años. En el generador real: cond = (ejercio is not False); «no lo sé» cuenta como aplica.",
+      "resto": "Siempre aplican en esta ruta."
+    },
+    "orden_de_los_pasos": "El orden del arreglo `pasos` es el orden en pantalla dentro de cada bloque.",
+    "plazo": "Los plazos son estimaciones de experiencia, salvo FSP (4–6 meses) y Kenntnisprüfung (8–10 meses), que son esperas orientativas publicadas por el RP."
+  },
+  "portada": {
+    "eyebrow": "Medical Network LATAM",
+    "titulo": "Expediente de {nombre}",
+    "subtitulo": "{perfil} · Los papeles que pide el Regierungspräsidium Stuttgart — Baden-Württemberg, con las reglas nuevas del 01/11/2026.",
+    "barra_de_avance": {
+      "titulo": "Mi avance hacia la Approbation",
+      "hitos": [
+        "Papeles",
+        "Traducciones",
+        "Formularios",
+        "Entrega",
+        "Exámenes"
+      ]
+    },
+    "metricas": [
+      "Ahora mismo",
+      "Avance del expediente",
+      "Hasta entregar la solicitud",
+      "Hasta la Approbation"
+    ]
+  },
+  "bloques": [
+    {
+      "bloque": 1,
+      "titulo": "Lo que puedes empezar hoy",
+      "subtitulo": "No depende de nadie más. Todo esto corre en paralelo, así que se arranca junto."
+    },
+    {
+      "bloque": 2,
+      "titulo": "Las traducciones",
+      "subtitulo": "En cuanto tengas las copias de los documentos en español."
+    },
+    {
+      "bloque": 3,
+      "titulo": "Los formularios y lo que caduca",
+      "subtitulo": "Lo que se firma, y los papeles con fecha de vencimiento: estos pueden ir después del sobre."
+    },
+    {
+      "bloque": 4,
+      "titulo": "La entrega",
+      "subtitulo": "El sobre con los Nr. 1 a 11, en un solo envío."
+    },
+    {
+      "bloque": 5,
+      "titulo": "Después de entregar",
+      "subtitulo": "Aquí manda la autoridad. Lo que sí depende de ti es prepararte mientras esperas."
+    }
+  ],
+  "pasos": [
+    {
+      "codigo": "n1",
+      "bloque": 1,
+      "numero_oficial": "1",
+      "titulo": "Beratungsnachweis: la prueba de que el RP Stuttgart es competente",
+      "descripcion": "Es lo primero que revisa el RP: sin esto no mira nada, ni siquiera si el expediente está completo. Como vives en {pais}, vale UNO de estos: el Beratungsnachweis (§ 1a Anerkennungsberatungsgesetz BW), una prueba de vínculo familiar en Baden-Württemberg, o una Stellenzusage de un empleador de BW (Anlage 3). El Beratungsnachweis es gratis: es la constancia de haber recibido asesoría de la Bundesagentur für Arbeit o del IQ-Netzwerk, y la asesoría puede ser online, desde {pais}. Va en copia simple.",
+      "donde": "IQ-Netzwerk o Bundesagentur für Arbeit (asesoría online)",
+      "plazo": "1–2 meses",
+      "aviso": "Desde la reforma hay una regla nueva (Anlage 1, A.5): si cuando llegues a Alemania te empadronas en OTRO Bundesland, Stuttgart deja de ser competente y tienes que avisar enseguida. Si vas por Baden-Württemberg, al llegar vives en Baden-Württemberg ({nota_personal}).",
+      "caduca": null,
+      "no_aplica_estado": false,
+      "motivo_no_aplica": null
+    },
+    {
+      "codigo": "p1",
+      "bloque": 1,
+      "numero_oficial": "2",
+      "titulo": "Pasaporte vigente",
+      "descripcion": "Copia simple del pasaporte o de la cédula vigentes. Un permiso de residencia o un visado NO sirven como identidad.",
+      "donde": "Tú",
+      "plazo": "1 semana",
+      "aviso": "Revisa que no venza durante el trámite: el procedimiento dura años.",
+      "caduca": null,
+      "no_aplica_estado": false,
+      "motivo_no_aplica": null
+    },
+    {
+      "codigo": "p2",
+      "bloque": 1,
+      "numero_oficial": "3",
+      "titulo": "Lebenslauf en alemán, en tabla",
+      "descripcion": "Currículum EN ALEMÁN y en tabla, con todas las etapas de tu formación y todos tus trabajos, cada uno con periodo, lugar y país: colegio, carrera, internado, rural si la hiciste, y lo que haya después hasta hoy. El modelo está al final de la Anlage 1 y termina con la fecha. Copia simple o impreso. Se arma con el formulario de currículum de Medical Network LATAM.",
+      "donde": "Tú, con el formulario de currículum",
+      "plazo": "1–2 semanas",
+      "aviso": "Que no quede ningún mes sin explicar desde que empezaste la carrera. Y que las fechas coincidan EXACTAMENTE con las de tus certificados.",
+      "caduca": null,
+      "no_aplica_estado": false,
+      "motivo_no_aplica": null
+    },
+    {
+      "codigo": "bw4",
+      "bloque": 1,
+      "numero_oficial": "4",
+      "titulo": "Prueba de cambio de nombre",
+      "descripcion": "Solo si cambiaste de nombre alguna vez, por ejemplo al casarte.",
+      "donde": "Registro Civil",
+      "plazo": "1 mes",
+      "aviso": null,
+      "caduca": null,
+      "no_aplica_estado": true,
+      "motivo_no_aplica": "No aplica si nunca cambiaste de nombre. Si fuera tu caso, va el acta correspondiente."
+    },
+    {
+      "codigo": "bw5",
+      "bloque": 1,
+      "numero_oficial": "5",
+      "titulo": "Partida de nacimiento (solo si el nombre se escribe distinto)",
+      "descripcion": "Partida de nacimiento u otra prueba oficial del nombre.",
+      "donde": "Registro Civil",
+      "plazo": "1 mes",
+      "aviso": null,
+      "caduca": null,
+      "no_aplica_estado": true,
+      "motivo_no_aplica": "Desde la reforma ya no es solo para países de habla árabe: hace falta si tu nombre aparece escrito de forma distinta en los documentos. Revisa que tus dos nombres y tus dos apellidos estén escritos igual en el pasaporte, el título, la habilitación y las traducciones. Si coinciden, no aplica."
+    },
+    {
+      "codigo": "f1",
+      "bloque": 1,
+      "numero_oficial": "6",
+      "titulo": "Título de medicina",
+      "descripcion": "Copia simple de tu título de medicina (con la apostilla, si la tiene pegada), unida a su traducción. Desde el 01/11/2026 ya NO hace falta copia certificada: todo va en copia simple. El título tiene que ser de medicina occidental.",
+      "donde": "Tu universidad ({nota_personal})",
+      "plazo": "1–2 semanas",
+      "aviso": "No mandes nunca el original: el RP se queda con todo lo que recibe. Guarda tus originales: si dudan de un documento, pueden pedirlo.",
+      "caduca": null,
+      "no_aplica_estado": false,
+      "motivo_no_aplica": null
+    },
+    {
+      "codigo": "f3",
+      "bloque": 1,
+      "numero_oficial": "7",
+      "titulo": "Fächerindex: todas tus materias con horas y notas",
+      "descripcion": "Expedido por la universidad, a tu nombre: todos los años de la carrera, todas las materias, sus horas y tus notas. Copia simple con su traducción.",
+      "donde": "Tu universidad ({nota_personal})",
+      "plazo": "1–2 meses",
+      "aviso": "Revísalo materia por materia antes de mandarlo a traducir: si falta una materia o está mal escrita, se corrige en la universidad, no en la traducción.",
+      "caduca": null,
+      "no_aplica_estado": false,
+      "motivo_no_aplica": null
+    },
+    {
+      "codigo": "bw8",
+      "bloque": 1,
+      "numero_oficial": "8",
+      "titulo": "Constancia del internado rotativo completo",
+      "descripcion": "Constancia de que terminaste COMPLETA la fase práctica de la carrera. El RP da como ejemplos el Praktisches Jahr, la Internatur, la Ordinatur o el Rotating Internship: en {pais}, el internado rotativo. Copia simple con su traducción.",
+      "donde": "Tu facultad o el hospital del internado",
+      "plazo": "1–2 meses",
+      "aviso": null,
+      "caduca": null,
+      "no_aplica_estado": false,
+      "motivo_no_aplica": null
+    },
+    {
+      "codigo": "bw9",
+      "bloque": 1,
+      "numero_oficial": "9",
+      "titulo": "Habilitación para ejercer en {pais}",
+      "descripcion": "Prueba de que estás {genero:habilitado|habilitada} para ejercer la medicina en {pais} (registro del título o licencia, como se llame allá). Copia simple con su traducción. Desde la reforma tampoco necesita copia certificada.",
+      "donde": "La autoridad que te habilitó en {pais}",
+      "plazo": "1–2 meses",
+      "aviso": "Es distinto del título y del Good Standing: el título dice que estudiaste, este dice que puedes ejercer, y el Good Standing dice que ejerciste sin sanciones.",
+      "caduca": null,
+      "no_aplica_estado": false,
+      "motivo_no_aplica": null
+    },
+    {
+      "codigo": "i1",
+      "bloque": 1,
+      "numero_oficial": "10",
+      "titulo": "Certificado de alemán B2",
+      "descripcion": "Copia simple, sin traducción, anverso y reverso. Tiene que ser de un instituto miembro pleno de ALTE: Goethe-Institut, telc u ÖSD. Sin el B2 no se manda el sobre: el Antrag y la Anlage 1 lo dicen expresamente.",
+      "donde": "Goethe-Institut, telc u ÖSD",
+      "plazo": "1 semana",
+      "aviso": "{nota_personal}",
+      "caduca": null,
+      "no_aplica_estado": false,
+      "motivo_no_aplica": null
+    },
+    {
+      "codigo": "p0",
+      "bloque": 1,
+      "numero_oficial": "—",
+      "titulo": "Averiguar cuánto tardan los papeles que caducan",
+      "descripcion": "Son tres: el Good Standing (Nr. 12, si te toca), los antecedentes penales de {pais} (Nr. 13) y el certificado médico (Nr. 15). Los tres valen 3 meses contados hasta que LLEGAN al RP. Hoy no los pides: averiguas cuánto tarda cada uno, para pedirlos contando hacia atrás desde el día en que van a llegar.",
+      "donde": "Quien los emite en {pais}",
+      "plazo": "1–2 semanas",
+      "aviso": "{nota_personal}",
+      "caduca": null,
+      "no_aplica_estado": false,
+      "motivo_no_aplica": null
+    },
+    {
+      "codigo": "t1",
+      "bloque": 2,
+      "numero_oficial": "—",
+      "titulo": "Traducción jurada al alemán (o al inglés)",
+      "descripcion": "Todo documento en español va con traducción COMPLETA al alemán o al inglés, de un traductor público o jurado, en Alemania o en el extranjero (también en {pais}). Basta una copia simple del documento en español unida (grapada) a la traducción, y la traducción va justo detrás de su documento. Si tus documentos llevan apostilla, la apostilla también se traduce. Lo que esté en inglés no se traduce.",
+      "donde": "Traductor público o jurado",
+      "plazo": "1–2 meses",
+      "aviso": "{nota_personal}",
+      "caduca": null,
+      "no_aplica_estado": false,
+      "motivo_no_aplica": null
+    },
+    {
+      "codigo": "e1",
+      "bloque": 3,
+      "numero_oficial": "Antrag",
+      "titulo": "Formulario de solicitud (Antrag del 01/11/2026)",
+      "descripcion": "El formulario NUEVO, versión del 01/11/2026, completo y firmado en la página 5. Página 1: Approbation. Página 4: si vas por la Kenntnisprüfung, NO marcas la casilla del Gutachten. Página 5: declaración de que no tienes otro procedimiento abierto en otro Bundesland, y la casilla voluntaria de notificación por e-mail. Bájalo de la web del RP el día que lo llenes.",
+      "donde": "Web del Regierungspräsidium Stuttgart",
+      "plazo": "1 semana",
+      "aviso": "Si marcas la notificación por e-mail, desde el correo pueden empezar a correr plazos para recurrir: revísalo a diario, también el spam, y avisa enseguida si cambias de dirección.",
+      "caduca": null,
+      "no_aplica_estado": false,
+      "motivo_no_aplica": null
+    },
+    {
+      "codigo": "bw_via",
+      "bloque": 3,
+      "numero_oficial": "pág. 4",
+      "titulo": "Kenntnisprüfung o Gutachten: la decisión",
+      "descripcion": "Desde el 01/11/2026 la Kenntnisprüfung es la REGLA y no hay que marcar nada para elegirla. El Gutachten (comparar tus documentos con la carrera alemana) es la excepción: se pide con la casilla de la página 4 o por escrito dentro de las 4 SEMANAS siguientes a que el Antrag LLEGUE al RP, y la decisión es VINCULANTE. Con Gutachten van además el currículum de la carrera confirmado por la universidad (Nr. 16) y la Anlage 5 (Nr. 17); cuesta hasta 2.500 €, con anticipo de hasta 2.000 €, y se espera hasta 15 meses. Si encuentra una diferencia esencial en aunque sea una materia, igual hay que dar la Kenntnisprüfung.",
+      "donde": "Tú, con Ivan",
+      "plazo": "1 semana",
+      "aviso": "El propio RP escribe que para muchos solicitantes de medicina la Kenntnisprüfung es el camino más rápido y más barato. Es una decisión de dinero y de meses, y no tiene marcha atrás: la cerramos juntos antes de firmar.",
+      "caduca": null,
+      "no_aplica_estado": false,
+      "motivo_no_aplica": null
+    },
+    {
+      "codigo": "bw11",
+      "bloque": 3,
+      "numero_oficial": "11",
+      "titulo": "Anlage 4: inscripción a la Kenntnisprüfung",
+      "descripcion": "El formulario Anlage 4, lleno y firmado. Con la firma aceptas hacer la Kenntnisprüfung y pagarla (1.100 € por intento). Solo NO va si eliges el Gutachten.",
+      "donde": "Web del Regierungspräsidium Stuttgart",
+      "plazo": "1 semana",
+      "aviso": null,
+      "caduca": null,
+      "no_aplica_estado": false,
+      "motivo_no_aplica": null
+    },
+    {
+      "codigo": "p3",
+      "bloque": 3,
+      "numero_oficial": "12",
+      "titulo": "Certificate of Good Standing",
+      "descripcion": "Certificado de que no tienes procesos profesionales ni disciplinarios. Se pide de cada país donde EJERCISTE como {genero:médico|médica} al menos seis meses dentro de los últimos tres años. Lo emite el colegio médico o la autoridad competente. Copia simple con traducción.",
+      "donde": "Autoridad sanitaria o colegio médico de {pais}",
+      "plazo": "1–2 meses",
+      "aviso": "{nota_personal}",
+      "caduca": "Máximo 3 meses de antigüedad el día en que LLEGA al Regierungspräsidium, no el día en que lo pides. Desde la reforma puede ir con el sobre o después, sin declararlo en ninguna casilla, siempre antes de la Approbation.",
+      "no_aplica_estado": false,
+      "motivo_no_aplica": "Solo se pide si ejerciste al menos seis meses en los últimos tres años."
+    },
+    {
+      "codigo": "p4",
+      "bloque": 3,
+      "numero_oficial": "13",
+      "titulo": "Antecedentes penales de {pais}",
+      "descripcion": "De cada país donde viviste al menos seis meses en los últimos tres años: en tu caso, {pais}. Copia simple con traducción.",
+      "donde": "Policía o justicia de {pais}",
+      "plazo": "1 mes",
+      "aviso": null,
+      "caduca": "Máximo 3 meses de antigüedad el día en que LLEGA al Regierungspräsidium, no el día en que lo pides. Desde la reforma puede ir con el sobre o después, sin declararlo en ninguna casilla, siempre antes de la Approbation.",
+      "no_aplica_estado": false,
+      "motivo_no_aplica": null
+    },
+    {
+      "codigo": "e3",
+      "bloque": 3,
+      "numero_oficial": "15",
+      "titulo": "Anlage 2: certificado médico de aptitud",
+      "descripcion": "Solo el formulario Anlage 2 del RP: otros no se aceptan. Lo firma CUALQUIER médico que ejerza en Alemania (de cabecera, de empresa, de hospital), con fecha, sello y firma. Un médico de {pais} no aparece como opción.",
+      "donde": "Un médico que ejerza en Alemania",
+      "plazo": "1–2 semanas",
+      "aviso": "En la práctica lo sacas cuando llegues a Alemania y lo mandas después del sobre. El Antrag nuevo lo permite sin declarar nada.",
+      "caduca": "Máximo 3 meses de antigüedad el día en que LLEGA al Regierungspräsidium, no el día en que lo pides. Desde la reforma puede ir con el sobre o después, sin declararlo en ninguna casilla, siempre antes de la Approbation.",
+      "no_aplica_estado": false,
+      "motivo_no_aplica": null
+    },
+    {
+      "codigo": "bw16",
+      "bloque": 3,
+      "numero_oficial": "16 y 17",
+      "titulo": "Solo con Gutachten: currículum de la carrera y Anlage 5",
+      "descripcion": "Currículum con contenidos y horas, confirmado por la universidad, y Kostenübernahmeerklärung.",
+      "donde": "Universidad",
+      "plazo": "1–2 meses",
+      "aviso": null,
+      "caduca": null,
+      "no_aplica_estado": true,
+      "motivo_no_aplica": "Solo si pides el Gutachten (al presentar o en las 4 semanas siguientes). Con la Kenntnisprüfung no van, ni tampoco certificados de trabajo ni de cursos."
+    },
+    {
+      "codigo": "e4",
+      "bloque": 4,
+      "numero_oficial": "—",
+      "titulo": "Mandar el sobre",
+      "descripcion": "Solo por correo postal a Regierungspräsidium Stuttgart, Referat 98, Ruppmannstraße 21, 70565 Stuttgart. Van sí o sí los Nr. 1 a 11 (el 4 y el 5 solo si te aplican), más el Antrag firmado. Cada documento de varias páginas grapado, en el orden de la lista; sin fundas plásticas ni carpetas de clip. Todo en copia simple: nada de originales. Antes de cerrar, escanea todo tal como va, y mándalo con seguimiento.",
+      "donde": "Correo postal con seguimiento",
+      "plazo": "1–2 semanas",
+      "aviso": "No lo mandes incompleto. Si falta algo, el RP lo pide UNA sola vez y da 3 meses; después decide con lo que hay, en general con un rechazo de 100 €.",
+      "caduca": null,
+      "no_aplica_estado": false,
+      "motivo_no_aplica": null
+    },
+    {
+      "codigo": "b1",
+      "bloque": 5,
+      "numero_oficial": "—",
+      "titulo": "Acuse de recibo y carta para la visa",
+      "descripcion": "La FAQ del RP dice que el acuse de recibo llega dentro de un mes. Según la asesoría de Freiburg (no es la autoridad), a quien vive en el extranjero se lo mandan por e-mail, igual que la carta para la visa (§ 16d AufenthG) cuando el expediente está completo, y las esperas se alargaron algo con la reforma. En la secuencia que publica el RP para la Kenntnisprüfung no aparece un Defizitbescheid: lo que llevas a la embajada es esa carta. Ojo: la carta para la visa la confirman Freiburg y la Anlage 1 anterior; la Anlage 1 nueva ya no la menciona.",
+      "donde": "El Regierungspräsidium (por e-mail)",
+      "plazo": "1–3 meses",
+      "aviso": "Pregunta en la embajada alemana en {pais} si aceptan la carta impresa desde el e-mail del RP. Freiburg no lo sabe y depende de cada embajada.",
+      "caduca": null,
+      "no_aplica_estado": false,
+      "motivo_no_aplica": null
+    },
+    {
+      "codigo": "b2",
+      "bloque": 5,
+      "numero_oficial": "—",
+      "titulo": "Fachsprachprüfung (FSP)",
+      "descripcion": "Examen de alemán médico, orientado al C1. Cuando el expediente está completo el RP te inscribe solo en la Landesärztekammer, que te propone fecha y te cobra 420 € antes. Espera orientativa del RP: 4 a 6 meses. Aceptan en su lugar una FSP aprobada en otro Bundesland, la FaMed (rendida después del 13/05/2024), telc Deutsch B2/C1 Medizin o la ÖÄK Sprachprüfung, PERO solo si el comprobante va dentro del sobre. Vale 3 años; el tiempo trabajado con Berufserlaubnis la alarga.",
+      "donde": "Landesärztekammer Baden-Württemberg",
+      "plazo": "4–6 meses",
+      "aviso": "El RP no mueve la fecha, tampoco para hacer un curso: prepárala desde ya, no cuando llegue la carta.",
+      "caduca": null,
+      "no_aplica_estado": false,
+      "motivo_no_aplica": null
+    },
+    {
+      "codigo": "b3",
+      "bloque": 5,
+      "numero_oficial": "18",
+      "titulo": "Si la quieres: Berufserlaubnis para trabajar mientras tanto",
+      "descripcion": "Con la FSP aprobada y una Stellenzusage de un empleador de BW (Anlage 3) puedes pedirla en cualquier momento. Solo en BW, bajo supervisión, máximo 2 años por regla general, sin hacer la especialidad. Cuesta 250 € hasta un año y 350 € si es de más. Los tiempos de Berufserlaubnis de otros Bundesländer cuentan dentro de los dos años, y si no encuentras puesto el tiempo no se alarga.",
+      "donde": "La misma autoridad",
+      "plazo": "1–2 meses",
+      "aviso": "Es voluntaria: para la Approbation no hace falta. Si decides no pedirla, márcalo como hecho.",
+      "caduca": null,
+      "no_aplica_estado": false,
+      "motivo_no_aplica": null
+    },
+    {
+      "codigo": "b4",
+      "bloque": 5,
+      "numero_oficial": "—",
+      "titulo": "Kenntnisprüfung",
+      "descripcion": "Aprobada la FSP, el RP te inscribe automáticamente en la Landesärztekammer. Espera orientativa: 8 a 10 meses. Es en alemán, de un solo día: presentación de un paciente con examen e informe escrito, y conversación oral de 60 a 90 minutos. Materias: Medicina Interna y Cirugía, más urgencias, farmacología clínica, imagen, radioprotección, marco legal del ejercicio y comunicación con el paciente, la familia y otros profesionales. 1.100 € por intento, 3 intentos en total. Aprobada, el RP te pide el Führungszeugnis alemán (Nr. 14) y, si está todo, concede la Approbation.",
+      "donde": "Landesärztekammer Baden-Württemberg",
+      "plazo": "8–10 meses",
+      "aviso": "La fecha no se mueve y la citación llega con poco margen: hay que estar {genero:listo|lista} antes de que llegue la carta. Si no te presentas sin un motivo importante, cuenta como intento.",
+      "caduca": null,
+      "no_aplica_estado": false,
+      "motivo_no_aplica": null
+    },
+    {
+      "codigo": "p5",
+      "bloque": 5,
+      "numero_oficial": "14",
+      "titulo": "Führungszeugnis alemán Belegart OB (cuando el RP lo pida)",
+      "descripcion": "Aprobada la Kenntnisprüfung, el RP te pide el Führungszeugnis alemán. Lo pides SOLO entonces, Belegart «OB», en el Bürgeramt de tu domicilio o online en el Bundesamt für Justiz, con Verwendungszweck «Approbation als {genero:Arzt|Ärztin}», dirigido al Regierungspräsidium Stuttgart, Referat 98, a la atención de quien lleva tu expediente. Llega directo a ellos: no va en el sobre.",
+      "donde": "Bürgeramt o Bundesamt für Justiz",
+      "plazo": "1–3 semanas",
+      "aviso": null,
+      "caduca": "Tiene que tener menos de 3 meses el día en que te CONCEDEN la Approbation. Por eso no se pide antes de que el RP lo indique.",
+      "no_aplica_estado": false,
+      "motivo_no_aplica": null
+    },
+    {
+      "codigo": "b5",
+      "bloque": 5,
+      "numero_oficial": "—",
+      "titulo": "Recibir la Approbation en una dirección de Alemania",
+      "descripcion": "El certificado de Approbation se manda, en principio, solo a una dirección en Alemania (lo dice el Antrag). La duración media de los procedimientos terminados el año pasado en BW fue de alrededor de TRES AÑOS: es un dato del RP, no una promesa.",
+      "donde": "—",
+      "plazo": "—",
+      "aviso": null,
+      "caduca": null,
+      "no_aplica_estado": false,
+      "motivo_no_aplica": null
+    }
+  ],
+  "tarjetas": {
+    "aviso_guardado": "Tus marcas se guardan en este dispositivo. Puedes cerrar la página y volver: lo que hayas tachado sigue ahí. Si abres el link en otro celular o borras los datos del navegador, empiezas de cero. Para contarle a Ivan cómo vas, usa el botón del final.",
+    "lo_que_cambio_con_la_reforma": {
+      "titulo": "Lo que cambió el 01/11/2026 y te favorece",
+      "puntos": [
+        "Todo va en copia simple: ya no hacen falta copias certificadas ni originales.",
+        "La traducción puede ser al alemán o al inglés, y lo que está en inglés no se traduce.",
+        "La Kenntnisprüfung es la regla: no hay que marcar nada para elegirla.",
+        "Good Standing, antecedentes y certificado médico pueden ir después del sobre."
+      ]
+    },
+    "leyenda": "El recuadro es el número que ese documento tiene en la lista del Antrag (páginas 6 a 8). No es el orden en que hay que hacer las cosas: para eso están los bloques. Los puntos en gris, «no va ahora», no desaparecen a propósito: debajo de cada uno dice cuándo te tocaría.",
+    "sobre": {
+      "titulo": "Cómo va el sobre, en el orden de la lista del Antrag",
+      "texto": "Primero el Antrag firmado (A) y después los documentos por su número. El funcionario tiene esta lista delante: encontrarlo todo en su sitio evita que te pidan cosas dos veces.",
+      "orden": [
+        "A · Antrag",
+        "1",
+        "2",
+        "3",
+        "4 (si aplica)",
+        "5 (si aplica)",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12 (puede ir después)",
+        "13 (puede ir después)",
+        "15 (puede ir después)"
+      ],
+      "nota_12_13_15": "Puede ir con el sobre o después, con menos de 3 meses al llegar al RP.",
+      "pie": "Solo por correo postal, todo en copia simple, cada documento grapado y cada traducción justo detrás de su documento. Se envía a: Regierungspräsidium Stuttgart, Referat 98, Ruppmannstraße 21, 70565 Stuttgart."
+    },
+    "mis_dudas": {
+      "titulo": "Mis dudas para la próxima llamada",
+      "ayuda": "Lo que escribas aquí lo revisa Ivan antes de la llamada.",
+      "marcador_vacio": "Escribe aquí tus dudas o lo que quieras revisar en la próxima llamada. Se guarda solo.",
+      "boton": "Preparar mi avance para Ivan",
+      "explicacion": "Arma un resumen con lo que ya tienes, en qué estás ahora y las dudas que escribiste arriba. Se lo mandas a Ivan por WhatsApp."
+    },
+    "errores_frecuentes": {
+      "titulo": "Errores que cuestan meses",
+      "puntos": [
+        {
+          "titulo": "Mandar el sobre sin el B2.",
+          "texto": "El Antrag y la Anlage 1 lo dicen expresamente: sin B2 no se presenta."
+        },
+        {
+          "titulo": "Pedir demasiado pronto lo que caduca.",
+          "texto": "Good Standing, antecedentes y certificado médico valen 3 meses contados hasta que LLEGAN al RP. Ahora pueden ir después del sobre: aprovéchalo."
+        },
+        {
+          "titulo": "Mandar originales.",
+          "texto": "El RP se queda con todo lo que recibe. Todo va en copia simple."
+        },
+        {
+          "titulo": "Presentar incompleto.",
+          "texto": "Si falta algo lo piden una sola vez y dan 3 meses; después, en general, rechazo con tasa de 100 €."
+        },
+        {
+          "titulo": "Instalarte en otro Bundesland al llegar.",
+          "texto": "Stuttgart deja de ser competente y hay que avisar enseguida."
+        }
+      ]
+    },
+    "autoridad_y_costos": {
+      "titulo": "La autoridad y los costos",
+      "filas": {
+        "Bundesland": "Baden-Württemberg",
+        "Ruta": "{genero:Médico|Médica} · título de fuera de la UE",
+        "Autoridad": "LAfG BW, Regierungspräsidium Stuttgart (Referat 98)",
+        "Dirección de envío": "Regierungspräsidium Stuttgart, Referat 98, Ruppmannstraße 21, 70565 Stuttgart",
+        "Contacto": "solo por su formulario web; no publican correo directo",
+        "Tasa de la FSP": "420 € (la cobra la Landesärztekammer)",
+        "Tasa de la Kenntnisprüfung": "1.100 € por intento (la cobra la Landesärztekammer)",
+        "Tasa de la Approbation": "450 €",
+        "Tasa de la Berufserlaubnis": "250 € hasta un año · 350 € si es de más de un año",
+        "Duración media (oficial, año pasado)": "alrededor de 3 años"
+      },
+      "otros_costos": "Rechazo de la solicitud: hasta 400 € según el estado; por documentos incompletos tras el plazo de 3 meses, 100 €. Retirarla: hasta 200 €. Gutachten, solo si lo pides: hasta 2.500 €, con anticipo de hasta 2.000 €. Traducciones y cursos de alemán van por tu cuenta.",
+      "contacto": "No atienden expedientes por teléfono: el contacto es por el formulario web del RP. Una sola oficina para todo el Land, aunque haya cuatro Regierungspräsidien."
+    },
+    "fuentes": {
+      "titulo": "De dónde sale cada dato",
+      "oficial": "La lista de documentos y sus números, las caducidades, las tasas, las esperas orientativas (FSP 4 a 6 meses, Kenntnisprüfung 8 a 10, Gutachten hasta 15) y la duración media, que publica el propio RP.",
+      "estimacion": "Los demás «plazo estimado» de esta lista. Lo que viene de la asesoría de Freiburg está dicho así en el texto.",
+      "documentos": [
+        "Antrag del Regierungspräsidium Stuttgart, Stand 01/11/2026 (lista de documentos Nr. 1 a 18, páginas 6 a 8)",
+        "Anlage 1 y Anlage 6, Stand 29/10/2026",
+        "Anlagen 2 a 5 (sin cambios con la reforma)",
+        "Página de Medicina, FAQ y página de FSP del RP Stuttgart",
+        "FICHA BADEN-WUERTTEMBERG en Drive (versión del 09/11/2026, recomprobada el 18/11/2026)"
+      ],
+      "fecha_de_version": "Antrag del 01/11/2026 y Anlage 1 y 6 del 29/10/2026, comprobados contra la web del Regierungspräsidium Stuttgart el 18/11/2026",
+      "consejo": "Antes de enviar, baja el Antrag otra vez de la web del RP por si cambió."
+    },
+    "pie": "Medical Network LATAM · La lista de documentos es la del Antrag de LAfG BW, Regierungspräsidium Stuttgart (Referat 98). Los plazos estimados son de experiencia, no promesas. La autoridad se reserva el derecho de pedir documentos adicionales."
+  }
+}
