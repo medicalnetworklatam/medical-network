@@ -1,5 +1,5 @@
 -- =============================================================================
--- RLS check: proves the access rules from migrations 1 to 6 work.
+-- RLS check: proves the access rules from migrations 1 to 7 work.
 -- =============================================================================
 -- Paste this whole file into Supabase's SQL Editor and press "Run".
 -- Run it after every migration, and again after any change to policies or
@@ -8,10 +8,11 @@
 -- What it does:
 --   1. Checks a few safety nets on the whole database (RLS on every table,
 --      nothing for logged-out visitors, and so on).
---   2. Creates 5 fake logins (clients A, B, C and D, and an admin), test
---      routes, test checklist items, test news posts and test community
---      posts. Everything it creates is marked "rls-test", or belongs to a
---      fake login, so it can be found and removed. The admin also uploads
+--   2. Creates 8 fake logins (clients A to G, and an admin), test routes,
+--      test checklist items, test news posts and test community posts, and
+--      (migration 7) test checklist templates, client-layer rows, client
+--      details and dudas. Everything it creates is marked "rls-test", or
+--      belongs to a fake login, so it can be found and removed. The admin also uploads
 --      a few test files into the "news-files" bucket (rows in
 --      storage.objects, no real file content), each in a test news post's
 --      folder, plus small copies of the test photos (migration 6), and
@@ -39,6 +40,10 @@ declare
   c      uuid := gen_random_uuid();   -- client C: paid, no state, no name
   adm    uuid := gen_random_uuid();   -- an admin: "María Fernanda" "García López"
   d      uuid := gen_random_uuid();   -- client D: paid, Thüringen, "Ana" "Ruiz"
+  -- migration 7 (set up in its own section near the end)
+  ce     uuid := gen_random_uuid();   -- client E: paid, Bayern, the other test route
+  cf     uuid := gen_random_uuid();   -- client F: paid, Thüringen, B's route
+  cg     uuid := gen_random_uuid();   -- client G: paid, Bayern, B's route (exactly like B)
   -- test content
   item_active    uuid;
   item_archived  uuid;
@@ -1666,6 +1671,607 @@ begin
   if rc <> 5 then raise exception 'FAIL: admin deleted % of the 5 remaining test files of migration 6', rc; end if;
   ok := ok + 1;
 
+  -- ===========================================================================
+  -- Migration 7: checklist templates, client layer, client details, dudas
+  -- ===========================================================================
+  -- Set up as you (postgres), so these checks don't depend on what the
+  -- sections above changed. Three more made-up paid clients:
+  --   E: Bayern, the OTHER test route (same state as B, another route)
+  --   F: Thüringen, B's route (another state, same route as B)
+  --   G: Bayern, B's route (exactly like B)
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+
+  insert into auth.users (instance_id, id, aud, role, email,
+                          raw_app_meta_data, raw_user_meta_data,
+                          created_at, updated_at)
+  values
+    ('00000000-0000-0000-0000-000000000000', ce, 'authenticated', 'authenticated',
+     'rls-test-e@example.invalid', '{}', '{"first_name": "Eva", "last_names": "Prueba"}', now(), now()),
+    ('00000000-0000-0000-0000-000000000000', cf, 'authenticated', 'authenticated',
+     'rls-test-f@example.invalid', '{}', '{"first_name": "Félix", "last_names": "Prueba"}', now(), now()),
+    ('00000000-0000-0000-0000-000000000000', cg, 'authenticated', 'authenticated',
+     'rls-test-g@example.invalid', '{}', '{"first_name": "Gabi", "last_names": "Prueba"}', now(), now());
+  update public.profiles set plan = 'paid', main_state = 'by', route = 'rls-test-route-otra' where id = ce;
+  update public.profiles set plan = 'paid', main_state = 'th', route = 'rls-test-route'      where id = cf;
+  update public.profiles set plan = 'paid', main_state = 'by', route = 'rls-test-route'      where id = cg;
+  update public.profiles set plan = 'paid', main_state = 'by', route = 'rls-test-route'      where id = b;
+  update public.profiles set plan = 'free', main_state = 'by', route = 'rls-test-route'      where id = a;
+  update public.profiles set plan = 'paid', main_state = null, route = null                 where id = c;
+  update public.checklist_items set archived = false where id in (item_active, item_other_state, item_other_route);
+  update public.checklist_items set archived = true  where id = item_archived;
+
+  -- CHECK (migration 7): the four routes exist with their Spanish names, in order
+  select string_agg(code || '=' || name, ' | ' order by sort_order) into txt
+    from public.routes
+   where code in ('medico_drittstaat', 'medico_ue', 'dentista_drittstaat', 'dentista_ue');
+  if txt is distinct from
+     'medico_drittstaat=Médico · título de fuera de la UE | medico_ue=Médico · título de la UE, el EEE o Suiza | '
+     'dentista_drittstaat=Dentista · título de fuera de la UE | dentista_ue=Dentista · título de la UE, el EEE o Suiza' then
+    raise exception 'FAIL: the four routes are missing, misnamed or out of order: %', txt;
+  end if;
+  ok := ok + 1;
+
+  -- CHECK (migration 7): codes may contain "_"; badly shaped codes are still refused
+  insert into public.routes (code, name) values ('rls-test-ruta_b', 'Ruta de prueba con _');
+  insert into public.checklist_items (code, state, route, title)
+    values ('rls-test-x_7', 'by', 'rls-test-route', 'Prueba con _');
+  for i in 1..4 loop
+    begin
+      case i
+        when 1 then insert into public.routes (code, name) values ('rls-test__doble', 'x');
+        when 2 then insert into public.routes (code, name) values ('rls-test-fin_', 'x');
+        when 3 then insert into public.checklist_items (code, state, route, title)
+                      values ('rls-test-Mayus', 'by', 'rls-test-route', 'x');
+        when 4 then insert into public.checklist_items (code, state, route, title)
+                      values ('rls-test-_x', 'by', 'rls-test-route', 'x');
+      end case;
+      raise exception 'FAIL: bad code number % of this check was accepted', i;
+    exception when check_violation then null;
+    end;
+  end loop;
+  ok := ok + 1;
+
+  -- CHECK (migration 7): with a source_code, the readable code must be
+  -- <state>-<route>-<source_code>
+  insert into public.checklist_items (code, state, route, title, source_code)
+    values ('by-rls-test-route-x_8', 'by', 'rls-test-route', 'Prueba de plantilla', 'x_8');
+  begin
+    insert into public.checklist_items (code, state, route, title, source_code)
+      values ('rls-test-mal', 'by', 'rls-test-route', 'x', 'x9');
+    raise exception 'FAIL: an item whose code doesn''t match its source_code was accepted';
+  exception when check_violation then ok := ok + 1;
+  end;
+
+  -- CHECK (migration 7): grants on checklist_items: the new columns are
+  -- readable (SELECT on the whole table) and writable only through the
+  -- admin-only rules; still no delete
+  if not (has_table_privilege('authenticated', 'public.checklist_items', 'SELECT')
+      and has_column_privilege('authenticated', 'public.checklist_items', 'donde', 'UPDATE')
+      and has_column_privilege('authenticated', 'public.checklist_items', 'source_code', 'INSERT')) then
+    raise exception 'FAIL: the new checklist_items columns can''t be read or written by admins';
+  end if;
+  if has_table_privilege('authenticated', 'public.checklist_items', 'DELETE')
+  or has_table_privilege('authenticated', 'public.checklist_items', 'TRUNCATE')
+  or has_column_privilege('authenticated', 'public.checklist_items', 'id', 'UPDATE') then
+    raise exception 'FAIL: checklist items can be deleted, or their id changed';
+  end if;
+  ok := ok + 1;
+
+  -- CHECK (migration 7): column-level grants on the four new tables, nothing
+  -- broader than needed. Nobody may delete, truncate, send updated_at, or
+  -- move a row to another user, item, state or route.
+  for rel in select unnest(array['public.checklist_templates', 'public.client_item_settings',
+                                 'public.client_details', 'public.client_dudas']) loop
+    if not has_table_privilege('authenticated', rel, 'SELECT') then
+      raise exception 'FAIL: logged-in users can''t read %', rel;
+    end if;
+    if has_table_privilege('authenticated', rel, 'DELETE')
+    or has_table_privilege('authenticated', rel, 'TRUNCATE')
+    or has_table_privilege('authenticated', rel, 'INSERT')       -- whole-table insert
+    or has_table_privilege('authenticated', rel, 'UPDATE')       -- whole-table update
+    or has_column_privilege('authenticated', rel, 'updated_at', 'INSERT')
+    or has_column_privilege('authenticated', rel, 'updated_at', 'UPDATE') then
+      raise exception 'FAIL: logged-in users have more rights than needed on %', rel;
+    end if;
+  end loop;
+  if has_column_privilege('authenticated', 'public.checklist_templates', 'state', 'UPDATE')
+  or has_column_privilege('authenticated', 'public.checklist_templates', 'route', 'UPDATE')
+  or has_column_privilege('authenticated', 'public.client_item_settings', 'user_id', 'UPDATE')
+  or has_column_privilege('authenticated', 'public.client_item_settings', 'item_id', 'UPDATE')
+  or has_column_privilege('authenticated', 'public.client_details', 'user_id', 'UPDATE')
+  or has_column_privilege('authenticated', 'public.client_dudas', 'user_id', 'UPDATE') then
+    raise exception 'FAIL: a row of a new table can be moved to another user, item, state or route';
+  end if;
+  if not (has_column_privilege('authenticated', 'public.client_dudas', 'user_id', 'INSERT')
+      and has_column_privilege('authenticated', 'public.client_dudas', 'body', 'INSERT')
+      and has_column_privilege('authenticated', 'public.client_dudas', 'body', 'UPDATE')) then
+    raise exception 'FAIL: the website can''t send user_id and body for dudas';
+  end if;
+  if not (has_column_privilege('authenticated', 'public.client_item_settings', 'note', 'UPDATE')
+      and has_column_privilege('authenticated', 'public.client_details', 'country', 'UPDATE')
+      and has_column_privilege('authenticated', 'public.checklist_templates', 'cards', 'UPDATE')) then
+    raise exception 'FAIL: the admin screens lost the right to change the new tables';
+  end if;
+  ok := ok + 1;
+
+  -- ---------------------------------------------------------------------------
+  -- Migration 7, as the ADMIN
+  -- ---------------------------------------------------------------------------
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', adm, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+
+  -- CHECK: admin writes the new step fields on an item
+  update public.checklist_items
+     set block = 2, official_number = 'pág. 4', donde = 'Una oficina inventada',
+         plazo = '1 semana', na_default = true, na_reason = 'Motivo inventado'
+   where id = item_active;
+  get diagnostics rc = row_count;
+  if rc <> 1 then raise exception 'FAIL: admin could not write the new checklist_items fields'; end if;
+  ok := ok + 1;
+
+  -- CHECK: admin adds templates (B's state + route, Thüringen + B's route,
+  -- Bayern + the other route) and can change one
+  insert into public.checklist_templates (state, route, title, blocks)
+    values ('by', 'rls-test-route',      '[rls-test] plantilla by', '[{"bloque": 1, "titulo": "Uno"}]'),
+           ('th', 'rls-test-route',      '[rls-test] plantilla th', '[]'),
+           ('by', 'rls-test-route-otra', '[rls-test] plantilla by otra', '[]');
+  update public.checklist_templates set cards = '{"pie": "Pie de prueba"}'
+   where state = 'by' and route = 'rls-test-route';
+  get diagnostics rc = row_count;
+  if rc <> 1 then raise exception 'FAIL: admin could not change a template'; end if;
+  ok := ok + 1;
+
+  -- CHECK: templates must have the right shape (cards an object, blocks a list)
+  begin
+    update public.checklist_templates set cards = '[]' where state = 'th' and route = 'rls-test-route';
+    raise exception 'FAIL: a template accepted cards that are not an object';
+  exception when check_violation then ok := ok + 1;
+  end;
+
+  -- CHECK: not even an admin can delete a template or move it to another state
+  begin
+    delete from public.checklist_templates where route = 'rls-test-route';
+    raise exception 'FAIL: admin deleted a template';
+  exception when insufficient_privilege then ok := ok + 1;
+  end;
+  begin
+    update public.checklist_templates set state = 'nw' where state = 'th' and route = 'rls-test-route';
+    raise exception 'FAIL: admin moved a template to another state';
+  exception when insufficient_privilege then ok := ok + 1;
+  end;
+
+  -- CHECK: admin writes the client layer; the database trims the texts,
+  -- turns text of only spaces into empty, and sets the date
+  insert into public.client_item_settings (user_id, item_id, applies, reason, note) values
+    (b, item_active,      false, '  Motivo de B  ', E' Nota de B \n'),
+    (b, item_archived,    null,  null,              'Nota de B en un paso archivado'),
+    (b, item_other_route, null,  null,              'Nota de B en otra ruta'),
+    (cg, item_active,      true,  null,              'Nota de G'),
+    (ce, item_other_route, null,  null,              'Nota de E'),
+    (ce, item_active,      null,  null,              'Nota de E en la ruta de B'),
+    (cf, item_other_state, null,  E' \t ',           'Nota de F'),
+    (a, item_active,      null,  null,              'Nota de A'),
+    (c, item_active,      null,  null,              'Nota de C');
+  select count(*) into cnt from public.client_item_settings
+   where user_id = b and item_id = item_active
+     and reason = 'Motivo de B' and note = 'Nota de B' and updated_at is not null;
+  if cnt <> 1 then raise exception 'FAIL: the client layer was not trimmed, or has no date'; end if;
+  select count(*) into cnt from public.client_item_settings
+   where user_id = cf and item_id = item_other_state and reason is null;
+  if cnt <> 1 then raise exception 'FAIL: a reason of only spaces was not made empty'; end if;
+  ok := ok + 1;
+
+  -- CHECK: admin changes the client layer, but can't move a row to another
+  -- client or step, can't send the date, and can't delete rows
+  update public.client_item_settings set applies = true, note = 'Nota de G, cambiada'
+   where user_id = cg and item_id = item_active;
+  get diagnostics rc = row_count;
+  if rc <> 1 then raise exception 'FAIL: admin could not change the client layer'; end if;
+  ok := ok + 1;
+  begin
+    update public.client_item_settings set user_id = b where user_id = cg and item_id = item_active;
+    raise exception 'FAIL: admin moved a client-layer row to another client';
+  exception when insufficient_privilege then ok := ok + 1;
+  end;
+  begin
+    update public.client_item_settings set item_id = item_archived where user_id = cg and item_id = item_active;
+    raise exception 'FAIL: admin moved a client-layer row to another step';
+  exception when insufficient_privilege then ok := ok + 1;
+  end;
+  begin
+    insert into public.client_item_settings (user_id, item_id, updated_at) values (cg, item_other_route, now());
+    raise exception 'FAIL: admin sent the client layer''s date';
+  exception when insufficient_privilege then ok := ok + 1;
+  end;
+  begin
+    delete from public.client_item_settings where user_id = cg;
+    raise exception 'FAIL: admin deleted a client-layer row';
+  exception when insufficient_privilege then ok := ok + 1;
+  end;
+
+  -- CHECK: the client layer's length limits (reason 500, note 2,000)
+  for i in 1..2 loop
+    begin
+      case i
+        when 1 then update public.client_item_settings set reason = repeat('x', 501) where user_id = cg and item_id = item_active;
+        when 2 then update public.client_item_settings set note = repeat('x', 2001) where user_id = cg and item_id = item_active;
+      end case;
+      raise exception 'FAIL: the client layer accepted a too-long text, number % of this check', i;
+    exception when check_violation then null;
+    end;
+  end loop;
+  update public.client_item_settings set reason = repeat('x', 500), note = repeat('x', 2000)
+   where user_id = cg and item_id = item_active;
+  update public.client_item_settings set reason = null, note = 'Nota de G, cambiada'
+   where user_id = cg and item_id = item_active;
+  ok := ok + 1;
+
+  -- CHECK: admin writes client details (trimmed), within their limits
+  insert into public.client_details (user_id, country, header_line) values
+    (b, ' Ecuador ', 'Médico · Título de {pais} (2015) · Vive en Quito'),
+    (cg, 'Perú', null),
+    (ce, 'Chile', null),
+    (cf, 'Bolivia', null),
+    (a, 'México', null);
+  select count(*) into cnt from public.client_details where user_id = b and country = 'Ecuador';
+  if cnt <> 1 then raise exception 'FAIL: client details were not saved or not trimmed'; end if;
+  update public.client_details set header_line = 'Línea de prueba' where user_id = cg;
+  get diagnostics rc = row_count;
+  if rc <> 1 then raise exception 'FAIL: admin could not change client details'; end if;
+  begin
+    update public.client_details set country = repeat('x', 101) where user_id = cg;
+    raise exception 'FAIL: client details accepted a 101-character country';
+  exception when check_violation then ok := ok + 1;
+  end;
+  begin
+    update public.client_details set user_id = b where user_id = cg;
+    raise exception 'FAIL: admin moved client details to another client';
+  exception when insufficient_privilege then ok := ok + 1;
+  end;
+  begin
+    delete from public.client_details where user_id = cg;
+    raise exception 'FAIL: admin deleted client details';
+  exception when insufficient_privilege then ok := ok + 1;
+  end;
+
+  -- CHECK: admin can't write a client's dudas (only their own row)
+  begin
+    insert into public.client_dudas (user_id, body) values (b, 'Escrito por el admin');
+    raise exception 'FAIL: admin wrote a client''s dudas';
+  exception when insufficient_privilege then ok := ok + 1;
+  end;
+
+  -- ---------------------------------------------------------------------------
+  -- Migration 7, as CLIENT B (paid, Bayern, rls-test-route)
+  -- ---------------------------------------------------------------------------
+  reset role;
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', b, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+
+  -- CHECK: B reads the new step fields of their own item through the
+  -- existing read rule
+  select count(*) into cnt from public.checklist_items
+   where id = item_active and block = 2 and donde = 'Una oficina inventada'
+     and na_reason = 'Motivo inventado' and na_default and official_number = 'pág. 4';
+  if cnt <> 1 then raise exception 'FAIL: client B cannot read block, donde and na_reason of their own item'; end if;
+  ok := ok + 1;
+
+  -- CHECK: B can't write the new step fields, nor add an item
+  update public.checklist_items set donde = 'hackeado', block = 5 where id = item_active;
+  get diagnostics rc = row_count;
+  if rc <> 0 then raise exception 'FAIL: client B changed the step fields of an item'; end if;
+  begin
+    insert into public.checklist_items (code, state, route, title, source_code)
+      values ('by-rls-test-route-hack', 'by', 'rls-test-route', 'x', 'hack');
+    raise exception 'FAIL: client B added a checklist item';
+  exception when insufficient_privilege then ok := ok + 1;
+  end;
+
+  -- CHECK: B reads exactly one template, the one for their state and route
+  select string_agg(title, ',') into txt from public.checklist_templates;
+  if txt is distinct from '[rls-test] plantilla by' then
+    raise exception 'FAIL: client B reads the templates "%" instead of only their own', txt;
+  end if;
+  ok := ok + 1;
+
+  -- CHECK: B can't add or change a template
+  begin
+    insert into public.checklist_templates (state, route, title) values ('by', 'rls-test-ruta_b', 'x');
+    raise exception 'FAIL: client B added a template';
+  exception when insufficient_privilege then ok := ok + 1;
+  end;
+  update public.checklist_templates set title = 'hackeado';
+  get diagnostics rc = row_count;
+  if rc <> 0 then raise exception 'FAIL: client B changed a template'; end if;
+  ok := ok + 1;
+
+  -- CHECK: B reads only their own client-layer row for the item they can
+  -- read: not the archived step's, not the other route's, nobody else's
+  select count(*) into cnt from public.client_item_settings;
+  if cnt <> 1 then raise exception 'FAIL: client B reads % client-layer rows instead of 1', cnt; end if;
+  select count(*) into cnt from public.client_item_settings
+   where user_id = b and item_id = item_active and applies = false and note = 'Nota de B';
+  if cnt <> 1 then raise exception 'FAIL: client B cannot read their own client-layer row'; end if;
+  ok := ok + 1;
+
+  -- CHECK: B can't write the client layer, not even their own rows
+  begin
+    insert into public.client_item_settings (user_id, item_id, note) values (b, item_other_state, 'x');
+    raise exception 'FAIL: client B added a client-layer row';
+  exception when insufficient_privilege then ok := ok + 1;
+  end;
+  update public.client_item_settings set applies = true, note = 'hackeado' where user_id = b;
+  get diagnostics rc = row_count;
+  if rc <> 0 then raise exception 'FAIL: client B changed their own client layer'; end if;
+  ok := ok + 1;
+  begin
+    delete from public.client_item_settings where user_id = b;
+    raise exception 'FAIL: client B deleted a client-layer row';
+  exception when insufficient_privilege then ok := ok + 1;
+  end;
+
+  -- CHECK: B reads only their own details, and can't write them
+  select string_agg(country, ',') into txt from public.client_details;
+  if txt is distinct from 'Ecuador' then
+    raise exception 'FAIL: client B reads the details "%" instead of only their own', txt;
+  end if;
+  begin
+    insert into public.client_details (user_id, country) values (b, 'x');
+    raise exception 'FAIL: client B added client details';
+  exception when insufficient_privilege then ok := ok + 1;
+  end;
+  update public.client_details set country = 'hackeado';
+  get diagnostics rc = row_count;
+  if rc <> 0 then raise exception 'FAIL: client B changed their own details'; end if;
+  ok := ok + 1;
+
+  -- CHECK: B writes their own dudas; the database trims the text and sets the date
+  insert into public.client_dudas (user_id, body) values (b, E'  Mis dudas de B \n\n');
+  select count(*) into cnt from public.client_dudas
+   where user_id = b and body = 'Mis dudas de B' and updated_at is not null;
+  if cnt <> 1 then raise exception 'FAIL: client B''s dudas were not saved trimmed, with a date'; end if;
+  ok := ok + 1;
+
+  -- CHECK: B changes their dudas (also with "insert ... on conflict", as the
+  -- website may) and can clear them; 4,000 characters fit, 4,001 don't
+  update public.client_dudas set body = repeat('d', 4000) || '   ' where user_id = b;
+  get diagnostics rc = row_count;
+  if rc <> 1 then raise exception 'FAIL: client B could not change their dudas'; end if;
+  begin
+    update public.client_dudas set body = repeat('d', 4001) where user_id = b;
+    raise exception 'FAIL: dudas accepted 4,001 characters';
+  exception when check_violation then ok := ok + 1;
+  end;
+  insert into public.client_dudas (user_id, body) values (b, '')
+    on conflict (user_id) do update set body = excluded.body;
+  insert into public.client_dudas (user_id, body) values (b, 'Dudas de B')
+    on conflict (user_id) do update set body = excluded.body;
+  select count(*) into cnt from public.client_dudas where user_id = b and body = 'Dudas de B';
+  if cnt <> 1 then raise exception 'FAIL: client B could not save their dudas with insert ... on conflict'; end if;
+  ok := ok + 1;
+
+  -- CHECK: B can't write dudas for another user, can't move their own row
+  -- to another user, can't send the date and can't delete
+  begin
+    insert into public.client_dudas (user_id, body) values (cg, 'Escrito por B');
+    raise exception 'FAIL: client B wrote dudas with another user''s user_id';
+  exception when insufficient_privilege then ok := ok + 1;
+  end;
+  begin
+    update public.client_dudas set user_id = cg where user_id = b;
+    raise exception 'FAIL: client B changed the user_id of their own dudas';
+  exception when insufficient_privilege then ok := ok + 1;
+  end;
+  begin
+    update public.client_dudas set updated_at = now() - interval '1 year' where user_id = b;
+    raise exception 'FAIL: client B changed the date of their dudas';
+  exception when insufficient_privilege then ok := ok + 1;
+  end;
+  begin
+    delete from public.client_dudas where user_id = b;
+    raise exception 'FAIL: client B deleted their dudas';
+  exception when insufficient_privilege then ok := ok + 1;
+  end;
+
+  -- ---------------------------------------------------------------------------
+  -- Migration 7, as CLIENT G (paid, Bayern, rls-test-route: exactly like B)
+  -- ---------------------------------------------------------------------------
+  reset role;
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', cg, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+
+  -- CHECK: G shares B's template (same state and route)...
+  select string_agg(title, ',') into txt from public.checklist_templates;
+  if txt is distinct from '[rls-test] plantilla by' then
+    raise exception 'FAIL: client G reads the templates "%" instead of their state + route''s', txt;
+  end if;
+  ok := ok + 1;
+
+  -- CHECK: ...but reads only their own client layer and details, never B's
+  select count(*) into cnt from public.client_item_settings where user_id <> cg;
+  if cnt <> 0 then raise exception 'FAIL: client G reads % client-layer rows of other clients', cnt; end if;
+  select count(*) into cnt from public.client_item_settings where user_id = cg and note = 'Nota de G, cambiada';
+  if cnt <> 1 then raise exception 'FAIL: client G cannot read their own client-layer row'; end if;
+  select count(*) into cnt from public.client_details where user_id <> cg;
+  if cnt <> 0 then raise exception 'FAIL: client G reads the details of another client'; end if;
+  select count(*) into cnt from public.client_details where user_id = cg and header_line = 'Línea de prueba';
+  if cnt <> 1 then raise exception 'FAIL: client G cannot read their own details'; end if;
+  ok := ok + 1;
+
+  -- CHECK: G can't read or change B's dudas, and writes their own
+  select count(*) into cnt from public.client_dudas;
+  if cnt <> 0 then raise exception 'FAIL: client G reads % dudas of other clients', cnt; end if;
+  update public.client_dudas set body = 'hackeado' where user_id = b;
+  get diagnostics rc = row_count;
+  if rc <> 0 then raise exception 'FAIL: client G changed client B''s dudas'; end if;
+  insert into public.client_dudas (user_id, body) values (cg, 'Dudas de G');
+  select count(*) into cnt from public.client_dudas;
+  if cnt <> 1 then raise exception 'FAIL: client G reads % dudas instead of only their own', cnt; end if;
+  ok := ok + 1;
+
+  -- ---------------------------------------------------------------------------
+  -- Migration 7, as CLIENT B again: G's private data
+  -- ---------------------------------------------------------------------------
+  reset role;
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', b, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+
+  -- CHECK: B reads nothing of G's: client layer, details, dudas
+  select (select count(*) from public.client_item_settings where user_id = cg)
+       + (select count(*) from public.client_details where user_id = cg)
+       + (select count(*) from public.client_dudas where user_id = cg)
+    into cnt;
+  if cnt <> 0 then raise exception 'FAIL: client B reads % rows of client G''s data', cnt; end if;
+  update public.client_dudas set body = 'hackeado' where user_id = cg;
+  get diagnostics rc = row_count;
+  if rc <> 0 then raise exception 'FAIL: client B changed client G''s dudas'; end if;
+  ok := ok + 1;
+
+  -- ---------------------------------------------------------------------------
+  -- Migration 7, as CLIENT E (paid, Bayern, the OTHER route)
+  -- ---------------------------------------------------------------------------
+  reset role;
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', ce, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+
+  -- CHECK: E (same state, another route) reads only their own route's
+  -- template, and only their client-layer row for their own route's item:
+  -- not their row on B's route's item
+  select string_agg(title, ',') into txt from public.checklist_templates;
+  if txt is distinct from '[rls-test] plantilla by otra' then
+    raise exception 'FAIL: client E reads the templates "%" instead of only their own route''s', txt;
+  end if;
+  select string_agg(note, ',') into txt from public.client_item_settings;
+  if txt is distinct from 'Nota de E' then
+    raise exception 'FAIL: client E reads the client-layer notes "%" instead of only "Nota de E"', txt;
+  end if;
+  ok := ok + 1;
+
+  -- CHECK: E reads nothing of B's or G's
+  select (select count(*) from public.client_item_settings where user_id <> ce)
+       + (select count(*) from public.client_details where user_id <> ce)
+       + (select count(*) from public.client_dudas where user_id <> ce)
+    into cnt;
+  if cnt <> 0 then raise exception 'FAIL: client E reads % rows of other clients'' data', cnt; end if;
+  ok := ok + 1;
+
+  -- ---------------------------------------------------------------------------
+  -- Migration 7, as CLIENT F (paid, Thüringen, B's route)
+  -- ---------------------------------------------------------------------------
+  reset role;
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', cf, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+
+  -- CHECK: F (another state, same route) reads only Thüringen's template and
+  -- their own row, nothing of B's or G's
+  select string_agg(title, ',') into txt from public.checklist_templates;
+  if txt is distinct from '[rls-test] plantilla th' then
+    raise exception 'FAIL: client F reads the templates "%" instead of only Thüringen''s', txt;
+  end if;
+  select string_agg(note, ',') into txt from public.client_item_settings;
+  if txt is distinct from 'Nota de F' then
+    raise exception 'FAIL: client F reads the client-layer notes "%" instead of only "Nota de F"', txt;
+  end if;
+  select (select count(*) from public.client_item_settings where user_id <> cf)
+       + (select count(*) from public.client_details where user_id <> cf)
+       + (select count(*) from public.client_dudas where user_id <> cf)
+    into cnt;
+  if cnt <> 0 then raise exception 'FAIL: client F reads % rows of other clients'' data', cnt; end if;
+  ok := ok + 1;
+
+  -- ---------------------------------------------------------------------------
+  -- Migration 7, as CLIENT A (FREE, Bayern, B's route)
+  -- ---------------------------------------------------------------------------
+  reset role;
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', a, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+
+  -- CHECK: a free client sees none of it, not even their own rows
+  select (select count(*) from public.checklist_templates)
+       + (select count(*) from public.client_item_settings)
+       + (select count(*) from public.client_details)
+       + (select count(*) from public.client_dudas)
+    into cnt;
+  if cnt <> 0 then raise exception 'FAIL: free client A reads % rows of migration 7''s tables', cnt; end if;
+  ok := ok + 1;
+
+  -- CHECK: a free client can't write dudas, not even their own
+  begin
+    insert into public.client_dudas (user_id, body) values (a, 'Dudas de A');
+    raise exception 'FAIL: free client A wrote dudas';
+  exception when insufficient_privilege then ok := ok + 1;
+  end;
+
+  -- ---------------------------------------------------------------------------
+  -- Migration 7, as CLIENT C (paid, no state, no route)
+  -- ---------------------------------------------------------------------------
+  reset role;
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', c, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+
+  -- CHECK: with no state and no route: no template and no client-layer row
+  -- (C's row is on an item C can't read)
+  select (select count(*) from public.checklist_templates)
+       + (select count(*) from public.client_item_settings)
+    into cnt;
+  if cnt <> 0 then raise exception 'FAIL: client C, with no state or route, reads % template or client-layer rows', cnt; end if;
+  ok := ok + 1;
+
+  -- ---------------------------------------------------------------------------
+  -- Migration 7, as a LOGGED-OUT visitor (anon)
+  -- ---------------------------------------------------------------------------
+  reset role;
+  perform set_config('request.jwt.claims', '{"role":"anon"}', true);
+  set local role anon;
+
+  -- CHECK: a logged-out visitor can't read any of the four new tables
+  for rel in select unnest(array['public.checklist_templates', 'public.client_item_settings',
+                                 'public.client_details', 'public.client_dudas']) loop
+    begin
+      execute format('select 1 from %s limit 1', rel);
+      raise exception 'FAIL: a logged-out visitor can read %', rel;
+    exception when insufficient_privilege then null;
+    end;
+  end loop;
+  ok := ok + 1;
+
+  -- ---------------------------------------------------------------------------
+  -- Migration 7, as the ADMIN again: reads everything
+  -- ---------------------------------------------------------------------------
+  reset role;
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', adm, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+
+  -- CHECK: admin reads every client's dudas, client layer (also on an
+  -- archived step) and details, and every template
+  select count(*) into cnt from public.client_dudas where user_id in (b, cg);
+  if cnt <> 2 then raise exception 'FAIL: admin reads % of the 2 clients'' dudas', cnt; end if;
+  select count(*) into cnt from public.client_item_settings where user_id in (a, b, c, ce, cf, cg);
+  if cnt <> 9 then raise exception 'FAIL: admin reads % of the 9 client-layer rows', cnt; end if;
+  select count(*) into cnt from public.client_item_settings where item_id = item_archived;
+  if cnt <> 1 then raise exception 'FAIL: admin cannot read the client layer of an archived step'; end if;
+  select count(*) into cnt from public.client_details where user_id in (a, b, ce, cf, cg);
+  if cnt <> 5 then raise exception 'FAIL: admin reads % of the 5 clients'' details', cnt; end if;
+  select count(*) into cnt from public.checklist_templates where route like 'rls-test-%';
+  if cnt <> 3 then raise exception 'FAIL: admin reads % of the 3 test templates', cnt; end if;
+  ok := ok + 1;
+
+  -- CHECK: admin can't change a client's dudas
+  update public.client_dudas set body = 'Cambiado por el admin' where user_id = b;
+  get diagnostics rc = row_count;
+  if rc <> 0 then raise exception 'FAIL: admin changed a client''s dudas'; end if;
+  ok := ok + 1;
+
   -- ---------------------------------------------------------------------------
   -- Clean up, as you (postgres) again
   -- ---------------------------------------------------------------------------
@@ -1673,18 +2279,23 @@ begin
   perform set_config('request.jwt.claims', '', true);
 
   -- Deleting the logins also deletes their profiles, progress and posts.
-  delete from auth.users where id in (a, b, c, d, adm);
+  delete from auth.users where id in (a, b, c, d, ce, cf, cg, adm);  -- and their client layer, details and dudas
   delete from public.news_posts where title like '[rls-test]%';  -- and their attachment rows
   delete from storage.objects where bucket_id = 'news-files' and name = any (test_files || thumb_files);
-  delete from public.checklist_items where code like 'rls-test-%';
+  delete from public.checklist_templates where route like 'rls-test-%';
+  delete from public.checklist_items where code like 'rls-test-%' or route like 'rls-test-%';
   delete from public.routes where code like 'rls-test-%';
 
   -- CHECK: nothing from the test is left behind
-  select (select count(*) from public.profiles where id in (a, b, c, d, adm))
-       + (select count(*) from auth.users where id in (a, b, c, d, adm))
-       + (select count(*) from public.progress where user_id in (a, b, c, d, adm))
-       + (select count(*) from public.community_posts where author_id in (a, b, c, d, adm))
-       + (select count(*) from public.checklist_items where code like 'rls-test-%')
+  select (select count(*) from public.profiles where id in (a, b, c, d, ce, cf, cg, adm))
+       + (select count(*) from auth.users where id in (a, b, c, d, ce, cf, cg, adm))
+       + (select count(*) from public.progress where user_id in (a, b, c, d, ce, cf, cg, adm))
+       + (select count(*) from public.community_posts where author_id in (a, b, c, d, ce, cf, cg, adm))
+       + (select count(*) from public.checklist_items where code like 'rls-test-%' or route like 'rls-test-%')
+       + (select count(*) from public.checklist_templates where route like 'rls-test-%')
+       + (select count(*) from public.client_item_settings where user_id in (a, b, c, d, ce, cf, cg, adm))
+       + (select count(*) from public.client_details where user_id in (a, b, c, d, ce, cf, cg, adm))
+       + (select count(*) from public.client_dudas where user_id in (a, b, c, d, ce, cf, cg, adm))
        + (select count(*) from public.news_posts where title like '[rls-test]%')
        + (select count(*) from public.news_attachments
            where path = any (test_files || thumb_files) or thumb_path = any (thumb_files))
