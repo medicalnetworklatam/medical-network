@@ -12,8 +12,8 @@
 import { berlinToUtc, formatBerlinDateTime, utcToBerlin } from '../src/lib/berlinTime.ts'
 import {
   clientName, lastActivity, newsStatus, progressFor, progressText, readAll, sortClients,
-  sortNews, stateName, STATES, summarise,
-  type Client, type Item, type Page, type Tick,
+  sortNews, stateName, stepApplies, STATES, summarise,
+  type Client, type Item, type ItemSetting, type Page, type Tick,
 } from '../src/lib/adminData.ts'
 
 let passed = 0
@@ -107,7 +107,7 @@ same('not a date gives empty text', formatBerlinDateTime('nonsense'), '')
    Progress %
    =========================================================================== */
 
-const item = (id: string, state: string, route: string): Item => ({ id, state, route })
+const item = (id: string, state: string, route: string, na_default = false): Item => ({ id, state, route, na_default })
 const tick = (user_id: string, item_id: string, done_at = '2026-11-01T10:00:00+00:00'): Tick => ({ user_id, item_id, done_at })
 const client = (id: string, main_state: string | null, route: string | null, extra: Partial<Client> = {}): Client => ({
   id, first_name: null, last_names: null, email: null, main_state, route, plan: 'paid', ...extra,
@@ -156,6 +156,64 @@ same('text: "25 % (1 de 4)"', progressText({ done: 1, total: 4, percent: 25 }), 
   same('1 of 300 is 1, never 0 once something is ticked', pct(1, 300), 1)
   same('0 of 300 is 0', pct(0, 300), 0)
   same('300 of 300 is 100', pct(300, 300), 100)
+}
+
+/* ===========================================================================
+   "No aplica" steps (DECISIONS.md, 20 and 21 Nov 2026): left out of the %,
+   of both kinds (template default and client layer), and a tick on such a
+   step never counts
+   =========================================================================== */
+{
+  // Baden-Württemberg + route md: 5 steps, 2 of them "no aplica" by default
+  const NA_ITEMS: Item[] = [
+    item('bw-1', 'bw', 'md'), item('bw-2', 'bw', 'md'), item('bw-3', 'bw', 'md'),
+    item('bw-na-1', 'bw', 'md', true), item('bw-na-2', 'bw', 'md', true),
+  ]
+  const bw = { main_state: 'bw', route: 'md' }
+  const set = (item_id: string, applies: boolean | null) => ({ item_id, applies })
+
+  same('the rule: template default "aplica"', stepApplies({ na_default: false }, null), true)
+  same('the rule: template default "no aplica"', stepApplies({ na_default: true }, undefined), false)
+  same('the rule: "Según la plantilla" (null) keeps the default', stepApplies({ na_default: true }, { applies: null }), false)
+  same('the rule: the client layer\'s "Aplica" wins', stepApplies({ na_default: true }, { applies: true }), true)
+  same('the rule: the client layer\'s "No aplica" wins', stepApplies({ na_default: false }, { applies: false }), false)
+
+  same('template "no aplica" steps are left out of the total', progressFor(bw, NA_ITEMS, []), { done: 0, total: 3, percent: 0 })
+  same('a tick on a template "no aplica" step never counts', progressFor(bw, NA_ITEMS, ticked('bw-na-1', 'bw-na-2', 'bw-1')),
+    { done: 1, total: 3, percent: 33 })
+  same('client layer "No aplica" is left out too', progressFor(bw, NA_ITEMS, ticked('bw-1'), [set('bw-2', false)]),
+    { done: 1, total: 2, percent: 50 })
+  same('a tick on a client layer "No aplica" step never counts', progressFor(bw, NA_ITEMS, ticked('bw-2', 'bw-3'), [set('bw-2', false)]),
+    { done: 1, total: 2, percent: 50 })
+  same('client layer "Aplica" brings a default "no aplica" step back, with its tick', progressFor(bw, NA_ITEMS, ticked('bw-na-1'), [set('bw-na-1', true)]),
+    { done: 1, total: 4, percent: 25 })
+  same('"Según la plantilla" (null) keeps the default', progressFor(bw, NA_ITEMS, ticked('bw-na-1'), [set('bw-na-1', null)]),
+    { done: 0, total: 3, percent: 0 })
+  same('every step ticked that applies: 100 %, ticks on the others ignored',
+    progressFor(bw, NA_ITEMS, ticked('bw-1', 'bw-3', 'bw-na-1', 'bw-2'), [set('bw-2', false)]),
+    { done: 2, total: 2, percent: 100 })
+  same('nothing applies: —', progressFor(bw, NA_ITEMS, ticked('bw-1'),
+    [set('bw-1', false), set('bw-2', false), set('bw-3', false)]), null)
+  same('a client layer row for another state\'s step changes nothing', progressFor(bw, NA_ITEMS, ticked('bw-1'), [set('by-kp-1', false)]),
+    { done: 1, total: 3, percent: 33 })
+
+  // The overview: each client only gets their own client-layer rows
+  const clients = [client('gabi', 'bw', 'md'), client('hugo', 'bw', 'md')]
+  const ticks = [
+    tick('gabi', 'bw-1'), tick('gabi', 'bw-na-1'), tick('gabi', 'bw-2'),
+    tick('hugo', 'bw-1'), tick('hugo', 'bw-2'),
+  ]
+  const settings: ItemSetting[] = [
+    { user_id: 'gabi', item_id: 'bw-2', applies: false },
+    { user_id: 'hugo', item_id: 'bw-na-2', applies: true },
+  ]
+  const summary = summarise(clients, NA_ITEMS, ticks, settings)
+  same('overview: gabi\'s ticks on "no aplica" steps of both kinds never count', summary.get('gabi')?.progress,
+    { done: 1, total: 2, percent: 50 })
+  same('overview: hugo isn\'t affected by gabi\'s client layer, and has his own', summary.get('hugo')?.progress,
+    { done: 2, total: 4, percent: 50 })
+  same('overview: without client-layer rows, only the template defaults count', summarise(clients, NA_ITEMS, ticks).get('hugo')?.progress,
+    { done: 2, total: 3, percent: 67 })
 }
 
 /* ===========================================================================

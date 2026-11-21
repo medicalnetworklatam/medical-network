@@ -1,6 +1,6 @@
 # MNL client area: decisions log
 
-Last updated: 20 Nov 2026. This is the source of truth for the project. When a decision changes, update this file in the Claude project knowledge and in the code repository.
+Last updated: 21 Nov 2026. This is the source of truth for the project. When a decision changes, update this file in the Claude project knowledge and in the code repository.
 
 ## Context
 
@@ -14,6 +14,18 @@ Last updated: 20 Nov 2026. This is the source of truth for the project. When a d
   - about 25 accounts in the first 12 months
   - Spanish only, web only
 - **Admins:** Ivan and his cousin.
+
+## Changes on 21 Nov 2026: Mi expediente and the CV page
+
+- **Mi expediente** is a login-only page, `/expediente`, in the column right after Novedades. A paid client with a state and a route sees their checklist. Otherwise one message: free → "El expediente es para miembros con el paquete completo."; no state → "Aún no has elegido tu estado." with "Elegir mi estado"; no route → "Tu ruta todavía no está asignada. Escríbenos si tienes dudas." with a link to Contacto; no template for their state and route yet → "Tu expediente todavía no está listo. Te avisaremos."
+- **Placeholders:** `{pais}` is the client's country, or "tu país" when it's empty; `{genero:x|y}` follows the neutral rule (20 Nov); `{nombre}` is first name + last names; `{perfil}` is the header line, and the " · " after it goes when it's empty.
+- **"No aplica"** (template default or client layer; the client layer wins) is shown greyed with its reason and can't be ticked. Reason: the client layer's, otherwise the template's.
+- **Cover numbers:** only "Ahora mismo" and "Avance del expediente" for now. The two time estimates wait for the owner.
+- The template's device-only "aviso guardado" card is replaced by: "Tus marcas se guardan en tu cuenta: las ves igual en el celular y en la computadora."
+- **Mis dudas:** help text "Lo que escribas aquí lo revisa el equipo MNL antes de la próxima llamada."; saved with "Guardar"; shows when it was last saved.
+- **Admin client layer** on the client's admin screen: country, header line, and per step "Según la plantilla / Aplica / No aplica", reason and note. Each step saves with its own "Guardar", without a confirmation step: an exception to "every change asks for confirmation", because each change is small and undone by going back to "Según la plantilla". State, route and plan keep their confirmation. The client's dudas are shown read-only with their date.
+- **Progress %** in the client overview and on one client's screen leaves out "no aplica" steps of both kinds.
+- **The CV tool** is a login-only page, `/curriculum`, not in the column. It opens from Mi expediente: a link at the top and one in step `p2`.
 
 ## Changes on 20 Nov 2026: the owner's tools join the client area
 
@@ -63,7 +75,7 @@ Based on the owner's own Claude explaining how he works today, and the Baden-Wü
     - **Novedades:** photos inside the post, whole, never taller than the screen; tapping opens the full photo in a new tab. PDFs are a row with the name and "Abrir PDF", in a new tab. One request makes the signed links (valid 1 hour) for every file on the page.
     - **Known limits, accepted:** signed links expire after 1 hour, so after that a PDF or a full-size photo needs a page reload (photos already on screen stay). Deleting a post by hand in the SQL Editor leaves its files in storage, invisible to clients.
 - **Links in text:** web addresses in Novedades, Comunidad and Chat become links: `http://` and `https://` addresses, addresses starting with `www.`, and bare domains whose ending is on a fixed list (com, org, net, info, eu, de, at, ch, es, ec, pe, co, mx, ar, cl, bo, ve, uy, py, gob, gov, edu; lowercase only, so "Alemania.De hecho" stays text). Addresses without `http(s)://` open as `https://`. Anything with "@" before the host (emails, disguised addresses) stays plain text (Ivan, 18 Nov 2026, option C).
-- **The dark column is shared** by Novedades, Comunidad and Chat, in this order: Mi perfil, Novedades, Comunidad MNL, Chat de <Bundesland>, Administración (admins only), Calendario, Contacto, Cerrar sesión. The current page is marked. The "← Novedades" links on Comunidad and Chat go. (Ivan gave the order; using the column on all three pages is Claude's reading of his answer, to be confirmed on the preview.) Contacto added 20 Nov 2026: a login-only page open to every logged-in user, title "equipo mnl" over "contacto.".
+- **The dark column is shared** by Novedades, Comunidad and Chat, in this order: Mi perfil, Novedades, Mi expediente, Comunidad MNL, Chat de <Bundesland>, Administración (admins only), Calendario, Contacto, Cerrar sesión. The current page is marked. The "← Novedades" links on Comunidad and Chat go. (Ivan gave the order; using the column on all three pages is Claude's reading of his answer, to be confirmed on the preview.) Contacto added 20 Nov 2026: a login-only page open to every logged-in user, title "equipo mnl" over "contacto.".
 - **"Comunidad" is called "Comunidad MNL"** in the column and the browser tab title. The page heading stays "tu" over "comunidad.".
 - **Calendar:** still a non-working preview labelled "Próximamente". It shows the current month and today's date (German time) and a few example events of one type, "Webinars / reuniones", in one event colour, with a small legend that says they are examples. This one colour is the only exception to "every colour comes from three values", and it is used only in the calendar.
 - **Novedades posts are redesigned** so each one reads as a separate post, not as lines of a log or chat. What the page shows and who sees what stay the same.
@@ -341,6 +353,7 @@ These replace the morning's "look and feel" bullet below where they differ.
   - Migration 4 (`20261117120000_state_chat.sql`, chat per Bundesland, "Equipo MNL", speed limit, `rls_auto_enable()` rights removed) was applied on 17 Nov 2026. The automatic-RLS check passed and rls_check.sql showed ALL RLS TESTS PASSED (124 checks). PR #16 merged.
   - Migration 5 (`20261118120000_news_attachments.sql`, photos and PDFs in news: table `news_attachments`, private bucket `news-files`, rules on stored files) was applied on 18 Nov 2026. PR #23 merged.
   - Migration 6 (`20261118180000_news_thumbnails.sql`, small copies of photos: `thumb_path`, the read rule on stored files also covers small copies) was applied on 18 Nov 2026; rls_check.sql has 158 checks. PR #24 merged.
+  - Migration 7 (`20261120120000_checklist_templates.sql`, routes, checklist template fields, client layer, client details, Mis dudas) was applied on 21 Nov 2026. rls_check.sql showed ALL RLS TESTS PASSED (210 checks). The BW template (26 steps) was loaded the same day. PR #27 merged.
   - Before the first real client: switch to Pro and turn on leaked password protection; remove the preview and localhost redirect URLs or move testing to a separate project; delete old preview deployments (14 on 17 Nov 2026).
   - The admin account is web@medicalnetworklatam.com (shared for now). Suggested: separate admin logins for Ivan and his cousin before real clients arrive.
 - **Database changes are written as SQL files** in `supabase/migrations/` in the repository. Ivan applies them by pasting them into Supabase's SQL Editor, so no Supabase keys are ever given to Claude Code.

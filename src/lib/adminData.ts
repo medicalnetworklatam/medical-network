@@ -43,6 +43,24 @@ export interface Item {
   id: string
   state: string
   route: string
+  /** "No aplica" by default in the template (migration 7) */
+  na_default: boolean
+}
+
+/** One row of the client layer (client_item_settings, migration 7), as far
+    as progress needs it: applies true = "aplica", false = "no aplica",
+    null = the template's default */
+export interface ItemSetting {
+  user_id: string
+  item_id: string
+  applies: boolean | null
+}
+
+/** Does this step apply to the client? The client layer wins; without it
+    (or with "Según la plantilla"), the template's default decides. */
+export function stepApplies(item: Pick<Item, 'na_default'>, setting: Pick<ItemSetting, 'applies'> | null | undefined): boolean {
+  if (setting && setting.applies !== null) return setting.applies
+  return !item.na_default
 }
 
 /** One ticked item */
@@ -99,9 +117,9 @@ export function sortClients<T extends Pick<Client, 'id' | 'first_name' | 'last_n
 /* ---------- Progress and last activity ---------- */
 
 export interface Progress {
-  /** Ticked items of the client's current state and route */
+  /** Ticked items of the client's current state and route that apply */
   done: number
-  /** Non-archived items of the client's current state and route */
+  /** Non-archived items of the client's current state and route that apply */
   total: number
   /** Whole number from 0 to 100. 100 only when everything is ticked, and 0
       only when nothing is. */
@@ -109,23 +127,29 @@ export interface Progress {
 }
 
 /** Progress of one client: ticked items ÷ non-archived items for their
-    current Bundesland and route.
+    current Bundesland and route, leaving out the steps that don't apply to
+    them ("no aplica" by the template's default or by the client layer;
+    DECISIONS.md, 20 and 21 Nov 2026).
 
     Returns null (shown as "—") when the client has no state, no route, or
-    there are no items for that state and route yet.
+    there are no items that apply for that state and route yet.
 
-    `items` must hold only non-archived items. Ticks for anything else (an
-    old state, another route, an archived item) are not counted, and an item
-    ticked twice in `ticks` counts once. */
+    `items` must hold only non-archived items. `settings` are this client's
+    own client-layer rows. Ticks for anything else (an old state, another
+    route, an archived item, a step that doesn't apply) are not counted, and
+    an item ticked twice in `ticks` counts once. */
 export function progressFor(
   client: Pick<Client, 'main_state' | 'route'>,
   items: readonly Item[],
   ticks: readonly Pick<Tick, 'item_id'>[],
+  settings: readonly Pick<ItemSetting, 'item_id' | 'applies'>[] = [],
 ): Progress | null {
   if (!client.main_state || !client.route) return null
+  const settingOf = new Map(settings.map((setting) => [setting.item_id, setting]))
   const current = new Set<string>()
   for (const item of items) {
-    if (item.state === client.main_state && item.route === client.route) current.add(item.id)
+    if (item.state !== client.main_state || item.route !== client.route) continue
+    if (stepApplies(item, settingOf.get(item.id))) current.add(item.id)
   }
   if (current.size === 0) return null
   const ticked = new Set<string>()
@@ -170,24 +194,35 @@ export interface ClientSummary {
   lastActivity: string | null
 }
 
+/** Rows grouped by their user_id */
+function byUser<T extends { user_id: string }>(rows: readonly T[]): Map<string, T[]> {
+  const result = new Map<string, T[]>()
+  for (const row of rows) {
+    const list = result.get(row.user_id)
+    if (list) list.push(row)
+    else result.set(row.user_id, [row])
+  }
+  return result
+}
+
 /** Progress and last activity for every client at once, from one list of
-    items and one list of ticks (no request per client). Each client only
-    gets their own ticks. */
+    items, one list of ticks and one list of client-layer rows (no request
+    per client). Each client only gets their own ticks and rows. */
 export function summarise(
   clients: readonly Client[],
   items: readonly Item[],
   ticks: readonly Tick[],
+  settings: readonly ItemSetting[] = [],
 ): Map<string, ClientSummary> {
-  const ticksOf = new Map<string, Tick[]>()
-  for (const tick of ticks) {
-    const list = ticksOf.get(tick.user_id)
-    if (list) list.push(tick)
-    else ticksOf.set(tick.user_id, [tick])
-  }
+  const ticksOf = byUser(ticks)
+  const settingsOf = byUser(settings)
   const result = new Map<string, ClientSummary>()
   for (const client of clients) {
     const own = ticksOf.get(client.id) ?? []
-    result.set(client.id, { progress: progressFor(client, items, own), lastActivity: lastActivity(own) })
+    result.set(client.id, {
+      progress: progressFor(client, items, own, settingsOf.get(client.id) ?? []),
+      lastActivity: lastActivity(own),
+    })
   }
   return result
 }
@@ -280,12 +315,34 @@ export interface Overview {
   routes: Route[]
   items: Item[]
   ticks: Tick[]
+  settings: ItemSetting[]
+}
+
+/** Every client-layer row that says "aplica" or "no aplica" (rows set back
+    to "Según la plantilla" change nothing, so they aren't read). Pass a
+    user ID for one client's rows only. */
+export function loadItemSettings(db: SupabaseClient, userId?: string): Promise<ItemSetting[]> {
+  return readAll<ItemSetting>(
+    // client_item_settings has no id: its primary key is (user_id, item_id)
+    (from, to) => {
+      let query = db.from('client_item_settings')
+        .select('user_id, item_id, applies', { count: 'exact' })
+        .not('applies', 'is', null)
+      if (userId) query = query.eq('user_id', userId)
+      return query
+        .order('user_id')
+        .order('item_id')
+        .range(from, to)
+        .returns<ItemSetting[]>()
+    },
+    (setting) => setting.user_id + ' ' + setting.item_id,
+  )
 }
 
 /** Everything the client overview needs: one query per table (in pages of
     1,000 rows), never one request per client. */
 export async function loadOverview(db: SupabaseClient): Promise<Overview> {
-  const [clients, routes, items, ticks] = await Promise.all([
+  const [clients, routes, items, ticks, settings] = await Promise.all([
     readAll<Client>(
       (from, to) => db.from('profiles')
         .select(CLIENT_COLUMNS, { count: 'exact' })
@@ -298,7 +355,7 @@ export async function loadOverview(db: SupabaseClient): Promise<Overview> {
     loadRoutes(db),
     readAll<Item>(
       (from, to) => db.from('checklist_items')
-        .select('id, state, route', { count: 'exact' })
+        .select('id, state, route, na_default', { count: 'exact' })
         .eq('archived', false)
         .order('id')
         .range(from, to)
@@ -315,22 +372,41 @@ export async function loadOverview(db: SupabaseClient): Promise<Overview> {
         .returns<Tick[]>(),
       (tick) => tick.user_id + ' ' + tick.item_id,
     ),
+    loadItemSettings(db),
   ])
-  return { clients, routes, items, ticks }
+  return { clients, routes, items, ticks, settings }
 }
 
-/** One checklist item as the client's screen shows it */
+/** One checklist step as Mi expediente and the client's admin screen show
+    it (migration 7 added the template's fields). Every text is plain text,
+    with the template's placeholders still in it (src/lib/placeholders.ts). */
 export interface ChecklistItem extends Item {
   title: string
   body: string
   sort_order: number
+  /** Template block 1–5; null for an item that doesn't come from a template */
+  block: number | null
+  /** The number in the authority's list ("6", "pág. 4", "—"), or null */
+  official_number: string | null
+  /** Place in the envelope; null = not in the envelope */
+  sobre_order: number | null
+  donde: string | null
+  plazo: string | null
+  aviso: string | null
+  caduca: string | null
+  na_reason: string | null
+  /** The owner's step code ("p2", "bw8"), or null */
+  source_code: string | null
 }
+const CHECKLIST_COLUMNS = 'id, state, route, title, body, sort_order, block, official_number, sobre_order, '
+  + 'donde, plazo, aviso, caduca, na_default, na_reason, source_code'
 
-/** The non-archived checklist of one state and route, in its own order */
+/** The non-archived checklist of one state and route, in its own order:
+    by block (items without a block last), then the template's order */
 export async function loadChecklist(db: SupabaseClient, state: string, route: string): Promise<ChecklistItem[]> {
   const items = await readAll<ChecklistItem>(
     (from, to) => db.from('checklist_items')
-      .select('id, state, route, title, body, sort_order', { count: 'exact' })
+      .select(CHECKLIST_COLUMNS, { count: 'exact' })
       .eq('archived', false)
       .eq('state', state)
       .eq('route', route)
@@ -339,7 +415,10 @@ export async function loadChecklist(db: SupabaseClient, state: string, route: st
       .returns<ChecklistItem[]>(),
     (item) => item.id,
   )
-  return items.sort((a, b) => a.sort_order - b.sort_order || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
+  return items.sort((a, b) =>
+    (a.block ?? 99) - (b.block ?? 99)
+    || a.sort_order - b.sort_order
+    || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
 }
 
 /** Every tick of one client */

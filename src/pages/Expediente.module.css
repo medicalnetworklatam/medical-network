@@ -1,0 +1,650 @@
+/* ------------------------------------------------------------------
+   Mi expediente (Expediente.tsx). The title cell, the small labels, the
+   notice cells, the buttons and the text box come from
+   Comunidad.module.css; this file has the page's own cells. Fonts and
+   colour tokens come from src/styles/redesign.css (never a hard-coded
+   colour).
+
+   Eight screens (Resumen, Bloque 1–5, El sobre, Mis dudas), with a row of
+   links to move between them and "← / →" at the end:
+   - Resumen:  cover | the two numbers side by side | the milestone bar |
+               the saved-marks notice | what changed | the legend
+   - a block:  the block's title cell, then one ruled row per step:
+               official number box | tick box, title, texts and boxes
+   - El sobre: the envelope, errors, authority and costs, sources, footer
+   - Mis dudas: one cell with the text box
+   Narrow (phone, or little room beside the dark column): the same cells,
+   one above the other; the row of links scrolls sideways.
+
+   Rule for this file: the site loads every page's CSS at once, so
+   nothing here may target html, body, * or :root directly.
+------------------------------------------------------------------- */
+
+/* Secondary text keeps at least 4.5:1 (CLAUDE.md) */
+.main {
+  --soft: color-mix(in srgb, var(--accent) 72%, transparent);
+}
+
+/* "Abrir el formulario del currículum" under the title */
+.cv-top { margin: 0; }
+
+/* Square outline buttons: the CV links */
+.outline-btn,
+.retry-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid var(--accent);
+  border-radius: 0;
+  background: transparent;
+  color: var(--accent);
+  font-family: var(--font-grotesk);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color .15s ease, color .15s ease;
+}
+.outline-btn:hover { background: var(--accent); color: var(--ink); }
+.outline-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+/* "Reintentar" sits on an inverted error cell */
+.retry-btn { margin-top: 16px; border-color: var(--ink); color: var(--ink); }
+.retry-btn:hover { background: var(--ink); color: var(--accent); }
+.retry-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+
+/* Headings that take the focus after moving to another screen: no ring
+   for that (it wasn't a key press), but a ring when tabbed to */
+.cover-title:focus,
+.block-title:focus,
+.card-title:focus { outline: none; }
+
+/* ---------- The row of screens ---------- */
+.screens {
+  border-bottom: 1px solid var(--rule);
+}
+/* the links share the width; when they don't fit, the row scrolls sideways */
+.screen-list {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+.screen-list li { flex: 1 0 auto; display: flex; }
+.screen-list li + li { border-left: 1px solid var(--rule); }
+.screen-link {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 10px 14px;
+  color: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color .15s ease;
+}
+.screen-link:not(.is-current):hover {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: .2em;
+}
+/* The current screen: an inverted cell */
+.screen-link.is-current { background: var(--accent); color: var(--ink); }
+.screen-link:focus-visible { outline: 2px solid currentColor; outline-offset: -5px; }
+
+/* ---------- "← Resumen" / "Bloque 2 →" at the end of every screen ---------- */
+.pager {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin-top: auto;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+.pager-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 64px;
+  padding: 12px var(--gutter);
+  color: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background-color .15s ease, color .15s ease;
+}
+.pager-link.is-next {
+  grid-column: 2;
+  justify-content: flex-end;
+  text-align: right;
+  border-left: 1px solid var(--rule);
+}
+.pager-link:hover { background: var(--accent); color: var(--ink); }
+.pager-link:focus-visible { outline: 2px solid currentColor; outline-offset: -5px; }
+
+/* ---------- Resumen ---------- */
+.cover {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: clamp(24px, 2.6vw, 40px) var(--gutter);
+  border-bottom: 1px solid var(--rule);
+}
+.cover-title {
+  margin: 0;
+  font-family: var(--font);
+  font-size: clamp(28px, 3.4vw, 52px);
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: -.03em;
+  overflow-wrap: break-word;
+}
+.cover-text {
+  margin: 0;
+  max-width: 72ch;
+  font-size: clamp(16px, 1.2vw, 18px);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* "Ahora mismo" | "Avance del expediente" */
+.numbers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 1px;
+  background: var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+.number {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+  padding: clamp(22px, 2.4vw, 34px) var(--gutter);
+  background: var(--ink);
+}
+.number-value,
+.number-link {
+  margin: 0;
+  font-size: clamp(28px, 3vw, 44px);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -.03em;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.number-link {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: .14em;
+}
+.number-link:hover { text-decoration-thickness: 3px; }
+.number-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.number-hint {
+  margin: 0;
+  color: var(--soft);
+  font-size: 15px;
+}
+
+/* The milestone bar: five cells, each with a line that fills up */
+.bar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: clamp(22px, 2.4vw, 34px) var(--gutter);
+  border-bottom: 1px solid var(--rule);
+}
+.milestones {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: var(--rule);
+  border: 1px solid var(--rule);
+}
+.milestone {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 12px;
+  background: var(--ink);
+}
+.milestone-track {
+  display: block;
+  height: 8px;
+  border: 1px solid var(--accent);
+}
+.milestone-fill {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transform: scaleX(var(--fill, 0));
+  transform-origin: left center;
+  transition: transform .3s ease;
+}
+.milestone-name {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.milestone-count {
+  color: var(--soft);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+/* a finished milestone: an inverted cell */
+.milestone.is-done { background: var(--accent); color: var(--ink); }
+.milestone.is-done .milestone-track { border-color: var(--ink); }
+.milestone.is-done .milestone-fill { background: var(--ink); }
+.milestone.is-done .milestone-count { color: inherit; }
+
+/* "Tus marcas se guardan en tu cuenta…": a ruled notice cell */
+.notice {
+  margin: 0;
+  padding: clamp(18px, 2vw, 26px) var(--gutter);
+  border-bottom: 1px solid var(--rule);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+/* ---------- Info cards (Resumen, El sobre, Mis dudas) ---------- */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: clamp(24px, 2.6vw, 40px) var(--gutter);
+  border-bottom: 1px solid var(--rule);
+}
+.card-title {
+  margin: 0;
+  font-size: clamp(22px, 2.2vw, 32px);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -.02em;
+  overflow-wrap: break-word;
+}
+.card-text,
+.card-strong {
+  margin: 0;
+  max-width: 72ch;
+  font-size: 16px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.card-strong { font-weight: 700; }
+
+.points,
+.errors {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 72ch;
+  margin: 0;
+  padding-left: 1.2em;
+  font-size: 16px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+.errors { gap: 12px; }
+
+.labelled {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Authority and costs: label | value, ruled rows */
+.rows {
+  margin: 0;
+  border-top: 1px solid var(--rule);
+}
+.row {
+  display: grid;
+  grid-template-columns: minmax(140px, 16rem) minmax(0, 1fr);
+  gap: 4px var(--gutter);
+  padding: 12px 0;
+  border-bottom: 1px solid var(--rule);
+  font-size: 16px;
+  line-height: 1.45;
+}
+.row dt { font-weight: 700; overflow-wrap: anywhere; }
+.row dd { margin: 0; overflow-wrap: anywhere; }
+
+/* The envelope: number box | title | note, one ruled row each */
+.envelope {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--rule);
+}
+.envelope-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--rule);
+}
+.envelope-title {
+  flex: 1 1 16rem;
+  min-width: 0;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.envelope-note {
+  color: var(--soft);
+  font-size: 14px;
+}
+
+/* The template's footer */
+.footer {
+  margin: 0;
+  padding: clamp(18px, 2vw, 26px) var(--gutter);
+  border-bottom: 1px solid var(--rule);
+  color: var(--soft);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- A block ---------- */
+.block-head {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: clamp(24px, 2.6vw, 40px) var(--gutter);
+  border-bottom: 1px solid var(--rule);
+}
+.block-title {
+  margin: 0;
+  font-size: clamp(28px, 3.2vw, 48px);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -.03em;
+  overflow-wrap: break-word;
+}
+.block-text {
+  margin: 0;
+  max-width: 72ch;
+  font-size: clamp(16px, 1.2vw, 18px);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.extra-title {
+  padding: 16px var(--gutter);
+  border-bottom: 1px solid var(--rule);
+}
+
+.steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+/* One step: official number box | the rest */
+.step {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  border-bottom: 1px solid var(--rule);
+}
+.official {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 22px 0;
+  border-right: 1px solid var(--rule);
+}
+/* the square with the number in the authority's list ("6", "pág. 4", "—") */
+.official-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
+  padding: 4px 6px;
+  border: 1px solid var(--accent);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.1;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.official .official-box { max-width: 56px; }
+.step-body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 22px var(--gutter) 24px;
+}
+.step-body > p { margin: 0; }
+
+.step-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+/* The tick box: a square in the text colour, 28px, inside a 44px tap
+   area (its label, the title, can be tapped too) */
+.tick-area {
+  flex: 0 0 44px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin: -8px -8px -8px -8px;
+}
+.tick-area .tick { width: 44px; height: 44px; border-color: transparent; background: transparent; }
+.tick-area::before {
+  content: "";
+  grid-area: 1 / 1;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--accent);
+  pointer-events: none;
+}
+.tick-area:has(.tick:checked)::before { background: var(--accent); }
+.tick-area .tick { grid-area: 1 / 1; z-index: 1; }
+.tick,
+.tick-na {
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  border: 1px solid var(--accent);
+}
+.tick {
+  -webkit-appearance: none;
+  appearance: none;
+  display: grid;
+  place-content: center;
+  border-radius: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.tick::before {
+  content: "";
+  width: 14px;
+  height: 8px;
+  margin-top: -3px;
+  border-left: 3px solid var(--ink);
+  border-bottom: 3px solid var(--ink);
+  transform: rotate(-45deg);
+  opacity: 0;
+}
+.tick-area .tick:checked { background: transparent; }
+.tick:checked::before { opacity: 1; }
+.tick:disabled { cursor: progress; }
+.tick-area:has(.tick:disabled) { opacity: .55; }
+.tick:focus-visible { outline: 2px solid var(--accent); outline-offset: -6px; }
+/* a step that doesn't apply: an empty dashed square, nothing to tick */
+.tick-na { border-style: dashed; border-color: var(--soft); }
+
+.step-title {
+  margin: 0;
+  min-width: 0;
+  padding-top: 2px;
+  font-size: clamp(18px, 1.5vw, 22px);
+  font-weight: 700;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.step-title label {
+  display: block;
+  cursor: pointer;
+}
+.is-done .step-title {
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+}
+
+.step-text {
+  max-width: 72ch;
+  font-size: 16px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* Dónde | Plazo: two ruled cells */
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 1px;
+  margin: 0;
+  background: var(--rule);
+  border: 1px solid var(--rule);
+}
+.fact {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 12px 14px;
+  background: var(--ink);
+}
+.fact dd {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+/* Atención, Caduca: square outline boxes. Nota para ti: inverted. */
+.box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 72ch;
+  padding: 12px 14px;
+  border: 1px solid var(--accent);
+}
+.box p { margin: 0; }
+.box-text {
+  font-size: 15px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.box.is-inverted { background: var(--accent); color: var(--ink); }
+
+/* "No aplica": the step is greyed (still 4.5:1) and says why */
+.step.is-na { color: var(--soft); }
+.step.is-na .official-box,
+.step.is-na .box,
+.envelope-row.is-na .official-box { border-color: var(--soft); }
+.step.is-na .box.is-inverted { background: var(--soft); color: var(--ink); }
+.na-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 12px;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.na-tag {
+  flex: 0 0 auto;
+  padding: 3px 7px;
+  border: 1px dashed currentColor;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.envelope-row.is-na { color: var(--soft); }
+
+/* ---------- Mis dudas ---------- */
+.dudas { min-height: 240px; }
+.saved-at {
+  margin: 0;
+  color: var(--soft);
+  font-size: 15px;
+}
+
+/* ---------- Narrow: beside the dark column on an upright iPad, or a phone ---------- */
+@container area-main (max-width: 760px) {
+  .milestones { grid-template-columns: repeat(auto-fit, minmax(min(100%, 120px), 1fr)); }
+  .row { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ---------- Phone ---------- */
+@media (max-width: 700px) {
+  .step { grid-template-columns: 52px minmax(0, 1fr); }
+  .official { padding: 18px 0; }
+  .official .official-box { min-width: 36px; min-height: 36px; max-width: 46px; font-size: 13px; }
+  .step-body { padding: 18px var(--gutter) 20px 14px; gap: 12px; }
+  .step-text { font-size: 15px; }
+  .milestones { grid-template-columns: minmax(0, 1fr); }
+  .milestone {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 6px 12px;
+    padding: 10px 12px;
+  }
+  .milestone-track { grid-column: 1 / -1; grid-row: 2; }
+  .pager-link { font-size: 12px; letter-spacing: .1em; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .outline-btn,
+  .retry-btn,
+  .screen-link,
+  .pager-link,
+  .milestone-fill { transition: none; }
+}

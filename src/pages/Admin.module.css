@@ -703,6 +703,102 @@ legend.label { margin-bottom: 8px; padding: 0; }
 
 /* Screen-reader message areas (aria-live) must always be there, but while
    empty they shouldn't take any room */
+/* ---------- Expediente on a client's screen (AdminExpediente.tsx) ---------- */
+/* One block's steps: a small spaced title over the list */
+.step-group { display: flex; flex-direction: column; }
+.step-group-title {
+  margin: 0;
+  padding: 18px 0 10px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+/* each step's texts and controls take the row's whole width */
+.check-item .check-body { flex: 1 1 auto; }
+/* the number in the authority's list, in a small square */
+.official-tag {
+  display: inline-block;
+  margin-right: 8px;
+  padding: 1px 6px;
+  border: 1px solid var(--accent);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  vertical-align: 1px;
+}
+/* a step that doesn't apply to this client: greyed (still 4.5:1) */
+.check-item.is-na .check-title,
+.check-item.is-na .check-status { color: color-mix(in srgb, var(--accent) 72%, transparent); }
+.check-item.is-na .check-mark { border-style: dashed; }
+
+/* "Para este cliente: …" folds out "¿Aplica a este cliente?", Motivo,
+   Nota, Guardar */
+.layer-box {
+  margin-top: 6px;
+  border-top: 1px dashed var(--rule);
+}
+.layer-summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  font-size: 14px;
+  cursor: pointer;
+  list-style: none;
+}
+.layer-summary::-webkit-details-marker { display: none; }
+/* a small arrow drawn in the text colour that turns when open */
+.layer-summary::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 0;
+  height: 0;
+  margin-right: 6px;
+  border-block: 5px solid transparent;
+  border-left: 7px solid currentColor;
+  transition: transform .15s ease;
+}
+.layer-box[open] > .layer-summary::before { transform: rotate(90deg); }
+.layer-summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.layer {
+  gap: 14px;
+  padding-bottom: 6px;
+}
+.layer-legend { margin: 0 0 4px; padding: 0; font-weight: 700; }
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 18px;
+}
+.choice {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  font-size: 15px;
+  cursor: pointer;
+}
+.choice input {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+.choice input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.textarea.small-textarea { min-height: 80px; }
+@media (prefers-reduced-motion: reduce) {
+  .layer-summary::before { transition: none; }
+}
+/* "Guardado." after a save */
+.saved-note {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: .06em;
+}
+
 .live:empty { display: none; }
 
 /* ---------- Up to 900px: one column; every client becomes a block ---------- */
