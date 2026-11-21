@@ -1,0 +1,522 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}</style></head><body>
+<title>Mi currículum para Alemania (Copy)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+
+<style>
+:root{
+  --ink:#101A1C; --paper:#EEF1F0; --surface:#FFFFFF; --surface-2:#F7F9F8;
+  --line:#D3DCDA; --line-soft:#E4EAE9; --text:#172224; --text-2:#4C5A5B; --text-3:#77827F;
+  --accent:#0E6B62; --accent-soft:#E2EFED;
+  --ok:#2C7350; --ok-soft:#E6F1EA;
+  --warn:#A8551B; --warn-soft:#F8EDE2;
+  --bad:#8F2B22; --bad-soft:#F8E9E7;
+  --shadow:0 1px 2px rgba(16,26,28,.05), 0 8px 24px -16px rgba(16,26,28,.28);
+  --radius:10px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ink:#070E0F; --paper:#0C1415; --surface:#131E1F; --surface-2:#182425;
+    --line:#2B3A3B; --line-soft:#212E2F; --text:#E3EAE8; --text-2:#A8B6B4; --text-3:#7F8D8B;
+    --accent:#5FBDB0; --accent-soft:#14312E;
+    --ok:#6FC194; --ok-soft:#13291D;
+    --warn:#E0A26B; --warn-soft:#332415;
+    --bad:#E8877C; --bad-soft:#331A17;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  --ink:#070E0F; --paper:#0C1415; --surface:#131E1F; --surface-2:#182425;
+  --line:#2B3A3B; --line-soft:#212E2F; --text:#E3EAE8; --text-2:#A8B6B4; --text-3:#7F8D8B;
+  --accent:#5FBDB0; --accent-soft:#14312E;
+  --ok:#6FC194; --ok-soft:#13291D;
+  --warn:#E0A26B; --warn-soft:#332415;
+  --bad:#E8877C; --bad-soft:#331A17;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--text);
+  font-family:"Archivo","Helvetica Neue",Arial,sans-serif;font-size:15px;line-height:1.5;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:1000px;margin:0 auto;padding:0 20px 80px}
+
+.cover{background:var(--ink);color:#E8EFEE;margin:0 0 22px}
+.cover-in{max-width:1000px;margin:0 auto;padding:26px 20px 24px}
+.eyebrow{font-size:10.5px;letter-spacing:.26em;text-transform:uppercase;font-weight:600;
+  color:#63BBAF;font-family:"IBM Plex Mono",ui-monospace,monospace}
+.cover h1{font-size:clamp(26px,4.4vw,36px);line-height:1.08;margin:10px 0 8px;
+  font-weight:700;letter-spacing:-.02em;text-wrap:balance}
+.cover p{color:#9FB2B0;font-size:14.5px;margin:0;max-width:62ch;
+  font-family:"Source Serif 4",Georgia,serif}
+.cover p b{color:#D6E2E0;font-weight:600}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);margin-top:20px;overflow:hidden}
+.panel-head{padding:18px 20px 0}
+.panel-head .num{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11.5px;
+  font-weight:600;color:var(--accent);letter-spacing:.14em;text-transform:uppercase}
+.panel-head h2{font-size:19px;margin:6px 0 4px;font-weight:700;letter-spacing:-.015em}
+.panel-head p{margin:0;font-family:"Source Serif 4",Georgia,serif;font-size:14.5px;
+  color:var(--text-2);max-width:68ch}
+.panel-body{padding:16px 20px 22px}
+
+label.f{display:block;font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--text-3);font-weight:600;margin-bottom:6px;
+  font-family:"IBM Plex Mono",ui-monospace,monospace}
+input[type=text],input[type=month],input[type=email],select,textarea{
+  width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:7px;
+  background:var(--surface);color:var(--text);font:inherit;font-size:14.5px}
+textarea{resize:vertical;min-height:84px;font-family:"Source Serif 4",Georgia,serif}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px 18px}
+
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--text-2);
+  padding:9px 15px;border-radius:7px;font:inherit;font-size:13.5px;font-weight:500;cursor:pointer}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.btn-primary:hover{filter:brightness(1.08);color:var(--surface)}
+.btn-mini{padding:5px 9px;font-size:12px;border-radius:6px}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.toolbar{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-top:16px}
+.saved{font-size:12.5px;color:var(--text-3);font-family:"IBM Plex Mono",ui-monospace,monospace}
+
+/* periodos */
+.per{border:1px solid var(--line);border-radius:9px;padding:14px;margin-bottom:12px;background:var(--surface-2)}
+.per-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+.per-n{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11.5px;font-weight:600;
+  color:var(--accent);letter-spacing:.08em}
+.per .grid{gap:12px 16px}
+.hint{font-size:12.5px;color:var(--text-3);margin-top:5px;font-family:"Source Serif 4",Georgia,serif}
+
+/* control de huecos */
+.check{border-radius:var(--radius);padding:15px 18px;margin-top:4px;
+  font-family:"Source Serif 4",Georgia,serif;font-size:14.5px}
+.check.ok{background:var(--ok-soft);color:var(--ok)}
+.check.bad{background:var(--bad-soft);color:var(--bad)}
+.check.warn{background:var(--warn-soft);color:var(--warn)}
+.check b{font-family:"Archivo",sans-serif;font-weight:600;font-size:13.5px;display:block;margin-bottom:5px}
+.check ul{margin:8px 0 0;padding-left:18px}
+.check li{margin-bottom:4px}
+.linea{margin-top:14px}
+.linea-barra{display:flex;height:22px;border-radius:5px;overflow:hidden;border:1px solid var(--line)}
+.linea-barra span{display:block;height:100%}
+.linea-barra .c{background:var(--ok)}
+.linea-barra .h{background:var(--bad)}
+.linea-eje{display:flex;justify-content:space-between;margin-top:5px;
+  font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11px;color:var(--text-3);
+  font-variant-numeric:tabular-nums}
+
+/* salida */
+.salida{margin-top:14px;border-top:1px solid var(--line-soft);padding-top:14px}
+.salida textarea{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12.5px;
+  line-height:1.6;background:var(--surface-2);min-height:260px}
+.nota{font-family:"Source Serif 4",Georgia,serif;font-size:13.5px;color:var(--text-3);
+  margin:10px 0 0;max-width:68ch}
+
+footer{margin-top:34px;text-align:center;font-size:12px;color:var(--text-3);line-height:1.7}
+footer b{color:var(--text-2);font-weight:600}
+
+@media (max-width:640px){ .per-top{flex-wrap:wrap} }
+@media print{ .no-print{display:none!important} body{background:#fff} }
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="cover">
+  <div class="cover-in">
+    <div class="eyebrow">Medical Network LATAM</div>
+    <h1>Mi currículum para Alemania</h1>
+    <p>Llénalo en español. De aquí sale tu <b>Lebenslauf</b> en el formato exacto que exige la autoridad alemana, y tu <b>carta de presentación</b> para postular a hospitales. Lo que escribas se guarda en este dispositivo mientras lo completas.</p>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <section class="panel">
+    <div class="panel-head">
+      <div class="num">Paso 1</div>
+      <h2>Mis datos</h2>
+      <p>Van en el encabezado del currículum, como se acostumbra en Alemania.</p>
+    </div>
+    <div class="panel-body">
+      <div class="grid">
+        <div><label class="f" for="d_nombre">Nombre y apellidos completos</label><input type="text" id="d_nombre" placeholder="Como aparece en tu pasaporte"></div>
+        <div><label class="f" for="d_nac">Fecha de nacimiento</label><input type="text" id="d_nac" placeholder="DD/MM/AAAA"></div>
+        <div><label class="f" for="d_lugar">Lugar y país de nacimiento</label><input type="text" id="d_lugar" placeholder="Quito, Ecuador"></div>
+        <div><label class="f" for="d_nacion">Nacionalidad</label><input type="text" id="d_nacion" placeholder="Ecuatoriana"></div>
+        <div><label class="f" for="d_dir">Dirección actual</label><input type="text" id="d_dir" placeholder="Calle, número, ciudad, país"></div>
+        <div><label class="f" for="d_mail">Correo electrónico</label><input type="email" id="d_mail" placeholder="tucorreo@ejemplo.com"></div>
+        <div><label class="f" for="d_tel">Teléfono</label><input type="text" id="d_tel" placeholder="Con el código del país"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div class="num">Paso 2</div>
+      <h2>Mi vida, mes por mes</h2>
+      <p>Aquí está lo importante y es lo que más expedientes frena: la autoridad exige un currículum <b>sin un solo hueco</b>. Cada mes desde que saliste del colegio hasta hoy tiene que estar explicado. Estudiar, trabajar, estar desempleado, cuidar a alguien, estar enfermo, viajar — todo cuenta y todo se escribe. Un vacío sin explicar no se lee como «no pasó nada», se lee como «falta información».</p>
+    </div>
+    <div class="panel-body">
+      <div id="periodos"></div>
+      <div class="toolbar no-print">
+        <button class="btn" id="addPer" type="button">Añadir un periodo</button>
+        <span class="saved" id="avisoGuardado"></span>
+      </div>
+      <div id="control" style="margin-top:18px"></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div class="num">Paso 3</div>
+      <h2>Para mi carta de presentación</h2>
+      <p>No escribas una carta. Contesta estas seis preguntas con naturalidad, como si me lo contaras hablando. Con eso se arma después una carta en el estilo alemán, que es más sobrio y directo de lo que acostumbramos.</p>
+    </div>
+    <div class="panel-body">
+      <div style="display:grid;gap:16px">
+        <div><label class="f" for="c1">1 · ¿Por qué estudiaste medicina?</label><textarea id="c1" placeholder="Sin adornos. Lo que te llevó a esta profesión."></textarea></div>
+        <div><label class="f" for="c2">2 · ¿Por qué Alemania y no otro país?</label><textarea id="c2" placeholder="Qué buscas allá que no encuentras donde estás."></textarea></div>
+        <div><label class="f" for="c3">3 · ¿Qué especialidad quieres hacer y por qué?</label><textarea id="c3" placeholder="Si aún no lo decides, dilo también."></textarea></div>
+        <div><label class="f" for="c4">4 · ¿Qué sabes hacer con tus manos?</label><textarea id="c4" placeholder="Procedimientos, técnicas, guardias, urgencias, quirófano. Sé concreto: cuántas veces, en qué contexto."></textarea></div>
+        <div><label class="f" for="c5">5 · ¿Qué buscas en el puesto y qué puedes aportar tú?</label><textarea id="c5" placeholder="Qué tipo de hospital o servicio te interesa, y qué ganan ellos contigo."></textarea></div>
+        <div><label class="f" for="c6">6 · ¿Desde cuándo podrías empezar y qué nivel de alemán tienes hoy?</label><textarea id="c6" placeholder="Fecha aproximada, nivel actual y qué certificado tienes o estás preparando."></textarea></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div class="num">Paso 4</div>
+      <h2>Mandárselo a Ivan</h2>
+      <p>Cuando esté completo y sin huecos, pulsa el botón. Aparece abajo un texto: cópialo y mándaselo por WhatsApp. Con eso él te prepara el currículum y la carta en alemán.</p>
+    </div>
+    <div class="panel-body">
+      <div class="toolbar no-print">
+        <button class="btn btn-primary" id="btnGen" type="button">Preparar mi texto para Ivan</button>
+        <button class="btn" id="btnLimpiar" type="button">Borrar todo y empezar de nuevo</button>
+        <span class="saved" id="avisoCopia"></span>
+      </div>
+      <div class="salida no-print" id="cajaSalida" hidden>
+        <label class="f" for="salida">Cópialo entero y mándaselo a Ivan</label>
+        <textarea id="salida" readonly spellcheck="false"></textarea>
+        <div class="toolbar">
+          <button class="btn" id="btnCopiar" type="button">Copiar otra vez</button>
+          <button class="btn" id="btnCerrar" type="button">Cerrar</button>
+        </div>
+      </div>
+      <p class="nota">Si el botón de copiar no funciona en tu celular, selecciona el texto a mano y cópialo. Siempre está a la vista.</p>
+    </div>
+  </section>
+
+  <footer>
+    <b>Medical Network LATAM</b> · El requisito de currículum sin lagunas es literal de la autoridad alemana.<br>
+    Lo que escribas aquí se queda en este dispositivo hasta que tú lo copies y lo mandes.
+  </footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+var TIPOS = [
+  ["colegio",      "Colegio / bachillerato"],
+  ["medicina",     "Estudios de medicina"],
+  ["otrosestudios","Otros estudios universitarios"],
+  ["internado",    "Año práctico / internado / rural"],
+  ["especialidad", "Especialidad o residencia"],
+  ["medico",       "Trabajo como médico"],
+  ["otrotrabajo",  "Otro trabajo (no médico)"],
+  ["idiomas",      "Curso de idiomas"],
+  ["formacion",    "Otro curso o formación"],
+  ["desempleo",    "Sin empleo / buscando trabajo"],
+  ["crianza",      "Maternidad, paternidad o crianza"],
+  ["enfermedad",   "Enfermedad o recuperación"],
+  ["cuidado",      "Cuidado de un familiar"],
+  ["militar",      "Servicio militar o social"],
+  ["viaje",        "Viaje o estancia en el extranjero"],
+  ["voluntario",   "Voluntariado"],
+  ["otro",         "Otro (lo explico abajo)"]
+];
+
+var KEY = "mnl-cv-v1";
+var estado = {d:{}, per:[], c:{}};
+
+/* ── utilidades de fecha ─────────────────────────────────────── */
+function aNum(ym){ // "2019-03" → 24231
+  if(!ym) return null;
+  var p = ym.split("-");
+  var a = parseInt(p[0],10), m = parseInt(p[1],10);
+  if(!a || !m) return null;
+  return a*12 + (m-1);
+}
+function deNum(n){
+  var a = Math.floor(n/12), m = n%12 + 1;
+  return (m<10?"0":"") + m + "/" + a;
+}
+function hoyNum(){
+  var d = new Date();
+  return d.getFullYear()*12 + d.getMonth();
+}
+function meses(n){ return n === 1 ? "1 mes" : n + " meses"; }
+
+/* ── periodos ────────────────────────────────────────────────── */
+function filaHTML(p, i){
+  return '<div class="per" data-i="' + i + '">' +
+    '<div class="per-top"><span class="per-n">PERIODO ' + (i+1) + '</span>' +
+      '<button class="btn btn-mini no-print" data-del="' + i + '" type="button">Quitar</button></div>' +
+    '<div class="grid">' +
+      '<div><label class="f">Desde</label><input type="month" data-k="desde" value="' + (p.desde||"") + '"></div>' +
+      '<div><label class="f">Hasta</label><input type="month" data-k="hasta" value="' + (p.hasta||"") + '">' +
+        '<div class="hint">Déjalo vacío si sigue hasta hoy.</div></div>' +
+      '<div><label class="f">Qué era</label><select data-k="tipo">' +
+        TIPOS.map(function(t){ return '<option value="' + t[0] + '"' + (p.tipo===t[0]?" selected":"") + '>' + t[1] + '</option>'; }).join("") +
+      '</select></div>' +
+      '<div><label class="f">Título, puesto o cargo</label><input type="text" data-k="titulo" value="' + esc(p.titulo||"") + '" placeholder="Médico residente de urología"></div>' +
+      '<div><label class="f">Dónde (institución o empresa)</label><input type="text" data-k="donde" value="' + esc(p.donde||"") + '" placeholder="Hospital Carlos Andrade Marín"></div>' +
+      '<div><label class="f">Ciudad y país</label><input type="text" data-k="ciudad" value="' + esc(p.ciudad||"") + '" placeholder="Quito, Ecuador"></div>' +
+    '</div>' +
+    '<div style="margin-top:12px"><label class="f">Detalle breve (opcional)</label>' +
+      '<input type="text" data-k="detalle" value="' + esc(p.detalle||"") + '" placeholder="Una línea: qué hacías, qué aprendiste"></div>' +
+  '</div>';
+}
+function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+
+function pintaPeriodos(){
+  document.getElementById("periodos").innerHTML =
+    estado.per.length ? estado.per.map(filaHTML).join("")
+    : '<p class="hint" style="margin:0 0 8px">Todavía no has añadido ningún periodo. Empieza por el colegio o por el inicio de la carrera.</p>';
+}
+
+/* ── control de huecos ───────────────────────────────────────── */
+function analiza(){
+  var hoy = hoyNum();
+  var val = [];
+  var sinFecha = 0;
+  estado.per.forEach(function(p){
+    var a = aNum(p.desde);
+    if(a === null){ sinFecha++; return; }
+    var b = p.hasta ? aNum(p.hasta) : hoy;
+    if(b === null) b = hoy;
+    if(b < a){ var t=a; a=b; b=t; }
+    val.push([a, Math.min(b, hoy)]);
+  });
+  if(!val.length) return {vacio:true, sinFecha:sinFecha};
+
+  val.sort(function(x,y){ return x[0]-y[0]; });
+  var ini = val[0][0];
+  var cubierto = {};
+  val.forEach(function(r){ for(var m=r[0]; m<=r[1]; m++) cubierto[m] = 1; });
+
+  var huecos = [], run = null;
+  for(var m=ini; m<=hoy; m++){
+    if(cubierto[m]) { if(run){ huecos.push(run); run = null; } }
+    else { if(!run) run = [m,m]; else run[1] = m; }
+  }
+  if(run) huecos.push(run);
+
+  var tramos = [];
+  for(var k=ini; k<=hoy; k++) tramos.push(!!cubierto[k]);
+
+  return {vacio:false, sinFecha:sinFecha, ini:ini, hoy:hoy, huecos:huecos, tramos:tramos};
+}
+
+function pintaControl(){
+  var r = analiza();
+  var el = document.getElementById("control");
+  if(r.vacio){
+    el.innerHTML = '<div class="check warn"><b>Todavía no puedo revisar</b>Añade tus periodos con sus fechas y aquí te aviso si queda algún mes sin explicar.</div>';
+    return;
+  }
+  var h = "";
+  if(r.sinFecha){
+    h += '<div class="check warn"><b>' + r.sinFecha + (r.sinFecha===1?' periodo sin fecha de inicio':' periodos sin fecha de inicio') + '</b>' +
+      'Ponles la fecha para que pueda revisarlos.</div>';
+  }
+  if(r.huecos.length){
+    h += '<div class="check bad"><b>Te faltan meses por explicar</b>' +
+      'La autoridad alemana exige que no haya ni un mes en blanco. Añade un periodo que cubra esto, aunque sea «sin empleo», «enfermedad» o «viaje»:' +
+      '<ul>' + r.huecos.map(function(g){
+        var n = g[1]-g[0]+1;
+        return '<li><b style="display:inline">' + deNum(g[0]) + (n>1 ? " – " + deNum(g[1]) : "") + '</b> · ' + meses(n) + '</li>';
+      }).join("") + '</ul></div>';
+  }else if(!r.sinFecha){
+    h += '<div class="check ok"><b>Sin huecos</b>Tu historial cubre cada mes desde ' + deNum(r.ini) + ' hasta hoy. Esto es justo lo que pide la autoridad.</div>';
+  }
+
+  var tot = r.tramos.length;
+  h += '<div class="linea"><div class="linea-barra">' +
+    r.tramos.map(function(c){ return '<span class="' + (c?"c":"h") + '" style="width:' + (100/tot) + '%"></span>'; }).join("") +
+    '</div><div class="linea-eje"><span>' + deNum(r.ini) + '</span><span>hoy</span></div></div>';
+
+  el.innerHTML = h;
+}
+
+/* ── guardado local ──────────────────────────────────────────── */
+function recoge(){
+  ["nombre","nac","lugar","nacion","dir","mail","tel"].forEach(function(k){
+    var e = document.getElementById("d_" + k); if(e) estado.d[k] = e.value;
+  });
+  ["c1","c2","c3","c4","c5","c6"].forEach(function(k){
+    var e = document.getElementById(k); if(e) estado.c[k] = e.value;
+  });
+}
+function guarda(){
+  recoge();
+  try{
+    localStorage.setItem(KEY, JSON.stringify(estado));
+    var a = document.getElementById("avisoGuardado");
+    if(a){ a.textContent = "Guardado en este dispositivo";
+      clearTimeout(guarda._t); guarda._t = setTimeout(function(){ a.textContent = ""; }, 2000); }
+  }catch(e){}
+}
+function restaura(){
+  try{
+    var raw = localStorage.getItem(KEY);
+    if(!raw) return;
+    var s = JSON.parse(raw);
+    if(s && s.d) estado.d = s.d;
+    if(s && s.c) estado.c = s.c;
+    if(s && s.per) estado.per = s.per;
+    Object.keys(estado.d).forEach(function(k){
+      var e = document.getElementById("d_" + k); if(e) e.value = estado.d[k] || "";
+    });
+    Object.keys(estado.c).forEach(function(k){
+      var e = document.getElementById(k); if(e) e.value = estado.c[k] || "";
+    });
+  }catch(e){}
+}
+
+/* ── salida ──────────────────────────────────────────────────── */
+function nombreTipo(t){
+  for(var i=0;i<TIPOS.length;i++) if(TIPOS[i][0] === t) return TIPOS[i][1];
+  return t || "Sin especificar";
+}
+function texto(){
+  recoge();
+  var r = analiza();
+  var L = [];
+  L.push("=== DATOS PARA MI CURRICULUM ALEMAN ===");
+  L.push("Nombre completo: " + (estado.d.nombre||""));
+  L.push("Fecha de nacimiento: " + (estado.d.nac||""));
+  L.push("Lugar y pais de nacimiento: " + (estado.d.lugar||""));
+  L.push("Nacionalidad: " + (estado.d.nacion||""));
+  L.push("Direccion actual: " + (estado.d.dir||""));
+  L.push("Correo: " + (estado.d.mail||""));
+  L.push("Telefono: " + (estado.d.tel||""));
+  L.push("");
+  L.push("=== MIS PERIODOS, DEL MAS ANTIGUO AL MAS RECIENTE ===");
+  var orden = estado.per.slice().sort(function(x,y){
+    var a = aNum(x.desde), b = aNum(y.desde);
+    if(a === null) return 1; if(b === null) return -1;
+    return a - b;
+  });
+  if(!orden.length) L.push("(ninguno)");
+  orden.forEach(function(p, i){
+    var d = p.desde ? deNum(aNum(p.desde)) : "??";
+    var h = p.hasta ? deNum(aNum(p.hasta)) : "actualidad";
+    L.push((i+1) + ") " + d + " - " + h + " | " + nombreTipo(p.tipo));
+    L.push("   Titulo o puesto: " + (p.titulo||"-"));
+    L.push("   Donde: " + (p.donde||"-"));
+    L.push("   Ciudad y pais: " + (p.ciudad||"-"));
+    if(p.detalle) L.push("   Detalle: " + p.detalle);
+  });
+  L.push("");
+  L.push("=== CONTROL DE HUECOS ===");
+  if(r.vacio) L.push("Sin periodos cargados.");
+  else if(r.huecos.length){
+    L.push("ATENCION: quedan meses sin explicar.");
+    r.huecos.forEach(function(g){
+      var n = g[1]-g[0]+1;
+      L.push("  - " + deNum(g[0]) + (n>1 ? " a " + deNum(g[1]) : "") + " (" + meses(n) + ")");
+    });
+  }else L.push("Sin huecos. Cubre desde " + deNum(r.ini) + " hasta hoy.");
+  L.push("");
+  L.push("=== PARA MI CARTA DE PRESENTACION ===");
+  var P = ["Por que estudie medicina", "Por que Alemania", "Que especialidad y por que",
+           "Que se hacer con las manos", "Que busco en el puesto y que aporto",
+           "Desde cuando puedo empezar y mi nivel de aleman"];
+  P.forEach(function(q, i){
+    L.push((i+1) + ". " + q + ":");
+    L.push((estado.c["c"+(i+1)] || "(sin contestar)").trim());
+    L.push("");
+  });
+  return L.join("\n");
+}
+
+/* ── eventos ─────────────────────────────────────────────────── */
+document.getElementById("addPer").addEventListener("click", function(){
+  estado.per.push({desde:"",hasta:"",tipo:"medicina",titulo:"",donde:"",ciudad:"",detalle:""});
+  pintaPeriodos(); pintaControl(); guarda();
+});
+document.getElementById("periodos").addEventListener("click", function(ev){
+  var b = ev.target.closest("[data-del]");
+  if(!b) return;
+  estado.per.splice(+b.dataset.del, 1);
+  pintaPeriodos(); pintaControl(); guarda();
+});
+document.getElementById("periodos").addEventListener("input", leePeriodo);
+document.getElementById("periodos").addEventListener("change", leePeriodo);
+function leePeriodo(ev){
+  var campo = ev.target.closest("[data-k]");
+  if(!campo) return;
+  var fila = campo.closest(".per");
+  if(!fila) return;
+  var i = +fila.dataset.i;
+  if(!estado.per[i]) return;
+  estado.per[i][campo.dataset.k] = campo.value;
+  pintaControl(); guarda();
+}
+document.addEventListener("input", function(ev){
+  if(ev.target.id && (/^d_/.test(ev.target.id) || /^c[1-6]$/.test(ev.target.id))){
+    clearTimeout(document._t); document._t = setTimeout(guarda, 500);
+  }
+});
+
+var caja = document.getElementById("cajaSalida");
+var area = document.getElementById("salida");
+var avC = document.getElementById("avisoCopia");
+function copiar(){
+  area.focus(); area.select();
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(area.value).then(
+        function(){ avC.textContent = "Copiado — pégaselo a Ivan por WhatsApp"; },
+        function(){ avC.textContent = "Selecciona el texto y cópialo a mano"; });
+      return;
+    }
+    var ok = document.execCommand && document.execCommand("copy");
+    avC.textContent = ok ? "Copiado — pégaselo a Ivan por WhatsApp" : "Selecciona el texto y cópialo a mano";
+  }catch(e){ avC.textContent = "Selecciona el texto y cópialo a mano"; }
+}
+document.getElementById("btnGen").addEventListener("click", function(){
+  area.value = texto(); caja.hidden = false; copiar();
+  caja.scrollIntoView({behavior:"smooth", block:"nearest"});
+});
+document.getElementById("btnCopiar").addEventListener("click", copiar);
+document.getElementById("btnCerrar").addEventListener("click", function(){
+  caja.hidden = true; avC.textContent = "";
+});
+document.getElementById("btnLimpiar").addEventListener("click", function(){
+  if(!window.confirm("Se borra todo lo que has escrito en este dispositivo. ¿Seguro?")) return;
+  estado = {d:{}, per:[], c:{}};
+  try{ localStorage.removeItem(KEY); }catch(e){}
+  ["nombre","nac","lugar","nacion","dir","mail","tel"].forEach(function(k){
+    var e = document.getElementById("d_" + k); if(e) e.value = "";
+  });
+  ["c1","c2","c3","c4","c5","c6"].forEach(function(k){
+    var e = document.getElementById(k); if(e) e.value = "";
+  });
+  caja.hidden = true;
+  pintaPeriodos(); pintaControl();
+  window.scrollTo({top:0, behavior:"smooth"});
+});
+
+restaura();
+pintaPeriodos();
+pintaControl();
+})();
+</script>
+
+</body></html>
