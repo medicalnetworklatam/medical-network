@@ -8,6 +8,8 @@ import styles from './AreaLayout.module.css'
 
 /** Which page is open, so the column can mark it */
 export type AreaPage = 'novedades' | 'comunidad' | 'chat' | 'contacto'
+  /* no row of its own: opened from Mi expediente, so nothing is marked */
+  | 'curriculum'
 
 /** The client area's frame, shared by Novedades, Comunidad, Chat and
     Contacto: the dark column on the left (on a phone, a bar with "Menú"),

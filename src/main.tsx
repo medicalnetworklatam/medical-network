@@ -21,6 +21,7 @@ import Perfil from './pages/Perfil.tsx'
 import Comunidad from './pages/Comunidad.tsx'
 import Chat from './pages/Chat.tsx'
 import Contacto from './pages/Contacto.tsx'
+import Curriculum from './pages/Curriculum.tsx'
 import RequireAdmin from './pages/RequireAdmin.tsx'
 import AdminClientes from './pages/AdminClientes.tsx'
 import AdminCliente from './pages/AdminCliente.tsx'
@@ -65,6 +66,7 @@ createRoot(document.getElementById('root')!).render(
               <Route path="/comunidad" element={<Comunidad />} />
               <Route path="/chat" element={<Chat />} />
               <Route path="/contacto" element={<Contacto />} />
+              <Route path="/curriculum" element={<Curriculum />} />
 
               {/* Admins only: everyone else is sent to /novedades */}
               <Route element={<RequireAdmin />}>
