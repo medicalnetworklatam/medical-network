@@ -214,107 +214,113 @@ export default function AdminDocumentos({ clientId, isFree, disabled }: {
   }
 
   return (
+    /* Wide screens: adding a PDF on the left, the list on the right. On a
+       phone, adding first, then the list. */
     <section
-      ref={sectionRef} className={styles.card}
+      ref={sectionRef} className={styles.docsGrid}
       aria-labelledby="documents-heading" aria-busy={items === null}
     >
-      <h2 className={styles.sectionTitle} id="documents-heading" ref={headingRef} tabIndex={-1}>
-        Documentos{items ? ` (${items.length})` : ''}
-      </h2>
-      <p className={styles.hint}>
-        Solo PDF, hasta 10 MB. Se guardan al momento y el cliente los ve en «Mis documentos».
-        {isFree && <> Con el plan gratis, el cliente no ve sus documentos.</>}
-      </p>
+      <div className={styles.docsSide}>
+        <h2 className={styles.sectionTitle} id="documents-heading" ref={headingRef} tabIndex={-1}>
+          Documentos{items ? ` (${items.length})` : ''}
+        </h2>
+        <p className={styles.hint}>
+          Solo PDF, hasta 10 MB. Se guardan al momento y el cliente los ve en «Mis documentos».
+          {isFree && <> Con el plan gratis, el cliente no ve sus documentos.</>}
+        </p>
 
-      {loadError && (
-        <div className={styles.message + ' ' + styles.isError} role="alert">
-          <p>No se pudieron cargar los documentos. {loadError}</p>
-          <button type="button" className={styles.messageBtn} onClick={() => setAttempt((n) => n + 1)}>
-            Reintentar
-          </button>
-        </div>
-      )}
-
-      {!items ? (
-        !loadError && <p className={styles.note} role="status">Cargando documentos…</p>
-      ) : items.length === 0 ? (
-        <p className={styles.note}>Este cliente todavía no tiene documentos.</p>
-      ) : (
-        <ul className={styles.fileList}>
-          {items.map((item) => (
-            <li key={item.id} className={styles.fileItem} data-file={item.id}>
-              {/* Plain text only (never HTML) */}
-              <p className={styles.fileInfo}>
-                <span className={styles.fileName}>{item.file_name}</span>
-              </p>
-              <p className={styles.fileDesc}>
-                Subido el <time dateTime={item.created_at}>{formatBerlinDateTime(item.created_at)}</time> (hora de Alemania)
-              </p>
-              {confirmId === item.id ? (
-                <div className={styles.confirm}>
-                  <p className={styles.confirmText}>
-                    ¿Eliminar «{item.file_name}»? El cliente dejará de verlo.
-                  </p>
-                  <div className={styles.confirmBtns}>
-                    <button type="button" className={styles.primaryBtn} onClick={() => void remove(item)} disabled={waiting}>
-                      {busy === 'remove' ? 'Eliminando…' : 'Sí, eliminar'}
-                    </button>
-                    {/* data-button="remove": gets the focus when the question opens */}
-                    <button type="button" className={styles.smallBtn} data-button="remove"
-                      onClick={() => cancel(item)} disabled={waiting}>
-                      Cancelar
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className={styles.fileBtns}>
-                  <button
-                    type="button" className={styles.smallBtn} data-button="remove"
-                    onClick={() => ask(item)} disabled={waiting}
-                    aria-label={'Eliminar: ' + item.file_name}
-                  >
-                    Eliminar
-                  </button>
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {items && (
-        <form className={styles.form} onSubmit={onUpload} noValidate>
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="doc-file">Añadir un PDF</label>
-            {/* The browser's own picker shows its words in the device's
-                language; this one is always in Spanish. The real picker is
-                still there (hidden, but reachable with Tab); the button is
-                its label. */}
-            <div className={styles.filePickRow}>
-              <input
-                ref={fileRef} id="doc-file" className={styles.fileInput} type="file" accept={ACCEPT}
-                onChange={(e) => chooseFile(e.target.files?.[0] ?? null)} disabled={waiting}
-                aria-describedby={'doc-file-chosen' + (error ? ' documents-error' : '')}
-              />
-              <label className={styles.smallBtn + ' ' + styles.filePick} htmlFor="doc-file">Elegir archivo</label>
-              <span className={styles.fileChosen} id="doc-file-chosen">
-                {file ? file.name : 'Ningún archivo elegido'}
-              </span>
+        {items && (
+          <form className={styles.form} onSubmit={onUpload} noValidate>
+            <div className={styles.field}>
+              <label className={styles.label} htmlFor="doc-file">Añadir un PDF</label>
+              {/* The browser's own picker shows its words in the device's
+                  language; this one is always in Spanish. The real picker is
+                  still there (hidden, but reachable with Tab); the button is
+                  its label. */}
+              <div className={styles.filePickRow}>
+                <input
+                  ref={fileRef} id="doc-file" className={styles.fileInput} type="file" accept={ACCEPT}
+                  onChange={(e) => chooseFile(e.target.files?.[0] ?? null)} disabled={waiting}
+                  aria-describedby={'doc-file-chosen' + (error ? ' documents-error' : '')}
+                />
+                <label className={styles.smallBtn + ' ' + styles.filePick} htmlFor="doc-file">Elegir archivo</label>
+                <span className={styles.fileChosen} id="doc-file-chosen">
+                  {file ? file.name : 'Ningún archivo elegido'}
+                </span>
+              </div>
             </div>
-          </div>
-          <div className={styles.formBtns}>
-            <button type="submit" className={styles.primaryBtn} disabled={waiting}>
-              {busy === 'upload' ? 'Subiendo…' : 'Subir PDF'}
+            <div className={styles.formBtns}>
+              <button type="submit" className={styles.primaryBtn} disabled={waiting}>
+                {busy === 'upload' ? 'Subiendo…' : 'Subir PDF'}
+              </button>
+            </div>
+          </form>
+        )}
+
+        <div className={styles.live} aria-live="assertive">
+          {error && <p className={styles.error} id="documents-error">{error}</p>}
+        </div>
+        <div className={styles.live} role="status">
+          {status && <p className={styles.notice}>{status}</p>}
+        </div>
+      </div>
+
+      <div className={styles.docsList}>
+        {loadError && (
+          <div className={styles.message + ' ' + styles.isError} role="alert">
+            <p>No se pudieron cargar los documentos. {loadError}</p>
+            <button type="button" className={styles.messageBtn} onClick={() => setAttempt((n) => n + 1)}>
+              Reintentar
             </button>
           </div>
-        </form>
-      )}
+        )}
 
-      <div className={styles.live} aria-live="assertive">
-        {error && <p className={styles.error} id="documents-error">{error}</p>}
-      </div>
-      <div className={styles.live} role="status">
-        {status && <p className={styles.notice}>{status}</p>}
+        {!items ? (
+          !loadError && <p className={styles.note} role="status">Cargando documentos…</p>
+        ) : items.length === 0 ? (
+          <p className={styles.note}>Este cliente todavía no tiene documentos.</p>
+        ) : (
+          <ul className={styles.fileList}>
+            {items.map((item) => (
+              <li key={item.id} className={styles.fileItem} data-file={item.id}>
+                {/* Plain text only (never HTML) */}
+                <p className={styles.fileInfo}>
+                  <span className={styles.fileName}>{item.file_name}</span>
+                </p>
+                <p className={styles.fileDesc}>
+                  Subido el <time dateTime={item.created_at}>{formatBerlinDateTime(item.created_at)}</time> (hora de Alemania)
+                </p>
+                {confirmId === item.id ? (
+                  <div className={styles.confirm}>
+                    <p className={styles.confirmText}>
+                      ¿Eliminar «{item.file_name}»? El cliente dejará de verlo.
+                    </p>
+                    <div className={styles.confirmBtns}>
+                      <button type="button" className={styles.primaryBtn} onClick={() => void remove(item)} disabled={waiting}>
+                        {busy === 'remove' ? 'Eliminando…' : 'Sí, eliminar'}
+                      </button>
+                      {/* data-button="remove": gets the focus when the question opens */}
+                      <button type="button" className={styles.smallBtn} data-button="remove"
+                        onClick={() => cancel(item)} disabled={waiting}>
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className={styles.fileBtns}>
+                    <button
+                      type="button" className={styles.smallBtn} data-button="remove"
+                      onClick={() => ask(item)} disabled={waiting}
+                      aria-label={'Eliminar: ' + item.file_name}
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </section>
   )

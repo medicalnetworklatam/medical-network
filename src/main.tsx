@@ -32,6 +32,10 @@ import AdminClienteEstado from './pages/AdminClienteEstado.tsx'
 import AdminClienteExpediente from './pages/AdminClienteExpediente.tsx'
 import AdminClienteDocumentos from './pages/AdminClienteDocumentos.tsx'
 import AdminNovedades from './pages/AdminNovedades.tsx'
+import AdminNovedadNueva from './pages/AdminNovedadNueva.tsx'
+import AdminNovedad from './pages/AdminNovedad.tsx'
+import AdminNovedadTexto from './pages/AdminNovedadTexto.tsx'
+import AdminNovedadArchivos from './pages/AdminNovedadArchivos.tsx'
 
 // The state picker used to keep the chosen states in this browser only
 // ("mn_estados"). The state is now saved to the account: remove the old copy.
@@ -88,6 +92,12 @@ createRoot(document.getElementById('root')!).render(
                 {/* Any other address under a client: their hub */}
                 <Route path="/admin/clientes/:id/*" element={<AdminCliente />} />
                 <Route path="/admin/novedades" element={<AdminNovedades />} />
+                <Route path="/admin/novedades/nueva" element={<AdminNovedadNueva />} />
+                <Route path="/admin/novedades/:id" element={<AdminNovedad />} />
+                <Route path="/admin/novedades/:id/texto" element={<AdminNovedadTexto />} />
+                <Route path="/admin/novedades/:id/archivos" element={<AdminNovedadArchivos />} />
+                {/* Any other address under a post: its hub */}
+                <Route path="/admin/novedades/:id/*" element={<AdminNovedad />} />
               </Route>
             </Route>
 

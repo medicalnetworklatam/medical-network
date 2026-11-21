@@ -282,141 +282,147 @@ export default function AdminNewsFiles({ postId, postTitle, disabled }: {
   }
 
   return (
-    <section ref={sectionRef} className={styles.files} aria-labelledby="files-heading" aria-busy={items === null}>
-      <h3 className={styles.sectionTitle} id="files-heading" ref={headingRef} tabIndex={-1}>
-        Fotos y PDF{items ? ` (${items.length} de ${MAX_FILES})` : ''}
-      </h3>
-      <p className={styles.hint}>
-        Se guardan al momento, sin pulsar «Guardar cambios». Fotos JPG, PNG o WebP: se reducen a
-        2000 px y se les quitan los datos ocultos, como la ubicación. PDF de hasta 10 MB.
-      </p>
-
-      {loadError && (
-        <div className={styles.message + ' ' + styles.isError} role="alert">
-          <p>No se pudieron cargar los archivos. {loadError}</p>
-          <button type="button" className={styles.messageBtn} onClick={() => setAttempt((n) => n + 1)}>
-            Reintentar
-          </button>
-        </div>
-      )}
-
-      {!items ? (
-        !loadError && <p className={styles.note} role="status">Cargando archivos…</p>
-      ) : items.length === 0 ? (
-        <p className={styles.note}>Esta novedad todavía no tiene fotos ni PDF.</p>
-      ) : (
-        <ol className={styles.fileList}>
-          {items.map((item, i) => (
-            <li key={item.id} className={styles.fileItem} data-file={item.id}>
-              {/* Plain text only (never HTML) */}
-              <p className={styles.fileInfo}>
-                <span className={styles.tag}>{item.kind === 'pdf' ? 'PDF' : 'Foto'}</span>{' '}
-                <span className={styles.fileName}>{item.file_name}</span>
-              </p>
-              {item.kind === 'image' && (
-                <p className={styles.fileDesc}>
-                  {item.description
-                    ? <>Descripción: {item.description}</>
-                    : <>Sin descripción: se lee «{altText(null, postTitle)}».</>}
-                </p>
-              )}
-              {confirmId === item.id ? (
-                <div className={styles.confirm}>
-                  <p className={styles.confirmText}>
-                    ¿Quitar «{item.file_name}» de la novedad? Los clientes dejarán de verlo.
-                  </p>
-                  <div className={styles.confirmBtns}>
-                    <button type="button" className={styles.primaryBtn} onClick={() => void remove(item)} disabled={waiting}>
-                      {busy === 'remove' ? 'Quitando…' : 'Sí, quitar'}
-                    </button>
-                    {/* data-button="remove": gets the focus when the question opens */}
-                    <button type="button" className={styles.smallBtn} data-button="remove"
-                      onClick={() => cancel(item)} disabled={waiting}>
-                      Cancelar
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className={styles.fileBtns}>
-                  <button
-                    type="button" className={styles.smallBtn} data-button="up"
-                    onClick={() => void move(i, -1)} disabled={waiting || i === 0}
-                    aria-label={'Mover arriba: ' + item.file_name}
-                  >
-                    <span aria-hidden="true">↑{'\u00a0'}</span>Arriba
-                  </button>
-                  <button
-                    type="button" className={styles.smallBtn} data-button="down"
-                    onClick={() => void move(i, 1)} disabled={waiting || i === items.length - 1}
-                    aria-label={'Mover abajo: ' + item.file_name}
-                  >
-                    <span aria-hidden="true">↓{'\u00a0'}</span>Abajo
-                  </button>
-                  <button
-                    type="button" className={styles.smallBtn} data-button="remove"
-                    onClick={() => ask(item)} disabled={waiting}
-                    aria-label={'Quitar: ' + item.file_name}
-                  >
-                    Quitar
-                  </button>
-                </div>
-              )}
-            </li>
-          ))}
-        </ol>
-      )}
-
-      {items && (items.length >= MAX_FILES ? (
-        <p className={styles.notice}>
-          Esta novedad ya tiene 10 archivos, el máximo. Quita uno para añadir otro.
+    /* Wide screens: adding a file on the left, the list on the right. On a
+       phone, adding first, then the list. */
+    <section ref={sectionRef} className={styles.docsGrid} aria-labelledby="files-heading" aria-busy={items === null}>
+      <div className={styles.docsSide}>
+        <h2 className={styles.sectionTitle} id="files-heading" ref={headingRef} tabIndex={-1}>
+          Fotos y PDF{items ? ` (${items.length} de ${MAX_FILES})` : ''}
+        </h2>
+        <p className={styles.hint}>
+          Se guardan al momento, sin pulsar «Guardar cambios». Fotos JPG, PNG o WebP: se reducen a
+          2000 px y se les quitan los datos ocultos, como la ubicación. PDF de hasta 10 MB.
         </p>
-      ) : (
-        <form className={styles.form} onSubmit={onUpload} noValidate>
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="news-file">Añadir una foto o un PDF</label>
-            {/* The browser's own picker shows its words in the device's
-                language; this one is always in Spanish. The real picker is
-                still there (hidden, but reachable with Tab); the button is
-                its label. */}
-            <div className={styles.filePickRow}>
-              <input
-                ref={fileRef} id="news-file" className={styles.fileInput} type="file" accept={ACCEPT}
-                onChange={(e) => chooseFile(e.target.files?.[0] ?? null)} disabled={waiting}
-                aria-describedby={'news-file-chosen' + (error ? ' files-error' : '')}
-              />
-              <label className={styles.smallBtn + ' ' + styles.filePick} htmlFor="news-file">Elegir archivo</label>
-              <span className={styles.fileChosen} id="news-file-chosen">
-                {file ? file.name : 'Ningún archivo elegido'}
-              </span>
-            </div>
-          </div>
-          {isPhoto && (
+
+        {items && (items.length >= MAX_FILES ? (
+          <p className={styles.notice}>
+            Esta novedad ya tiene 10 archivos, el máximo. Quita uno para añadir otro.
+          </p>
+        ) : (
+          <form className={styles.form} onSubmit={onUpload} noValidate>
             <div className={styles.field}>
-              <label className={styles.label} htmlFor="news-file-desc">Descripción de la foto (opcional)</label>
-              <input
-                id="news-file-desc" className={styles.input} type="text" maxLength={MAX_NAME}
-                value={description} onChange={(e) => setDescription(e.target.value)} disabled={waiting}
-                aria-describedby="news-file-desc-hint"
-              />
-              <p className={styles.hint} id="news-file-desc-hint">
-                La oyen quienes usan un lector de pantalla. Si la dejas vacía, se lee
-                «{altText(null, postTitle)}».
-              </p>
+              <label className={styles.label} htmlFor="news-file">Añadir una foto o un PDF</label>
+              {/* The browser's own picker shows its words in the device's
+                  language; this one is always in Spanish. The real picker is
+                  still there (hidden, but reachable with Tab); the button is
+                  its label. */}
+              <div className={styles.filePickRow}>
+                <input
+                  ref={fileRef} id="news-file" className={styles.fileInput} type="file" accept={ACCEPT}
+                  onChange={(e) => chooseFile(e.target.files?.[0] ?? null)} disabled={waiting}
+                  aria-describedby={'news-file-chosen' + (error ? ' files-error' : '')}
+                />
+                <label className={styles.smallBtn + ' ' + styles.filePick} htmlFor="news-file">Elegir archivo</label>
+                <span className={styles.fileChosen} id="news-file-chosen">
+                  {file ? file.name : 'Ningún archivo elegido'}
+                </span>
+              </div>
             </div>
-          )}
-          <div className={styles.formBtns}>
-            <button type="submit" className={styles.primaryBtn} disabled={waiting}>
-              {busy === 'upload' ? 'Subiendo…' : 'Subir archivo'}
+            {isPhoto && (
+              <div className={styles.field}>
+                <label className={styles.label} htmlFor="news-file-desc">Descripción de la foto (opcional)</label>
+                <input
+                  id="news-file-desc" className={styles.input} type="text" maxLength={MAX_NAME}
+                  value={description} onChange={(e) => setDescription(e.target.value)} disabled={waiting}
+                  aria-describedby="news-file-desc-hint"
+                />
+                <p className={styles.hint} id="news-file-desc-hint">
+                  La oyen quienes usan un lector de pantalla. Si la dejas vacía, se lee
+                  «{altText(null, postTitle)}».
+                </p>
+              </div>
+            )}
+            <div className={styles.formBtns}>
+              <button type="submit" className={styles.primaryBtn} disabled={waiting}>
+                {busy === 'upload' ? 'Subiendo…' : 'Subir archivo'}
+              </button>
+            </div>
+          </form>
+        ))}
+
+        <div className={styles.live} aria-live="assertive">
+          {error && <p className={styles.error} id="files-error">{error}</p>}
+        </div>
+        <div className={styles.live} role="status">
+          {status && <p className={styles.notice}>{status}</p>}
+        </div>
+      </div>
+
+      <div className={styles.docsList}>
+        {loadError && (
+          <div className={styles.message + ' ' + styles.isError} role="alert">
+            <p>No se pudieron cargar los archivos. {loadError}</p>
+            <button type="button" className={styles.messageBtn} onClick={() => setAttempt((n) => n + 1)}>
+              Reintentar
             </button>
           </div>
-        </form>
-      ))}
+        )}
 
-      <div className={styles.live} aria-live="assertive">
-        {error && <p className={styles.error} id="files-error">{error}</p>}
-      </div>
-      <div className={styles.live} role="status">
-        {status && <p className={styles.notice}>{status}</p>}
+        {!items ? (
+          !loadError && <p className={styles.note} role="status">Cargando archivos…</p>
+        ) : items.length === 0 ? (
+          <p className={styles.note}>Esta novedad todavía no tiene fotos ni PDF.</p>
+        ) : (
+          <ol className={styles.fileList}>
+            {items.map((item, i) => (
+              <li key={item.id} className={styles.fileItem} data-file={item.id}>
+                {/* Plain text only (never HTML) */}
+                <p className={styles.fileInfo}>
+                  <span className={styles.tag}>{item.kind === 'pdf' ? 'PDF' : 'Foto'}</span>{' '}
+                  <span className={styles.fileName}>{item.file_name}</span>
+                </p>
+                {item.kind === 'image' && (
+                  <p className={styles.fileDesc}>
+                    {item.description
+                      ? <>Descripción: {item.description}</>
+                      : <>Sin descripción: se lee «{altText(null, postTitle)}».</>}
+                  </p>
+                )}
+                {confirmId === item.id ? (
+                  <div className={styles.confirm}>
+                    <p className={styles.confirmText}>
+                      ¿Quitar «{item.file_name}» de la novedad? Los clientes dejarán de verlo.
+                    </p>
+                    <div className={styles.confirmBtns}>
+                      <button type="button" className={styles.primaryBtn} onClick={() => void remove(item)} disabled={waiting}>
+                        {busy === 'remove' ? 'Quitando…' : 'Sí, quitar'}
+                      </button>
+                      {/* data-button="remove": gets the focus when the question opens */}
+                      <button type="button" className={styles.smallBtn} data-button="remove"
+                        onClick={() => cancel(item)} disabled={waiting}>
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className={styles.fileBtns}>
+                    <button
+                      type="button" className={styles.smallBtn} data-button="up"
+                      onClick={() => void move(i, -1)} disabled={waiting || i === 0}
+                      aria-label={'Mover arriba: ' + item.file_name}
+                    >
+                      <span aria-hidden="true">↑{'\u00a0'}</span>Arriba
+                    </button>
+                    <button
+                      type="button" className={styles.smallBtn} data-button="down"
+                      onClick={() => void move(i, 1)} disabled={waiting || i === items.length - 1}
+                      aria-label={'Mover abajo: ' + item.file_name}
+                    >
+                      <span aria-hidden="true">↓{'\u00a0'}</span>Abajo
+                    </button>
+                    <button
+                      type="button" className={styles.smallBtn} data-button="remove"
+                      onClick={() => ask(item)} disabled={waiting}
+                      aria-label={'Quitar: ' + item.file_name}
+                    >
+                      Quitar
+                    </button>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ol>
+        )}
       </div>
     </section>
   )

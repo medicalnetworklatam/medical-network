@@ -30,6 +30,8 @@ export interface ClientPage {
   /** "Actualizar" is running */
   loading: boolean
   reload: () => void
+  /** The page is saving: "Actualizar" waits */
+  setBusy: (busy: boolean) => void
 }
 
 type Loaded =
@@ -49,11 +51,13 @@ type Loaded =
     It also draws the frame: the back link, the title and the browser tab's
     title, which never holds the client's name (DECISIONS.md, 21 Nov 2026,
     night, later). */
-export default function AdminClientPage({ section = null, withRoutes = false, children }: {
+export default function AdminClientPage({ section = null, withRoutes = false, refresh = false, children }: {
   /** null: the client's hub page */
   section?: ClientSection | null
   /** Also load every route, in the same request as the client (as before) */
   withRoutes?: boolean
+  /** "Actualizar" in the title cell, once the client is loaded */
+  refresh?: boolean
   children: (page: ClientPage) => ReactNode
 }) {
   usePageTitle((section ? section.title + ' · ' : '') + 'Cliente · Administración · Medical Network')
@@ -66,13 +70,18 @@ export default function AdminClientPage({ section = null, withRoutes = false, ch
       </Frame>
     )
   }
-  return <Loader key={id} clientId={id} section={section} withRoutes={withRoutes}>{children}</Loader>
+  return (
+    <Loader key={id} clientId={id} section={section} withRoutes={withRoutes} refresh={refresh}>
+      {children}
+    </Loader>
+  )
 }
 
-function Loader({ clientId, section, withRoutes, children }: {
+function Loader({ clientId, section, withRoutes, refresh, children }: {
   clientId: string
   section: ClientSection | null
   withRoutes: boolean
+  refresh: boolean
   children: (page: ClientPage) => ReactNode
 }) {
   const [attempt, setAttempt] = useState(0)
@@ -108,6 +117,8 @@ function Loader({ clientId, section, withRoutes, children }: {
   }, [clientId, withRoutes, attempt])
   const loading = loaded?.attempt !== attempt
   const reload = () => setAttempt((n) => n + 1)
+  /* The page is saving (Estado): "Actualizar" waits, as it always has */
+  const [busy, setBusy] = useState(false)
 
   /* ---------- Loading, error, not found: never the page's section ---------- */
   if (!client) {
@@ -129,8 +140,13 @@ function Loader({ clientId, section, withRoutes, children }: {
     return <Frame section={section} clientId={clientId} client={null}>{message}</Frame>
   }
 
+  const action = refresh && (
+    <button type="button" className={styles.smallBtn} onClick={reload} disabled={loading || busy}>
+      {loading ? 'Actualizando…' : 'Actualizar'}
+    </button>
+  )
   return (
-    <Frame section={section} clientId={clientId} client={client}>
+    <Frame section={section} clientId={clientId} client={client} action={action}>
       {loaded && !loaded.ok && !loading && (
         <div className={styles.message + ' ' + styles.isError} role="alert">
           <p>No se pudo actualizar. {loaded.error}</p>
@@ -138,7 +154,7 @@ function Loader({ clientId, section, withRoutes, children }: {
       )}
       {children({
         clientId, client, setClient, routes: loaded?.ok ? loaded.routes : [],
-        attempt, loading, reload,
+        attempt, loading, reload, setBusy,
       })}
     </Frame>
   )
@@ -148,11 +164,13 @@ function Loader({ clientId, section, withRoutes, children }: {
     with the email) and "← Clientes"; on a section page, the section as the
     title, the client's name as the small label and "← <name>". Names keep
     their own capitals. Everything from the database is plain text. */
-function Frame({ section, clientId, client, children }: {
+function Frame({ section, clientId, client, action, children }: {
   section: ClientSection | null
   clientId: string
   /** null: not loaded (yet), or not found */
   client: Client | null
+  /** "Actualizar", on a section page with a loaded client */
+  action?: ReactNode
   children: ReactNode
 }) {
   const name = client ? clientName(client) : ''
@@ -177,28 +195,14 @@ function Frame({ section, clientId, client, children }: {
       title={section.title}
       label={client ? (name || 'Sin nombre' + (email ? ' · ' + email : '')) : 'administración'}
       nameLabel={!!client}
+      compact
+      action={action}
       back={UUID.test(clientId)
         ? { to: '/admin/clientes/' + clientId, label: name || 'Cliente' }
         // Not a client ID: its hub would only say "not found" too
         : { to: '/admin/clientes', label: 'Clientes' }}
-      body="single"
     >
       {children}
     </AdminLayout>
-  )
-}
-
-/** "Actualizar" in a thin row at the top of a client page */
-export function RefreshRow({ loading, disabled, onClick }: {
-  loading: boolean
-  disabled: boolean
-  onClick: () => void
-}) {
-  return (
-    <div className={styles.refreshRow}>
-      <button type="button" className={styles.smallBtn} onClick={onClick} disabled={disabled}>
-        {loading ? 'Actualizando…' : 'Actualizar'}
-      </button>
-    </div>
   )
 }

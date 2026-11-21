@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import AdminClientPage, { RefreshRow, type ClientPage } from './AdminClientPage.tsx'
+import { useEffect, useState, type CSSProperties } from 'react'
+import AdminClientPage, { type ClientPage } from './AdminClientPage.tsx'
 import { supabase } from '../lib/supabase.ts'
 import { dataErrorMessage } from '../lib/dataErrors.ts'
 import { formatBerlinDateTime } from '../lib/berlinTime.ts'
@@ -36,16 +36,18 @@ type Extra =
     their dudas (read-only), and per step their tick (read-only) and the
     client layer ("Según la plantilla / Aplica / No aplica", reason, note),
     each saved with its own "Guardar" and no confirmation (DECISIONS.md,
-    21 Nov 2026). Drawn only once the client is loaded (AdminClientPage.tsx). */
+    21 Nov 2026). Drawn only once the client is loaded (AdminClientPage.tsx).
+    On wide screens: progress, details and dudas in a column on the left
+    that stays in view, the steps on the right; on a phone, stacked. */
 export default function AdminClienteExpediente() {
   return (
-    <AdminClientPage section={{ title: 'Expediente' }} withRoutes>
+    <AdminClientPage section={{ title: 'Expediente' }} withRoutes refresh>
       {(page) => <ExpedienteScreen {...page} />}
     </AdminClientPage>
   )
 }
 
-function ExpedienteScreen({ clientId, client, routes, attempt, loading, reload }: ClientPage) {
+function ExpedienteScreen({ clientId, client, routes, attempt, loading }: ClientPage) {
   /* ---------- Their checklist: current state and route only ---------- */
   const state = client.main_state
   const route = client.route
@@ -126,17 +128,37 @@ function ExpedienteScreen({ clientId, client, routes, attempt, loading, reload }
   /** Fills the template's placeholders for this client (src/lib/placeholders.ts) */
   const placeholderValues = { pais: details?.country, nombre: name, perfil: details?.header_line }
 
-  return (
-    <>
-      <RefreshRow loading={loading} disabled={loading} onClick={reload} />
+  const hasSteps = !!currentChecklist?.ok && currentChecklist.items.length > 0
 
-      {/* Expediente: country and header line, the client's dudas, and per
-          step their tick (read-only) and the client layer */}
-      <section className={styles.card} aria-labelledby="checklist-heading" aria-busy={(!!state && !!route && !currentChecklist) || !currentExtra}>
-        <h2 className={styles.sectionTitle} id="checklist-heading">Expediente</h2>
+  return (
+    /* Expediente: country and header line, the client's dudas, and per step
+       their tick (read-only) and the client layer. The page title already
+       says "expediente.": the heading is for screen readers only. */
+    <section className={styles.expGrid} aria-labelledby="checklist-heading" aria-busy={(!!state && !!route && !currentChecklist) || !currentExtra}>
+      <h2 className="sr-only" id="checklist-heading">Expediente</h2>
+
+      <div className={styles.expSide}>
+        {hasSteps && (
+          <div className={styles.setting} role="group" aria-labelledby="progress-heading">
+            <h3 className={styles.settingLabel} id="progress-heading">Progreso</h3>
+            <p className={styles.progressBig}>
+              <strong>{progressText(progress)}</strong>
+              {/* The words already say it: the bar is only for the eye */}
+              {progress && (
+                <span className={styles.progressTrack} aria-hidden="true">
+                  <span className={styles.progressFill} style={{ '--fill': progress.percent / 100 } as CSSProperties} />
+                </span>
+              )}
+            </p>
+            <p className={styles.note}>
+              <span lang="de">{currentState}</span> · {routeName(route)}
+              {client.plan === 'free' && <> · Con el plan gratis, el cliente no ve este checklist.</>}
+            </p>
+          </div>
+        )}
 
         {!currentExtra ? (
-          <p className={styles.note} role="status">Cargando datos del expediente…</p>
+          <p className={styles.sideNote} role="status">Cargando datos del expediente…</p>
         ) : !currentExtra.ok ? (
           <p className={styles.error} role="alert">No se pudieron cargar el país, la línea de encabezado y las dudas. {currentExtra.error}</p>
         ) : (
@@ -160,7 +182,9 @@ function ExpedienteScreen({ clientId, client, routes, attempt, loading, reload }
             </div>
           </>
         )}
+      </div>
 
+      <div className={styles.expSteps}>
         <div className={styles.setting} role="group" aria-labelledby="steps-heading">
           <h3 className={styles.settingLabel} id="steps-heading">Pasos</h3>
           {!state ? (
@@ -177,10 +201,6 @@ function ExpedienteScreen({ clientId, client, routes, attempt, loading, reload }
             </p>
           ) : (
             <>
-              <p className={styles.note}>
-                <span lang="de">{currentState}</span> · {routeName(route)} · Progreso: <strong>{progressText(progress)}</strong>
-                {client.plan === 'free' && <> · Con el plan gratis, el cliente no ve este checklist.</>}
-              </p>
               <p className={styles.hint}>
                 Los pasos que no aplican no cuentan en el progreso, aunque estén marcados. Cada paso se guarda con su
                 propio «Guardar»; para deshacer un cambio, vuelve a «Según la plantilla».
@@ -197,8 +217,8 @@ function ExpedienteScreen({ clientId, client, routes, attempt, loading, reload }
             </>
           )}
         </div>
-      </section>
-    </>
+      </div>
+    </section>
   )
 }
 

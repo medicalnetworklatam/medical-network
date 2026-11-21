@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
-import AdminClientPage, { RefreshRow, type ClientPage } from './AdminClientPage.tsx'
+import AdminClientPage, { type ClientPage } from './AdminClientPage.tsx'
 import { supabase } from '../lib/supabase.ts'
 import { dataErrorMessage, NOT_ALLOWED } from '../lib/dataErrors.ts'
 import { CLIENT_COLUMNS, clientName, stateName, STATES, type Client } from '../lib/adminData.ts'
@@ -21,18 +21,21 @@ function saveErrorMessage(error: unknown): string {
 
 /** /admin/clientes/<id>/estado: the three things an admin may change
     (Bundesland, route and plan), each with a confirmation inside the page.
-    Drawn only once the client is loaded (AdminClientPage.tsx). */
+    Drawn only once the client is loaded (AdminClientPage.tsx). On wide
+    screens the three sit side by side; on a phone, stacked. */
 export default function AdminClienteEstado() {
   return (
-    <AdminClientPage section={{ title: 'Estado, ruta y plan' }} withRoutes>
+    <AdminClientPage section={{ title: 'Estado, ruta y plan' }} withRoutes refresh>
       {(page) => <EstadoScreen {...page} />}
     </AdminClientPage>
   )
 }
 
-function EstadoScreen({ clientId, client, setClient, routes, loading, reload }: ClientPage) {
+function EstadoScreen({ clientId, client, setClient, routes, loading, setBusy }: ClientPage) {
   /* ---------- Saving: one change at a time ---------- */
   const [saving, setSaving] = useState(false)
+  // "Actualizar" (in the title cell) waits while a change is saved
+  useEffect(() => { setBusy(saving) }, [saving, setBusy])
   const [announcement, setAnnouncement] = useState('')
   const mounted = useRef(true)
   useEffect(() => {
@@ -90,11 +93,10 @@ function EstadoScreen({ clientId, client, setClient, routes, loading, reload }: 
   return (
     <>
       <span className="sr-only" role="status">{announcement}</span>
-      <RefreshRow loading={loading} disabled={busy} onClick={reload} />
-
-      {/* The three things an admin may change */}
-      <section className={styles.card} aria-labelledby="settings-heading">
-        <h2 className={styles.sectionTitle} id="settings-heading">Estado, ruta y plan</h2>
+      {/* The three things an admin may change. The page title already
+          says it: this heading is for screen readers only. */}
+      <section className={styles.estadoGrid} aria-labelledby="settings-heading">
+        <h2 className="sr-only" id="settings-heading">Estado, ruta y plan</h2>
 
         <Setting
           label="Estado (Bundesland)"

@@ -68,7 +68,7 @@ export default function AdminClientes() {
   }, [shown])
 
   return (
-    <AdminLayout title="Clientes" body="wide" back={{ to: '/admin', label: 'Administración' }}>
+    <AdminLayout title="Clientes" back={{ to: '/admin', label: 'Administración' }}>
       <section className={styles.list} aria-labelledby="clients-heading" aria-busy={loading}>
         <div className={styles.listHead}>
           <h2 className={styles.sectionTitle} id="clients-heading">

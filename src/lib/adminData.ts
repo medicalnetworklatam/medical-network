@@ -132,6 +132,14 @@ export function documentCountText(count: number): string {
   return count === 1 ? '1 documento' : `${count} documentos`
 }
 
+/** "Sin archivos", "1 foto", "3 fotos · 1 PDF", "2 PDF" (a news post's files) */
+export function newsFilesText(photos: number, pdfs: number): string {
+  const parts: string[] = []
+  if (photos > 0) parts.push(photos === 1 ? '1 foto' : `${photos} fotos`)
+  if (pdfs > 0) parts.push(`${pdfs} PDF`)
+  return parts.length ? parts.join(' · ') : 'Sin archivos'
+}
+
 /* ---------- Progress and last activity ---------- */
 
 export interface Progress {

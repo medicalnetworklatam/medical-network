@@ -15,6 +15,22 @@ Last updated: 21 Nov 2026. This is the source of truth for the project. When a d
   - Spanish only, web only
 - **Admins:** Ivan and his cousin.
 
+## Changes on 21 Nov 2026 (night, latest): the client pages redone, Publicar split up
+
+Ivan's request after the first preview: the client pages should look and fit better on a desktop and on a phone, and Publicar should be split up like Clientes. Proposed by Claude and approved by Ivan the same night. What each section does stays the same; no database change.
+
+- **Section pages** (a client's Estado, Expediente and Documentos; a post's two pages): a low title cell, the client's name or the post's title as the small label, "Actualizar" on the right of the title where there is one. The heading that repeated the page title is kept for screen readers only.
+  - **Estado:** Estado | Ruta | Plan side by side, the current value big; each confirmation opens inside its column. Stacked on a phone, with the list and "Cambiar" on one line. Fits one screen.
+  - **Expediente:** a column on the left (progress, country and header line, the client's dudas) that stays in view while the steps scroll by on the right. Stacked on a phone.
+  - **Documentos** and a post's **Fotos y PDF:** adding a file on the left, the list on the right, one compact row per file. On a phone, adding first, then the list.
+- **Publicar** (the button on `/admin` keeps its name):
+  - `/admin/novedades`: a big "Nueva novedad" button, then every post as a table like the client overview (title, situación, date, Para, plan). A post's title opens its screen.
+  - `/admin/novedades/nueva`: the form for a new post. Once saved, its "Fotos y PDF" page opens with a notice.
+  - `/admin/novedades/<id>`: the post's title and two big buttons with a status line each: "Texto y publicación" (situación · date · Bundesland · plan) and "Fotos y PDF" ("2 fotos · 1 PDF", from counts only).
+  - `/admin/novedades/<id>/texto` (the form; after a save the page stays on the post with "Guardada") and `/admin/novedades/<id>/archivos`.
+  - Every post page checks the address is a valid ID and draws its section only once the post has loaded. Browser tab titles stay generic ("Novedad · Administración").
+  - The news form's rules don't change (German time, schedule with a future date, unpublish instead of delete, only changed fields are sent). "Cancelar edición" goes: the back link does that now.
+
 ## Changes on 21 Nov 2026 (night, later): Administración as a set of simple screens
 
 Ivan's decision, from his two sketches. It replaces the admin tabs and the single long client screen. What each section does, and every admin rule below, stays the same.
@@ -316,7 +332,7 @@ These replace the morning's "look and feel" bullet below where they differ.
 
 ### Admin screens (decided 16 Nov 2026)
 
-Since 21 Nov 2026 (night, later) these are split into separate screens; see that section. What each one does stays as below.
+Since 21 Nov 2026 (night, later) these are split into separate screens, and since 21 Nov 2026 (night, latest) Publicar too; see those sections. What each one does stays as below.
 
 - **Who sees them:** admins only. The website hides the admin pages from everyone else, but the database rules (RLS) are what actually protect the data.
 - **No database change expected.** Migrations 1 and 2 already let admins read every profile, progress and checklist item, write news, and change a client's plan, route and state (checked 16 Nov 2026). If the build turns out to need one, it comes as migration 3 with new checks in `rls_check.sql`.
