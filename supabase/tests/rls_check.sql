@@ -1,5 +1,5 @@
 -- =============================================================================
--- RLS check: proves the access rules from migrations 1 to 7 work.
+-- RLS check: proves the access rules from migrations 1 to 8 work.
 -- =============================================================================
 -- Paste this whole file into Supabase's SQL Editor and press "Run".
 -- Run it after every migration, and again after any change to policies or
@@ -16,7 +16,9 @@
 --      a few test files into the "news-files" bucket (rows in
 --      storage.objects, no real file content), each in a test news post's
 --      folder, plus small copies of the test photos (migration 6), and
---      removes them all again at the end.
+--      removes them all again at the end. In the same way (migration 8),
+--      the admin uploads a few test PDFs into the "client-files" bucket,
+--      in test clients' folders, and they are removed at the end too.
 --   3. Pretends to be each of them in turn, the same way the website would be
 --      after a login, and checks what they can and can't see or change.
 --   4. Deletes everything it created.
@@ -87,6 +89,15 @@ declare
   f_removed      text;
   t_removed      text;
   thumb_files    text[];   -- the eight files of migration 6 above
+  -- client documents (migration 8): "<client id>/<uuid>.pdf" in the bucket
+  -- client-files. B has two with a row and one with NO row; G and A (free)
+  -- one each, with a row.
+  doc_b1         text;
+  doc_b2         text;
+  doc_b_orphan   text;
+  doc_g          text;
+  doc_a          text;
+  doc_files      text[];   -- the five files above
   names          text[];
   -- the 16 state codes (the same list as public.state_code in migration 1)
   states  text[] := array['bw', 'by', 'be', 'bb', 'hb', 'hh', 'he', 'mv',
@@ -2272,6 +2283,411 @@ begin
   if rc <> 0 then raise exception 'FAIL: admin changed a client''s dudas'; end if;
   ok := ok + 1;
 
+  -- ===========================================================================
+  -- Migration 8: "Mis documentos" (client_documents and the bucket client-files)
+  -- ===========================================================================
+  -- Uses the clients set up above: B (paid, Bayern, rls-test-route), G
+  -- (paid, exactly like B), A (FREE) and the admin. First, as you
+  -- (postgres), the safety nets on the table and the bucket.
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+
+  -- CHECK (migration 8): client_documents has RLS on, and the website may
+  -- read, delete, and add only user_id, path and file_name: never the id
+  -- or the date (the database sets them), never change a row, never empty
+  -- the whole table
+  select count(*) into cnt from pg_class
+   where oid = 'public.client_documents'::regclass and relrowsecurity;
+  if cnt <> 1 then raise exception 'FAIL: client_documents has Row Level Security switched off'; end if;
+  if not (has_table_privilege('authenticated', 'public.client_documents', 'SELECT')
+      and has_table_privilege('authenticated', 'public.client_documents', 'DELETE')
+      and has_column_privilege('authenticated', 'public.client_documents', 'user_id', 'INSERT')
+      and has_column_privilege('authenticated', 'public.client_documents', 'path', 'INSERT')
+      and has_column_privilege('authenticated', 'public.client_documents', 'file_name', 'INSERT')) then
+    raise exception 'FAIL: the website lost a right it needs on client_documents';
+  end if;
+  if has_table_privilege('authenticated', 'public.client_documents', 'INSERT')       -- whole-table insert
+  or has_table_privilege('authenticated', 'public.client_documents', 'TRUNCATE')
+  or has_column_privilege('authenticated', 'public.client_documents', 'id', 'INSERT')
+  or has_column_privilege('authenticated', 'public.client_documents', 'created_at', 'INSERT')
+  or has_any_column_privilege('authenticated', 'public.client_documents', 'UPDATE')
+  or has_any_column_privilege('anon', 'public.client_documents', 'SELECT, INSERT, UPDATE')
+  or has_table_privilege('anon', 'public.client_documents', 'SELECT, INSERT, UPDATE, DELETE, TRUNCATE') then
+    raise exception 'FAIL: someone has more rights than needed on client_documents';
+  end if;
+  ok := ok + 1;
+
+  -- CHECK (migration 8): the bucket client-files is private, at most 10 MB
+  -- per file, and takes only PDF
+  select count(*) into cnt from storage.buckets
+   where id = 'client-files'
+     and public is false
+     and file_size_limit = 10485760
+     and allowed_mime_types = array['application/pdf'];
+  if cnt <> 1 then
+    raise exception 'FAIL: the bucket client-files is missing, public, or has the wrong size limit or file types';
+  end if;
+  ok := ok + 1;
+
+  -- CHECK (migration 8): client-files has exactly three rules on
+  -- storage.objects: read, upload and delete. No rule to change (replace or
+  -- move) a file.
+  select string_agg(cmd, ',' order by cmd) into txt from pg_policies
+   where schemaname = 'storage' and tablename = 'objects' and policyname like 'client-files:%';
+  if txt is distinct from 'DELETE,INSERT,SELECT' then
+    raise exception 'FAIL: client-files has the rules "%" instead of DELETE,INSERT,SELECT', txt;
+  end if;
+  ok := ok + 1;
+
+  doc_b1       := b::text  || '/' || gen_random_uuid()::text || '.pdf';
+  doc_b2       := b::text  || '/' || gen_random_uuid()::text || '.pdf';
+  doc_b_orphan := b::text  || '/' || gen_random_uuid()::text || '.pdf';
+  doc_g        := cg::text || '/' || gen_random_uuid()::text || '.pdf';
+  doc_a        := a::text  || '/' || gen_random_uuid()::text || '.pdf';
+  doc_files := array[doc_b1, doc_b2, doc_b_orphan, doc_g, doc_a];
+
+  -- ---------------------------------------------------------------------------
+  -- Migration 8, as the ADMIN
+  -- ---------------------------------------------------------------------------
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', adm, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+
+  -- CHECK: admin uploads files into clients' folders and adds their rows,
+  -- the way the website does it: first the file, then its row. B's third
+  -- file gets NO row (like an upload whose row was never saved). A name of
+  -- exactly 200 characters is accepted.
+  insert into storage.objects (bucket_id, name)
+    select 'client-files', unnest(doc_files);
+  get diagnostics rc = row_count;
+  if rc <> 5 then raise exception 'FAIL: admin uploaded % of 5 client documents', rc; end if;
+  insert into public.client_documents (user_id, path, file_name)
+  values (b,  doc_b1, 'Approbation Antrag.pdf'),
+         (b,  doc_b2, repeat('x', 196) || '.pdf'),
+         (cg, doc_g,  'Documento de G.pdf'),
+         (a,  doc_a,  'Documento de A.pdf');
+  get diagnostics rc = row_count;
+  if rc <> 4 then raise exception 'FAIL: admin added % of 4 client_documents rows', rc; end if;
+  ok := ok + 1;
+
+  -- CHECK: the database sets the date of a new row
+  select count(*) into cnt from public.client_documents
+   where path = any (doc_files) and created_at is not null and id is not null;
+  if cnt <> 4 then raise exception 'FAIL: the database did not set id and created_at on new client_documents rows'; end if;
+  ok := ok + 1;
+
+  -- CHECK: admin reads every row and every file, also the file with no row
+  select count(*) into cnt from public.client_documents where path = any (doc_files);
+  if cnt <> 4 then raise exception 'FAIL: admin reads % of the 4 client_documents rows', cnt; end if;
+  select count(*) into cnt from storage.objects where bucket_id = 'client-files' and name = any (doc_files);
+  if cnt <> 5 then raise exception 'FAIL: admin reads % of the 5 client documents', cnt; end if;
+  ok := ok + 1;
+
+  -- CHECK: the bucket refuses badly named files, even from an admin. First
+  -- (asked for by Ivan): a folder that is a uuid but not an existing
+  -- profile's ID. Then: the uploaded file's own name, a folder that isn't a
+  -- uuid at all, a sub-folder, another ending, uppercase letters.
+  names := array[
+    gen_random_uuid()::text || '/' || gen_random_uuid()::text || '.pdf',
+    b::text || '/Approbation Antrag.pdf',
+    'no-es-un-uuid/' || gen_random_uuid()::text || '.pdf',
+    b::text || '/carpeta/' || gen_random_uuid()::text || '.pdf',
+    b::text || '/' || gen_random_uuid()::text || '.docx',
+    b::text || '/' || gen_random_uuid()::text || '.html',
+    b::text || '/' || upper(gen_random_uuid()::text) || '.pdf',
+    b::text || '/' || gen_random_uuid()::text || '.PDF'];
+  foreach txt in array names loop
+    begin
+      insert into storage.objects (bucket_id, name) values ('client-files', txt);
+      raise exception 'FAIL: admin uploaded a client document named %', txt;
+    exception when insufficient_privilege then null;
+    end;
+  end loop;
+  ok := ok + 1;
+
+  -- CHECK: a client_documents row must point into its own client's folder
+  -- (never another client's), with a lowercase uuid as the name and ".pdf";
+  -- file_name 1 to 200 characters with no spaces or line breaks at either end
+  for i in 1 .. 8 loop
+    begin
+      case i
+        when 1 then insert into public.client_documents (user_id, path, file_name)  -- G's folder, B's row
+                      values (b, cg::text || '/' || gen_random_uuid()::text || '.pdf', 'x.pdf');
+        when 2 then insert into public.client_documents (user_id, path, file_name)
+                      values (b, b::text || '/' || upper(gen_random_uuid()::text) || '.pdf', 'x.pdf');
+        when 3 then insert into public.client_documents (user_id, path, file_name)
+                      values (b, b::text || '/' || gen_random_uuid()::text || '.jpg', 'x.pdf');
+        when 4 then insert into public.client_documents (user_id, path, file_name)
+                      values (b, b::text || '/x/' || gen_random_uuid()::text || '.pdf', 'x.pdf');
+        when 5 then insert into public.client_documents (user_id, path, file_name)
+                      values (b, b::text || '/' || gen_random_uuid()::text || '.pdf', '');
+        when 6 then insert into public.client_documents (user_id, path, file_name)
+                      values (b, b::text || '/' || gen_random_uuid()::text || '.pdf', repeat('x', 197) || '.pdf');
+        when 7 then insert into public.client_documents (user_id, path, file_name)
+                      values (b, b::text || '/' || gen_random_uuid()::text || '.pdf', ' x.pdf');
+        when 8 then insert into public.client_documents (user_id, path, file_name)
+                      values (b, b::text || '/' || gen_random_uuid()::text || '.pdf', E'x.pdf\n');
+      end case;
+      raise exception 'FAIL: bad client_documents row number % of this check was accepted', i;
+    exception when check_violation then null;
+    end;
+  end loop;
+  ok := ok + 1;
+
+  -- CHECK: two rows can never point to the same file
+  begin
+    insert into public.client_documents (user_id, path, file_name) values (b, doc_b1, 'Otra vez.pdf');
+    raise exception 'FAIL: a second client_documents row for the same file was accepted';
+  exception when unique_violation then ok := ok + 1;
+  end;
+
+  -- CHECK: nobody changes a row, not even an admin: not its name, its
+  -- client or its path
+  begin
+    update public.client_documents set file_name = 'Cambiado.pdf' where path = doc_b1;
+    raise exception 'FAIL: admin changed the name of a client document';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    update public.client_documents set user_id = cg where path = doc_b1;
+    raise exception 'FAIL: admin moved a client document to another client';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    update public.client_documents set path = doc_b_orphan where path = doc_b1;
+    raise exception 'FAIL: admin changed the path of a client document';
+  exception when insufficient_privilege then null;
+  end;
+  ok := ok + 1;
+
+  -- CHECK: nobody replaces or moves a stored file, not even an admin (no
+  -- rule to change files in client-files)
+  update storage.objects set name = b::text || '/' || gen_random_uuid()::text || '.pdf'
+   where bucket_id = 'client-files' and name = doc_b1;
+  get diagnostics rc = row_count;
+  if rc <> 0 then raise exception 'FAIL: admin moved a client document in storage'; end if;
+  update storage.objects set metadata = '{}'
+   where bucket_id = 'client-files' and name = any (doc_files);
+  get diagnostics rc = row_count;
+  if rc <> 0 then raise exception 'FAIL: admin changed a client document in storage'; end if;
+  ok := ok + 1;
+
+  -- ---------------------------------------------------------------------------
+  -- Migration 8, as CLIENT B (paid, Bayern, rls-test-route)
+  -- ---------------------------------------------------------------------------
+  reset role;
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', b, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+
+  -- CHECK: B reads exactly their own two rows, not G's or A's
+  select coalesce(array_agg(path order by path), '{}') into names from public.client_documents;
+  if names <> (select array_agg(x order by x) from unnest(array[doc_b1, doc_b2]) as x) then
+    raise exception 'FAIL: paid client B reads % client_documents rows instead of only their own 2', cardinality(names);
+  end if;
+  ok := ok + 1;
+
+  -- CHECK: B reads their own two files...
+  select count(*) into cnt from storage.objects where bucket_id = 'client-files' and name in (doc_b1, doc_b2);
+  if cnt <> 2 then raise exception 'FAIL: paid client B reads % of their own 2 documents', cnt; end if;
+  ok := ok + 1;
+
+  -- CHECK: ...but not the file in their own folder that has no row, also
+  -- when listing their folder (what the Storage service does for "list")
+  select count(*) into cnt from storage.objects where bucket_id = 'client-files' and name = doc_b_orphan;
+  if cnt <> 0 then raise exception 'FAIL: paid client B reads a document that has no client_documents row'; end if;
+  select coalesce(array_agg(name order by name), '{}') into names from storage.objects
+   where bucket_id = 'client-files' and name like b::text || '/%';
+  if names <> (select array_agg(x order by x) from unnest(array[doc_b1, doc_b2]) as x) then
+    raise exception 'FAIL: listing their folder shows paid client B % files instead of only the 2 with a row', cardinality(names);
+  end if;
+  ok := ok + 1;
+
+  -- CHECK: B reads no file of G or A, whatever is asked
+  select count(*) into cnt from storage.objects where bucket_id = 'client-files' and name not like b::text || '/%';
+  if cnt <> 0 then raise exception 'FAIL: paid client B reads % documents of other clients', cnt; end if;
+  ok := ok + 1;
+
+  -- CHECK: B can't add a row or upload a file, not even into their own folder
+  begin
+    insert into public.client_documents (user_id, path, file_name)
+      values (b, b::text || '/' || gen_random_uuid()::text || '.pdf', 'Mío.pdf');
+    raise exception 'FAIL: client B added a client_documents row';
+  exception when insufficient_privilege then ok := ok + 1;
+  end;
+  begin
+    insert into storage.objects (bucket_id, name)
+      values ('client-files', b::text || '/' || gen_random_uuid()::text || '.pdf');
+    raise exception 'FAIL: client B uploaded a file to client-files';
+  exception when insufficient_privilege then ok := ok + 1;
+  end;
+
+  -- CHECK: B can't delete or change their own rows or files
+  delete from public.client_documents where path in (doc_b1, doc_b2);
+  get diagnostics rc = row_count;
+  if rc <> 0 then raise exception 'FAIL: client B deleted their own client_documents row'; end if;
+  begin
+    update public.client_documents set file_name = 'Cambiado.pdf' where path = doc_b1;
+    raise exception 'FAIL: client B changed a client_documents row';
+  exception when insufficient_privilege then null;
+  end;
+  delete from storage.objects where bucket_id = 'client-files' and name = any (doc_files);
+  get diagnostics rc = row_count;
+  if rc <> 0 then raise exception 'FAIL: client B deleted a file in client-files'; end if;
+  update storage.objects set name = b::text || '/' || gen_random_uuid()::text || '.pdf'
+   where bucket_id = 'client-files' and name = doc_b1;
+  get diagnostics rc = row_count;
+  if rc <> 0 then raise exception 'FAIL: client B moved a file in client-files'; end if;
+  ok := ok + 1;
+
+  -- ---------------------------------------------------------------------------
+  -- Migration 8, as CLIENT G (paid, same state and route as B)
+  -- ---------------------------------------------------------------------------
+  reset role;
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', cg, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+
+  -- CHECK: G reads only their own row, never B's (same state and route)
+  select coalesce(array_agg(path), '{}') into names from public.client_documents;
+  if names <> array[doc_g] then
+    raise exception 'FAIL: client G reads % client_documents rows instead of only their own', cardinality(names);
+  end if;
+  select count(*) into cnt from public.client_documents where user_id = b;
+  if cnt <> 0 then raise exception 'FAIL: client G reads client B''s client_documents rows'; end if;
+  ok := ok + 1;
+
+  -- CHECK: G reads their own file, but none of B's, also when listing
+  -- B's folder
+  select count(*) into cnt from storage.objects where bucket_id = 'client-files' and name = doc_g;
+  if cnt <> 1 then raise exception 'FAIL: client G cannot read their own document'; end if;
+  select count(*) into cnt from storage.objects where bucket_id = 'client-files' and name like b::text || '/%';
+  if cnt <> 0 then raise exception 'FAIL: client G reads % of client B''s documents', cnt; end if;
+  ok := ok + 1;
+
+  -- CHECK (asked for by Ivan): G can't create a signed link for B's file.
+  -- Supabase's Storage service makes a signed link only after it has read
+  -- the file's row in storage.objects as the logged-in person, asking for
+  -- exactly that bucket and path; when that read finds nothing, it answers
+  -- "Object not found" and makes no link. This is that read, as G:
+  select count(*) into cnt from storage.objects
+   where bucket_id = 'client-files' and name = doc_b1;
+  if cnt <> 0 then raise exception 'FAIL: client G can read client B''s document, so could get a signed link for it'; end if;
+  select count(*) into cnt from storage.objects
+   where bucket_id = 'client-files' and name in (doc_b1, doc_b2, doc_b_orphan);
+  if cnt <> 0 then raise exception 'FAIL: client G could get signed links for % of client B''s documents', cnt; end if;
+  ok := ok + 1;
+
+  -- CHECK: G can't delete B's rows or files, nor add a row for B
+  delete from public.client_documents where user_id = b;
+  get diagnostics rc = row_count;
+  if rc <> 0 then raise exception 'FAIL: client G deleted client B''s client_documents rows'; end if;
+  delete from storage.objects where bucket_id = 'client-files' and name like b::text || '/%';
+  get diagnostics rc = row_count;
+  if rc <> 0 then raise exception 'FAIL: client G deleted client B''s documents'; end if;
+  begin
+    insert into public.client_documents (user_id, path, file_name) values (b, doc_b_orphan, 'x.pdf');
+    raise exception 'FAIL: client G added a row for client B''s file';
+  exception when insufficient_privilege then ok := ok + 1;
+  end;
+
+  -- ---------------------------------------------------------------------------
+  -- Migration 8, as CLIENT A (FREE)
+  -- ---------------------------------------------------------------------------
+  reset role;
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', a, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+
+  -- CHECK: a free client sees nothing, not even their own row and file
+  select count(*) into cnt from public.client_documents;
+  if cnt <> 0 then raise exception 'FAIL: free client A reads % client_documents rows', cnt; end if;
+  select count(*) into cnt from storage.objects where bucket_id = 'client-files';
+  if cnt <> 0 then raise exception 'FAIL: free client A reads % files of client-files', cnt; end if;
+  ok := ok + 1;
+
+  -- CHECK: a free client can't add a row or upload a file either
+  begin
+    insert into public.client_documents (user_id, path, file_name)
+      values (a, a::text || '/' || gen_random_uuid()::text || '.pdf', 'x.pdf');
+    raise exception 'FAIL: free client A added a client_documents row';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    insert into storage.objects (bucket_id, name)
+      values ('client-files', a::text || '/' || gen_random_uuid()::text || '.pdf');
+    raise exception 'FAIL: free client A uploaded a file to client-files';
+  exception when insufficient_privilege then null;
+  end;
+  ok := ok + 1;
+
+  -- ---------------------------------------------------------------------------
+  -- Migration 8, as a LOGGED-OUT visitor (anon)
+  -- ---------------------------------------------------------------------------
+  reset role;
+  perform set_config('request.jwt.claims', '{"role":"anon"}', true);
+  set local role anon;
+
+  -- CHECK: a logged-out visitor can't read client_documents, reads no file
+  -- of client-files and can't upload one
+  begin
+    select count(*) into cnt from public.client_documents;
+    raise exception 'FAIL: a logged-out visitor can read client_documents';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    select count(*) into cnt from storage.objects where bucket_id = 'client-files';
+  exception when insufficient_privilege then cnt := 0;
+  end;
+  if cnt <> 0 then raise exception 'FAIL: a logged-out visitor reads % files of client-files', cnt; end if;
+  begin
+    insert into storage.objects (bucket_id, name)
+      values ('client-files', b::text || '/' || gen_random_uuid()::text || '.pdf');
+    raise exception 'FAIL: a logged-out visitor uploaded a file to client-files';
+  exception when insufficient_privilege then null;
+  end;
+  ok := ok + 1;
+
+  -- ---------------------------------------------------------------------------
+  -- Migration 8, as the ADMIN again: deleting
+  -- ---------------------------------------------------------------------------
+  reset role;
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', adm, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+
+  -- CHECK: admin deletes a document the way the website does it: the row
+  -- first, then the file
+  delete from public.client_documents where path = doc_b2;
+  get diagnostics rc = row_count;
+  if rc <> 1 then raise exception 'FAIL: admin could not delete a client_documents row'; end if;
+  delete from storage.objects where bucket_id = 'client-files' and name = doc_b2;
+  get diagnostics rc = row_count;
+  if rc <> 1 then raise exception 'FAIL: admin could not delete a client document'; end if;
+  ok := ok + 1;
+
+  -- CHECK: admin can also delete a file that has no row
+  delete from storage.objects where bucket_id = 'client-files' and name = doc_b_orphan;
+  get diagnostics rc = row_count;
+  if rc <> 1 then raise exception 'FAIL: admin could not delete a document that has no row'; end if;
+  ok := ok + 1;
+
+  -- CHECK: once its row is gone, B no longer sees the deleted document;
+  -- B still sees the other one
+  reset role;
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', b, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  select coalesce(array_agg(path), '{}') into names from public.client_documents;
+  if names <> array[doc_b1] then
+    raise exception 'FAIL: after deleting, paid client B reads % rows instead of 1', cardinality(names);
+  end if;
+  select coalesce(array_agg(name), '{}') into names from storage.objects where bucket_id = 'client-files';
+  if names <> array[doc_b1] then
+    raise exception 'FAIL: after deleting, paid client B reads % files instead of 1', cardinality(names);
+  end if;
+  ok := ok + 1;
+
   -- ---------------------------------------------------------------------------
   -- Clean up, as you (postgres) again
   -- ---------------------------------------------------------------------------
@@ -2282,6 +2698,9 @@ begin
   delete from auth.users where id in (a, b, c, d, ce, cf, cg, adm);  -- and their client layer, details and dudas
   delete from public.news_posts where title like '[rls-test]%';  -- and their attachment rows
   delete from storage.objects where bucket_id = 'news-files' and name = any (test_files || thumb_files);
+  -- Deleting the logins removed their client_documents rows, but not their
+  -- files (known limit of migration 8): remove the test files by hand
+  delete from storage.objects where bucket_id = 'client-files' and name = any (doc_files);
   delete from public.checklist_templates where route like 'rls-test-%';
   delete from public.checklist_items where code like 'rls-test-%' or route like 'rls-test-%';
   delete from public.routes where code like 'rls-test-%';
@@ -2301,6 +2720,10 @@ begin
            where path = any (test_files || thumb_files) or thumb_path = any (thumb_files))
        + (select count(*) from storage.objects
            where bucket_id = 'news-files' and name = any (test_files || thumb_files))
+       + (select count(*) from public.client_documents
+           where user_id in (a, b, c, d, ce, cf, cg, adm) or path = any (doc_files))
+       + (select count(*) from storage.objects
+           where bucket_id = 'client-files' and name = any (doc_files))
        + (select count(*) from public.routes where code like 'rls-test-%')
     into cnt;
   if cnt <> 0 then raise exception 'FAIL: % test rows were left behind', cnt; end if;

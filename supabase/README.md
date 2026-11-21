@@ -13,7 +13,8 @@ and Claude Code never connects to Supabase.
 | `migrations/20261118120000_news_attachments.sql` | **Migration 5.** Photos and PDFs in Novedades posts: the table `news_attachments` and the private storage bucket `news-files`, with their rules. Run it **once**, after migration 4. |
 | `migrations/20261118180000_news_thumbnails.sql` | **Migration 6.** Small copies of the photos in Novedades posts (`news_attachments.thumb_path`), readable exactly when their photo is. Run it **once**, after migration 5. |
 | `migrations/20261120120000_checklist_templates.sql` | **Migration 7.** The checklist built from the owner's templates: the four routes, new step fields on `checklist_items`, and the tables `checklist_templates`, `client_item_settings` (the client layer), `client_details` and `client_dudas` ("Mis dudas"), with their rules. Run it **once**, after migration 6. |
-| `content/` | **Checklist templates as SQL.** One file per Bundesland + route (e.g. `content/bw-medico_drittstaat.sql`), made by `npm run checklist-sql` from the owner's JSON in `content/checklists/`. Safe to run again (see section 10). Never edit these by hand. |
+| `migrations/20261121200000_client_documents.sql` | **Migration 8.** "Mis documentos": the table `client_documents` and the private storage bucket `client-files` (PDF only, 10 MB), with their rules. Run it **once**, after migration 7. |
+| `content/` | **Checklist templates as SQL.** One file per Bundesland + route (e.g. `content/bw-medico_drittstaat.sql`), made by `npm run checklist-sql` from the owner's JSON in `content/checklists/`. Safe to run again (see section 11). Never edit these by hand. |
 | `tests/rls_check.sql` | **The RLS test.** Proves that clients can't see or change each other's data and that admins can do their job. Run it as often as you like. |
 | `templates/` | **Login emails and settings.** The Spanish invite and reset-password emails, plus the guide (`templates/README.md`) to the URL, password and email settings that logins need. |
 
@@ -79,7 +80,7 @@ run it again.
 "Unrestricted". `profiles` has the columns `first_name` and `last_names`
 and no `full_name`.
 
-Then **run the RLS test again** (section 9). It should still end with
+Then **run the RLS test again** (section 10). It should still end with
 `ALL RLS TESTS PASSED`.
 
 ## 3. Apply migration 3 (once)
@@ -91,7 +92,7 @@ Migration 3 makes these changes:
   can read. Admins still read every item.
 - **`is_admin`:** it can no longer be changed through the website, by
   anyone, admins included. It changes only here in the SQL Editor, by user ID
-  (see section 8). Admins keep changing plan, state and route from the admin
+  (see section 9). Admins keep changing plan, state and route from the admin
   screens.
 - A new private helper, `my_route()`, gives the checklist rule the user's own
   route (like `my_state()` does for news).
@@ -109,7 +110,7 @@ Steps:
 unit). Send me the message. If it says something **"already exists"**,
 migration 3 was already applied. Don't run it again.
 
-Then **run the RLS test** (section 9), with the newest `tests/rls_check.sql`
+Then **run the RLS test** (section 10), with the newest `tests/rls_check.sql`
 from the repository. It should end with `ALL RLS TESTS PASSED`.
 
 **Before real clients use the checklist:** every paid client needs both a
@@ -189,7 +190,7 @@ The one result row must say `rls_was_on` = **true**, `left_behind` =
 **false** and `website_cannot_run_it` = **true**. If any of the three is
 different, send me the row.
 
-Then **run the RLS test** (section 9), with the newest `tests/rls_check.sql`
+Then **run the RLS test** (section 10), with the newest `tests/rls_check.sql`
 from the repository. It should end with `ALL RLS TESTS PASSED`.
 
 ## 5. Apply migration 5 (once)
@@ -224,7 +225,7 @@ Steps:
 unit, the storage part included). Send me the message. If it says something
 **"already exists"**, migration 5 was already applied. Don't run it again.
 
-Then **run the RLS test** (section 9), with the newest `tests/rls_check.sql`
+Then **run the RLS test** (section 10), with the newest `tests/rls_check.sql`
 from the repository. It should end with `ALL RLS TESTS PASSED`.
 
 **Check the bucket and the rules** with these three queries (each in a new
@@ -298,7 +299,7 @@ unit). Send me the message. If it says **"column "thumb_path" of relation
 "news_attachments" already exists"**, migration 6 was already applied.
 Don't run it again.
 
-Then **run the RLS test** (section 9), with the newest `tests/rls_check.sql`
+Then **run the RLS test** (section 10), with the newest `tests/rls_check.sql`
 from the repository. It should end with `ALL RLS TESTS PASSED`.
 
 **Check the change** with these four queries (each in a new query, or all
@@ -408,7 +409,7 @@ unit). Send me the message. If it says **"relation "checklist_templates"
 already exists"** or **"duplicate key value … routes_pkey"**, migration 7
 was already applied. Don't run it again.
 
-Then **run the RLS test** (section 9), with the newest `tests/rls_check.sql`
+Then **run the RLS test** (section 10), with the newest `tests/rls_check.sql`
 from the repository. It should end with `ALL RLS TESTS PASSED`.
 
 **Check the change** with these five queries (each in a new query, or all
@@ -473,7 +474,116 @@ select count(*) as anon_rights
 
 Expected: `anon_rights` = `0`.
 
-## 8. Make yourself and your cousin admins
+## 8. Apply migration 8 (once)
+
+Migration 8 makes these changes (decision of 21 Nov 2026, night, see
+DECISIONS.md), for **"Mis documentos"**: PDFs the MNL team uploads for one
+client. Same pattern as the news files (migration 5).
+- **New table `client_documents`:** one row per PDF: the client
+  (`user_id`), where the file is stored (`path`), the uploaded file's name
+  (`file_name`, plain text, 1 to 200 characters, no spaces or line breaks
+  at either end) and the upload date (`created_at`, set by the database).
+  - `path` is always `<client id>/<random uuid>.pdf`, in lowercase, and must
+    be in that client's own folder. The uploaded file's own name is never
+    part of it. No two rows share a path.
+  - **Who:** a **paid** client reads only their own rows (a free client
+    sees nothing); admins read, add and delete any row. **Nobody changes a
+    row**, admins included (there is no update right at all).
+  - Deleting a login deletes its rows.
+- **New private bucket `client-files`** (a bucket is a folder in Supabase
+  Storage): **PDF only**, at most **10 MB** per file, no public links.
+- **Its rules on stored files:**
+  - a client reads (downloads, lists, gets a signed link for) a file only
+    when a `client_documents` row with exactly that path is theirs and they
+    are paid. A file without a row is invisible to clients.
+  - admins read every file in the bucket (also one without a row, so they
+    can still delete it), upload (only to `<an existing profile's id>/<uuid>.pdf`)
+    and delete.
+  - clients never upload or delete; **nobody replaces or moves a file**.
+- **Known limit, accepted:** deleting a login removes its rows, but its
+  files stay in storage, invisible to everyone but admins.
+
+The site that is live before this migration keeps working with it, but the
+**new** site reads `client_documents`, so apply the migration **before**
+merging the website change.
+
+Steps:
+1. SQL Editor → **New query**.
+2. Open `supabase/migrations/20261121200000_client_documents.sql` and copy
+   **all** of it ("Copy raw file" on GitHub).
+3. Paste it and click **Run**.
+4. You should see **"Success. No rows returned"**.
+
+**If you get an error:** nothing was changed (the whole file runs as one
+unit). Send me the message. If it says **"relation "client_documents"
+already exists"**, migration 8 was already applied. Don't run it again.
+
+Then **run the RLS test** (section 10), with the newest `tests/rls_check.sql`
+from the repository. It should end with `ALL RLS TESTS PASSED`.
+
+**Check the change** with these five queries (each in a new query, or all
+five one after another):
+
+```sql
+-- 1. The new table, with RLS on and its three rules
+select c.relrowsecurity as rls_on,
+       (select string_agg(p.cmd, ', ' order by p.cmd) from pg_policies p
+         where p.schemaname = 'public' and p.tablename = 'client_documents') as rules
+  from pg_class c
+ where c.oid = 'public.client_documents'::regclass;
+```
+
+Expected: one row, `rls_on` = `true`, `rules` = `DELETE, INSERT, SELECT`.
+
+```sql
+-- 2. What the website may do on it: read, delete, add only three columns,
+--    never change a row
+select has_table_privilege('authenticated', 'public.client_documents', 'SELECT') as can_read,
+       has_table_privilege('authenticated', 'public.client_documents', 'DELETE') as can_delete,
+       (select string_agg(column_name, ', ' order by column_name)
+          from information_schema.column_privileges
+         where grantee = 'authenticated' and table_schema = 'public'
+           and table_name = 'client_documents' and privilege_type = 'INSERT') as can_add,
+       has_any_column_privilege('authenticated', 'public.client_documents', 'UPDATE') as can_change;
+```
+
+Expected: `can_read` = `true`, `can_delete` = `true`, `can_add` =
+`file_name, path, user_id`, `can_change` = `false`.
+
+```sql
+-- 3. The bucket: private, 10 MB, PDF only
+select id, public, file_size_limit, allowed_mime_types
+  from storage.buckets
+ where id = 'client-files';
+```
+
+Expected: one row, `client-files` | `false` | `10485760` |
+`{application/pdf}`.
+
+```sql
+-- 4. The three rules on stored files (no rule to change a file)
+select policyname, cmd
+  from pg_policies
+ where schemaname = 'storage' and tablename = 'objects'
+   and policyname like 'client-files:%'
+ order by policyname;
+```
+
+Expected, three rows: `client-files: admins delete` | `DELETE`,
+`client-files: admins upload` | `INSERT`,
+`client-files: read own documents, admins read all` | `SELECT`.
+
+```sql
+-- 5. Logged-out visitors have no rights on the new table
+select count(*) as anon_rights
+  from information_schema.role_table_grants
+ where grantee = 'anon' and table_schema = 'public'
+   and table_name = 'client_documents';
+```
+
+Expected: `anon_rights` = `0`.
+
+## 9. Make yourself and your cousin admins
 
 Accounts are only created by admins, through **Invite user**. Public sign-ups
 are disabled in Supabase (**Authentication** settings, "Allow new users to
@@ -514,7 +624,7 @@ admin. `plan`, `route` and the state can be changed by an admin in the admin
 screens, or by you here in the SQL Editor. A client can never change
 `plan`, `route` or `is_admin`, not even on their own profile.
 
-## 9. Run the RLS test
+## 10. Run the RLS test
 
 1. SQL Editor → **New query**. Paste **all** of `tests/rls_check.sql`, then
    click **Run**.
@@ -535,18 +645,20 @@ screens, or by you here in the SQL Editor. A client can never change
   templates, client-layer rows, client details and dudas. Client G has the
   same state and route as client B, to prove two clients on the same
   checklist still never see each other's notes, details or dudas. The test admin also adds a few test files
-  to the `news-files` bucket, small copies of photos included (only their storage rows, no real content). Their names all start with `rls-test` /
+  to the `news-files` bucket, small copies of photos included, and (migration 8) a few test PDFs
+  to the `client-files` bucket, in test clients' folders (only their storage rows, no real content). Their names all start with `rls-test` /
   `[rls-test]`, or they belong to a fake login.
 - **Safety nets:** before that, it checks the whole database: every table
   has RLS on, logged-out visitors have no rights on any table, every
   `SECURITY DEFINER` function (one that runs with its owner's rights) has a
   fixed `search_path`, and there are no views in `public`.
 - **Checks:** it pretends to be each of them, the same way the website does
-  after a login, and runs 210 checks. (Before migration 7 there were 158,
+  after a login, and runs 238 checks. (Before migration 8 there were 210,
+  before migration 7 there were 158,
   before migration 6 there were 147,
   before migration 5 there were 124, before migration 4 there were 93,
   before migration 3 there were 75, and before migration 2 there were 46.
-  The new version only works once migration 7 is applied.)
+  The new version only works once migration 8 is applied.)
 - **Clean-up:** it deletes everything it created, the test files included.
   Supabase may refuse plain-SQL deletes on stored files ("use the Storage
   API instead"); the test switches that guard off for its own run only
@@ -558,7 +670,7 @@ screens, or by you here in the SQL Editor. A client can never change
 **Run it again** after every future migration that changes tables, grants
 or policies.
 
-## 10. Load a checklist template
+## 11. Load a checklist template
 
 Each of the owner's checklist templates is one JSON file in
 `content/checklists/`, named `<state>-<route>.json`
@@ -645,6 +757,8 @@ There are two layers, and both must allow something before it works.
 | `checklist_templates` | read the template of **their own state and route**, **only on the paid plan** | read all; add and change (never delete) |
 | `client_item_settings` (client layer) | **paid plan only:** read their own rows, for steps they can read | read all; add and change (never delete; reset by emptying `applies`, `reason` and `note`) |
 | `client_details` | **paid plan only:** read their own | read all; add and change (never delete) |
+| `client_documents` ("Mis documentos") | **paid plan only:** read their own rows; never add, change or delete | read all; add (only `user_id`, `path`, `file_name`) and delete. **Nobody** changes a row. |
+| files in the `client-files` bucket | **paid plan only:** read (download, signed links, listing) a file only when it has their own `client_documents` row; never upload or delete | read every file, also one without a row; upload (only to `<an existing profile's id>/<uuid>.pdf`) and delete. **Nobody** replaces or moves a file. |
 | `client_dudas` ("Mis dudas") | **paid plan only:** read, add and change their own (only `user_id`, which must be their own, and `body`); never delete | read all (but not write a client's) |
 | `community_posts` | **paid plan only:** read the board (posts with an empty `state`) and **their own state's chat**; post there (only the text and the state); delete their own. At most 5 posts a minute and 100 in 24 hours. Nobody edits posts. | read all (the board and all 16 chats); post anywhere, with no speed limit; delete any post |
 
@@ -667,8 +781,9 @@ There are two layers, and both must allow something before it works.
   change old posts. It is the only thing about another member a client can
   see.
 - **Deleting an account** in **Authentication → Users** also deletes their
-  profile, progress and community posts, and their client layer, details
-  and dudas.
+  profile, progress and community posts, and their client layer, details,
+  dudas and `client_documents` rows. Their files in `client-files` stay in
+  storage (known limit, accepted), invisible to everyone but admins.
 - **State codes:** states are stored as the 16 short codes the map uses
   (`by` = Bayern, `nw` = Nordrhein-Westfalen, `th` = Thüringen…). Anything
   else is refused.
