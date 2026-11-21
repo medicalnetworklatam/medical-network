@@ -256,17 +256,20 @@
 .small-btn:focus-visible,
 .more-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
-/* "Sí, eliminar": a light block on the inverted confirmation strip */
+/* "Sí, eliminar" (PostBoard) and "Sí, borrar todo" (the CV tool): an
+   Alerta block with cream text on the inverted confirmation strip
+   (DECISIONS.md, 21 Nov 2026, late). Its hover gets darker, never black
+   text on Alerta. */
 .danger-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-height: 44px;
   padding: 0 16px;
-  border: 1px solid var(--ink);
+  border: 1px solid var(--alerta);
   border-radius: 0;
-  background: var(--ink);
-  color: var(--accent);
+  background: var(--alerta);
+  color: var(--on-alerta);
   font-family: var(--font-grotesk);
   font-size: 13px;
   font-weight: 700;
@@ -274,7 +277,7 @@
   text-transform: uppercase;
   cursor: pointer;
 }
-.danger-btn:hover:not(:disabled) { background: transparent; color: var(--ink); }
+.danger-btn:hover:not(:disabled) { border-color: var(--alerta-hover); background: var(--alerta-hover); }
 .danger-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
 .danger-btn:disabled { opacity: .7; cursor: default; }
 

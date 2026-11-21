@@ -65,13 +65,16 @@
    Tokens. Never hard-code a colour: use these.
 ------------------------------------------------------------------- */
 :root {
-  /* Three colours make the palette:
-       --paper       background of the dark heroes
+  /* Three base colours make the palette:
+       --paper       background of the dark heroes (black)
        --ink         words on the heroes, the circle, the pale sections
+                     (cream)
        --accent-rgb  text and lines in the pale sections, the "después"
                      cell, and (see-through) the words crossing a photo
+                     (black)
      The palette is "Flatline" (flatlineagency.com): black on cream,
-     chosen on 18 Nov 2026 (DECISIONS.md). */
+     chosen on 18 Nov 2026 (DECISIONS.md). Five colours with a meaning
+     are added below (21 Nov 2026, late). */
   --paper: #050505;
   --ink: #f3f0e9;
   --accent-rgb: 5 5 5;     /* #050505 */
@@ -80,12 +83,31 @@
   --tint: rgb(var(--accent-rgb) / 0.82);   /* words where they cross a photo */
   --rule: rgb(var(--accent-rgb) / 0.4);    /* thin cell lines */
 
-  /* The calendar's example events ("Webinars / reuniones"). The one
-     colour that isn't made from the three above, used only in the
-     calendar (CalendarPreview.module.css; DECISIONS.md, 18 Nov 2026,
-     afternoon). 5.7:1 against --paper, 3.2:1 against --ink.
-     To be confirmed by Ivan on the preview: change it here only. */
-  --event: #e8590c;
+  /* Five colours, each with one meaning, the same on every screen
+     (DECISIONS.md, "Changes on 21 Nov 2026 (late): colour with
+     meaning"). Only ever a background (cells, boxes, tags, buttons),
+     never coloured text and never a thin line as the only signal. Each
+     comes with the text colour to use on it (--on-…): --paper is black,
+     --ink is cream. Contrast of the text on it in brackets.
+     Change a colour here only: nothing else may hard-code these values. */
+  --alerta: #b72e1f;               /* careful / an admin has to act */
+  --on-alerta: var(--ink);         /* cream, 5.39:1 */
+  --dato: #ddd6c6;                 /* a step's facts (sand) */
+  --on-dato: var(--paper);         /* black, 14.08:1 */
+  --hecho: #87c454;                /* progress, finished steps */
+  --on-hecho: var(--paper);        /* black, 9.76:1 */
+  --para-ti: #2b6786;              /* this client, their own Bundesland */
+  --on-para-ti: var(--ink);        /* cream, 5.45:1 */
+  --para-todos: #d6982e;           /* for everyone */
+  --on-para-todos: var(--paper);   /* black, 8.14:1 */
+
+  /* Hover: colours with cream text get darker, colours with black text
+     get lighter, so the text only gains contrast. */
+  --alerta-hover: color-mix(in srgb, var(--alerta) 80%, var(--paper));         /* #93261a, cream 7.29:1 */
+  --para-ti-hover: color-mix(in srgb, var(--para-ti) 80%, var(--paper));       /* #23536c, cream 7.31:1 */
+  --hecho-hover: color-mix(in srgb, var(--hecho) 80%, var(--ink));             /* #9dcd72, black 11.07:1 */
+  --dato-hover: color-mix(in srgb, var(--dato) 80%, var(--ink));               /* #e1dbcd, black 14.77:1 */
+  --para-todos-hover: color-mix(in srgb, var(--para-todos) 80%, var(--ink));   /* #dcaa53, black 9.63:1 */
 
   --font: "aaux-next", "MNL Fallback", system-ui, sans-serif;
   --font-grotesk: "Space Grotesk", "MNL Fallback", system-ui, sans-serif;

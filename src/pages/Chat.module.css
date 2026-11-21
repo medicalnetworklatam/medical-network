@@ -186,7 +186,8 @@ div > .chat { grid-column: 1 / -1; }
   overflow-wrap: anywhere;
 }
 
-/* Others: framed. Own: a dark filled block with light text. "Equipo MNL":
+/* Others: framed. Own: a Para ti block with cream text (DECISIONS.md,
+   21 Nov 2026, late). "Equipo MNL":
    a thicker frame with a heavy left edge, plus the label over the run. */
 .bubble {
   max-width: 100%;
@@ -198,8 +199,9 @@ div > .chat { grid-column: 1 / -1; }
   color: var(--accent);
 }
 .is-own .bubble {
-  background: var(--accent);
-  color: var(--ink);
+  border-color: var(--para-ti);
+  background: var(--para-ti);
+  color: var(--on-para-ti);
 }
 .is-other.is-staff .bubble {
   border-width: 2px 2px 2px 6px;
@@ -238,7 +240,8 @@ div > .chat { grid-column: 1 / -1; }
   font-variant-numeric: tabular-nums;
   color: color-mix(in srgb, var(--accent) 72%, transparent);
 }
-.is-own .msg-foot { color: color-mix(in srgb, var(--ink) 72%, transparent); }
+/* full cream: cream at 72% would be only 3.7:1 on Para ti */
+.is-own .msg-foot { color: var(--on-para-ti); }
 
 /* Small to look at, but 44px to tap (the invisible ::before) */
 .del-btn {
@@ -264,8 +267,9 @@ div > .chat { grid-column: 1 / -1; }
   outline-offset: 3px;
 }
 
-/* "¿Eliminar este mensaje?": a strip inside the message, in the opposite
-   colours of the message */
+/* "¿Eliminar este mensaje?": a strip inside the message, black under
+   others' messages and cream under your own. "Sí, eliminar" is an
+   Alerta block with cream text on both. */
 .confirm {
   display: flex;
   flex-wrap: wrap;
@@ -307,9 +311,9 @@ div > .chat { grid-column: 1 / -1; }
   text-transform: uppercase;
   cursor: pointer;
 }
-.confirm-yes { background: var(--ink); color: var(--accent); }
+.confirm-yes { border-color: var(--alerta); background: var(--alerta); color: var(--on-alerta); }
+.confirm-yes:hover:not(:disabled) { border-color: var(--alerta-hover); background: var(--alerta-hover); }
 .confirm-no { background: transparent; color: var(--ink); }
-.is-own .confirm-yes { border-color: var(--accent); background: var(--accent); color: var(--ink); }
 .is-own .confirm-no { border-color: var(--accent); color: var(--accent); }
 .confirm-yes:focus-visible,
 .confirm-no:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }

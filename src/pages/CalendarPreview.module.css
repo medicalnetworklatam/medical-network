@@ -1,9 +1,9 @@
 /* ------------------------------------------------------------------
    The calendar preview in the dark column (CalendarPreview.tsx). The
    month is a grid of ruled cells; today is an inverted cell; an example
-   event has a short bar under its number, in the event colour (--event,
-   the only colour not made from the three tokens, used only here).
-   The bar's shape, not only its colour, marks the day.
+   event is a Para todos cell with a bold black number (DECISIONS.md,
+   21 Nov 2026, late). Screen readers hear "webinar de ejemplo", and the
+   legend says what the colour means.
 
    Rule for this file: the site loads every page's CSS at once, so
    nothing here may target html, body, * or :root directly.
@@ -89,23 +89,21 @@
   font-weight: 700;
 }
 
-/* An example event: bold, with a short bar under the number */
-.days > .event { font-weight: 700; }
-.days > .event::after,
+/* An example event: a Para todos cell, black bold number (8.1:1) */
+.days > .event {
+  background: var(--para-todos);
+  color: var(--on-para-todos);
+  font-weight: 700;
+}
+/* today on an event day: still Para todos, framed in cream inside */
+.days > .today.event { box-shadow: inset 0 0 0 2px var(--ink); }
 .legend-mark {
   width: 14px;
-  height: 3px;
-  background: var(--event);
-}
-.days > .event::after {
-  content: "";
-  position: absolute;
-  bottom: 5px;
-  left: 50%;
-  margin-left: -7px;
+  height: 14px;
+  background: var(--para-todos);
 }
 
-/* "▬ Webinars / reuniones (ejemplo)" */
+/* "■ Webinars / reuniones (ejemplo)" */
 .legend {
   display: flex;
   align-items: center;

@@ -19,16 +19,23 @@ function dateParts(iso: string): { day: string; month: string; year: string; tex
     filesNote (the list only): how many files the post has, "3 fotos y
     1 PDF", in a box above the tag. CSS shows it on phones only, where the
     preview has no file area. Screen readers hear the preview's own
-    summary instead, so the box is hidden from them. */
-export default function NewsMeta({ publishedAt, state, filesNote = '' }: {
+    summary instead, so the box is hidden from them.
+
+    Colour (DECISIONS.md, 21 Nov 2026, late): the whole cell is Para ti
+    for a post for the reader's own Bundesland (readerState), Para todos
+    for "Todos los estados", and stays uncoloured for another state's post
+    (only admins can open those). The tag says the same in words. */
+export default function NewsMeta({ publishedAt, state, readerState, filesNote = '' }: {
   publishedAt: string
   state: string | null
+  readerState: string | null
   filesNote?: string
 }) {
   const date = dateParts(publishedAt)
   const stateName = state ? MAP_SHAPES.find((s) => s.id === state)?.name ?? '' : ''
+  const tone = !state ? styles.isParaTodos : state === readerState ? styles.isParaTi : ''
   return (
-    <div className={styles.postMeta}>
+    <div className={styles.postMeta + (tone ? ' ' + tone : '')}>
       {/* Seen as "NOV 2026" over "18."; heard once as "18 nov 2026" */}
       <time className={styles.postDate} dateTime={publishedAt}>
         <span className={styles.postMonth} aria-hidden="true">{date.month} {date.year}</span>

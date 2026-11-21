@@ -229,10 +229,12 @@ export function StepLayer({ item, doneAt, setting, clientId, placeholderValues, 
   ].filter(Boolean).join(' · ')
 
   const defaultText = item.na_default ? 'no aplica' : 'aplica'
-  const options: { value: Choice; label: string }[] = [
-    { value: 'template', label: `Según la plantilla (${defaultText})` },
-    { value: 'yes', label: 'Aplica' },
-    { value: 'no', label: 'No aplica' },
+  /* The chosen option is coloured: the template's rule is for everyone
+     (Para todos), "Aplica" / "No aplica" is this client's own (Para ti) */
+  const options: { value: Choice; label: string; tone: string }[] = [
+    { value: 'template', label: `Según la plantilla (${defaultText})`, tone: styles.isParaTodos },
+    { value: 'yes', label: 'Aplica', tone: styles.isParaTi },
+    { value: 'no', label: 'No aplica', tone: styles.isParaTi },
   ]
 
   return (
@@ -245,7 +247,15 @@ export function StepLayer({ item, doneAt, setting, clientId, placeholderValues, 
         </p>
         <p className={styles.checkStatus}>
           {doneAt
-            ? <>Hecho · <time dateTime={doneAt}>{formatBerlinDateTime(doneAt)}</time> (hora de Alemania){!applies && ' · No cuenta: no aplica'}</>
+            ? (
+              /* Hecho only when the step counts; "no aplica" stays uncoloured */
+              <>
+                <span className={applies ? styles.hechoTag : undefined}>
+                  Hecho · <time dateTime={doneAt}>{formatBerlinDateTime(doneAt)}</time> (hora de Alemania)
+                </span>
+                {!applies && ' · No cuenta: no aplica'}
+              </>
+            )
             : 'Pendiente'}
           {!applies && !doneAt && ' · No aplica'}
         </p>
@@ -263,7 +273,7 @@ export function StepLayer({ item, doneAt, setting, clientId, placeholderValues, 
           <legend className={styles.subLabel + ' ' + styles.layerLegend}>¿Aplica a este cliente?</legend>
           <div className={styles.choices}>
             {options.map((option) => (
-              <label key={option.value} className={styles.choice}>
+              <label key={option.value} className={styles.choice + ' ' + option.tone}>
                 <input
                   type="radio" name={id + '-applies'} value={option.value}
                   checked={choice === option.value}
@@ -287,7 +297,7 @@ export function StepLayer({ item, doneAt, setting, clientId, placeholderValues, 
           </div>
 
           <div className={styles.field}>
-            <label className={styles.subLabel} htmlFor={id + '-note'}>Nota para el cliente</label>
+            <label className={styles.subLabel + ' ' + styles.paraTiTag} htmlFor={id + '-note'}>Nota para el cliente</label>
             <textarea
               id={id + '-note'} className={styles.textarea + ' ' + styles.smallTextarea} value={note}
               aria-describedby={id + '-note-hint'} aria-invalid={noteTooLong || undefined}

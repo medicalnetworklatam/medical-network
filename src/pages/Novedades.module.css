@@ -152,6 +152,22 @@
 /* "3 FOTOS Y 1 PDF": phones only (see the end of this file) */
 .post-files-note { display: none; }
 
+/* The date cell in the colour of who the post is for (DECISIONS.md,
+   21 Nov 2026, late; NewsMeta.tsx): Para ti for the reader's own
+   Bundesland, Para todos for "Todos los estados". The tag and the file
+   box become outlines in the cell's text colour. Hovering the preview
+   only underlines its title, so the cell never changes colour. */
+.post-meta.is-para-ti { background: var(--para-ti); color: var(--on-para-ti); }
+.post-meta.is-para-todos { background: var(--para-todos); color: var(--on-para-todos); }
+.post-meta.is-para-ti .post-tag,
+.post-meta.is-para-ti .post-files-note,
+.post-meta.is-para-todos .post-tag,
+.post-meta.is-para-todos .post-files-note {
+  border-color: currentColor;
+  background: transparent;
+  color: inherit;
+}
+
 /* Right cell: the title, the text (with its links), then the post's
    photos and PDFs */
 .post-body {

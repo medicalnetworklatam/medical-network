@@ -15,6 +15,36 @@ Last updated: 21 Nov 2026. This is the source of truth for the project. When a d
   - Spanish only, web only
 - **Admins:** Ivan and his cousin.
 
+## Changes on 21 Nov 2026 (late): colour with meaning
+
+Ivan chose these colours on 21 Nov 2026 from previews. This replaces "every colour comes from three values" (17 Nov) and "there is no red colour" (18 Nov). Black `#050505` and cream `#F3F0E9` stay the base.
+
+- **Five colours, each with one meaning, the same on every screen:**
+  - **Alerta** `#B72E1F`, cream text: careful, this can go wrong; or an admin has to act.
+  - **Dato** `#DDD6C6` (sand), black text: a step's facts (Dónde, Plazo, Caduca).
+  - **Hecho** `#87C454`, black text: progress and finished steps.
+  - **Para ti** `#2B6786`, cream text: about this client personally, or their own Bundesland.
+  - **Para todos** `#D6982E`, black text: for everyone.
+- **Rules:**
+  - Colours are only backgrounds (cells, boxes, tags, buttons), never coloured text and never a thin coloured line as the only signal.
+  - Text on them is black or cream as above, each at least 4.5:1: cream on Alerta and on Para ti 5.4:1; black on Para todos 8.1:1, on Hecho 9.8:1, on Dato 14.1:1.
+  - Labels, ticks and words stay, so colour never carries the meaning alone.
+  - "No aplica" steps stay greyed, with none of these colours. Errors stay inverted black cells. The dark column is unchanged.
+- **Client screens:**
+  - Mi expediente: "Atención" = Alerta. "Dónde", "Plazo" and "Caduca" = Dato. A ticked step's tick box, the "Avance del expediente" cell (no new bar), finished milestones, and a block tab whose block is fully done = Hecho. "Nota para ti" = Para ti (instead of black).
+  - "Abrir el formulario del currículum" is a filled black button with cream text, at the top of Mi expediente and in step `p2`.
+  - Novedades (list, full post, the phone's file-count box): posts for the reader's own Bundesland get Para ti on the date cell and the tag; "Todos los estados" posts get Para todos.
+  - Chat: the reader's own messages = Para ti.
+  - Calendar preview: the example events = Para todos. The separate calendar orange (`--event`) goes.
+- **Admin screens:**
+  - Client overview: "Sin estado" and "Sin ruta" cells of paid clients = Alerta; progress % gets a Hecho bar.
+  - One client's screen: confirm buttons ("Sí, cambiar") = Alerta; "Hecho · <fecha>" on a step = Hecho; a chosen "Según la plantilla" = Para todos; a chosen "Aplica" / "No aplica" = Para ti; "Nota para el cliente" = Para ti; "Guardado." = Hecho.
+  - News list: a state's tag = Para ti, "Todos los estados" = Para todos.
+  - Delete confirmations elsewhere ("Sí, eliminar", "Sí, quitar" for a news file, "Sí, borrar todo" in the CV tool) = Alerta, for consistency.
+  - Free accounts and everything else: no colour.
+- **Dudas del cliente:** no colour for now. A "new" marker would need a database change (remembering when an admin last opened them). Revisit if the owner misses new dudas.
+- All colours live in `src/styles/redesign.css`; changing one is a one-line edit.
+
 ## Changes on 21 Nov 2026 (night): Mis documentos
 
 - **Mis documentos** is a login-only page, `/documentos`, in the column right after "Mi expediente". A paid client sees the files the team uploaded for them, newest first: name, date (German time) and "Abrir PDF" in a new tab. Free clients see "Mis documentos es para miembros con el paquete completo."; with no files: "Todavía no hay documentos para ti."
@@ -85,7 +115,7 @@ Based on the owner's own Claude explaining how he works today, and the Baden-Wü
 - **Links in text:** web addresses in Novedades, Comunidad and Chat become links: `http://` and `https://` addresses, addresses starting with `www.`, and bare domains whose ending is on a fixed list (com, org, net, info, eu, de, at, ch, es, ec, pe, co, mx, ar, cl, bo, ve, uy, py, gob, gov, edu; lowercase only, so "Alemania.De hecho" stays text). Addresses without `http(s)://` open as `https://`. Anything with "@" before the host (emails, disguised addresses) stays plain text (Ivan, 18 Nov 2026, option C).
 - **The dark column is shared** by Novedades, Comunidad and Chat, in this order: Mi perfil, Novedades, Mi expediente, Comunidad MNL, Chat de <Bundesland>, Administración (admins only), Calendario, Contacto, Cerrar sesión. The current page is marked. The "← Novedades" links on Comunidad and Chat go. (Ivan gave the order; using the column on all three pages is Claude's reading of his answer, to be confirmed on the preview.) Contacto added 20 Nov 2026: a login-only page open to every logged-in user, title "equipo mnl" over "contacto.".
 - **"Comunidad" is called "Comunidad MNL"** in the column and the browser tab title. The page heading stays "tu" over "comunidad.".
-- **Calendar:** still a non-working preview labelled "Próximamente". It shows the current month and today's date (German time) and a few example events of one type, "Webinars / reuniones", in one event colour, with a small legend that says they are examples. This one colour is the only exception to "every colour comes from three values", and it is used only in the calendar.
+- **Calendar:** still a non-working preview labelled "Próximamente". It shows the current month and today's date (German time) and a few example events of one type, "Webinars / reuniones", in one event colour, with a small legend that says they are examples. This one colour is the only exception to "every colour comes from three values", and it is used only in the calendar. (Replaced 21 Nov 2026, late: the events use the "Para todos" colour; see that section.)
 - **Novedades posts are redesigned** so each one reads as a separate post, not as lines of a log or chat. What the page shows and who sees what stay the same.
 - **The state chat looks like a chat:** oldest at the top, newest at the bottom, the page opens at the newest message, the writing box stays at the bottom, own messages on the right and everyone else's on the left, older messages loaded at the top. This replaces "messages are newest first like the board" for the chat only. Comunidad stays a board, newest first. Every chat rule (length, deleting, speed limit, 20-second refresh, "Equipo MNL") stays the same.
 
@@ -97,7 +127,7 @@ Based on the owner's own Claude explaining how he works today, and the Baden-Wü
 - **Admin screens:** full redesign, like the client screens.
 - **The old look is removed** once every screen is redesigned: Figtree, Anton and the mint colours go, and the new look's background, colour and fonts become the site-wide default.
 - **Home menu:** "Menú" opens a list with "Aplicar a Ruta Approbation" (the Calendly link, in a new tab) and "Entrar"; when logged in, "Mi área" and "Cerrar sesión" instead of "Entrar". The header chips next to "Menú" stay.
-- **Errors** are shown as inverted cells (dark background, light text), as on Novedades. There is no red colour.
+- **Errors** are shown as inverted cells (dark background, light text), as on Novedades. There is no red colour. (Replaced 21 Nov 2026, late: red now means "Alerta"; errors stay inverted cells.)
 - **Title labels:** "tu" over "comunidad."; in the chat, "chat de" over the state name, or "tu" over "chat." when there is no state; "administración" over the admin titles. The headings' own words don't change.
 
 ## Changes on 17 Nov 2026 (night): Novedades in the new look
@@ -118,7 +148,7 @@ These replace the morning's "look and feel" bullet below where they differ.
 - **Order:** the home page first, then Novedades, then every other screen (18 Nov 2026, see above). The state map keeps its shapes, sizes and behaviour; only its colours and fonts change.
 - **Novedades:** new layout, with the left column redesigned from scratch. It keeps everything it has today: profile link and first name, Comunidad, "Chat de <Bundesland>", Administración (admins only), the calendar preview (still non-working), "Cerrar sesión", and the floating chat button on phones.
 - **Fonts on redesigned screens:** Albert Sans for the big headlines, standing in for Aaux Next, a commercial font that isn't licensed yet (it needs a web licence before it can be used). Space Grotesk is used for everything else. Both are open-licence fonts and self-hosted. Since 18 Nov 2026 they are the site's only fonts: Figtree and Anton are removed.
-- **Colours on redesigned screens:** every colour comes from three values (`--paper`, `--ink`, `--accent-rgb`). The palette is Flatline, chosen on 18 Nov 2026 (see above); the five-palette switcher on the home page's menu button is removed.
+- **Colours on redesigned screens:** every colour comes from three values (`--paper`, `--ink`, `--accent-rgb`). The palette is Flatline, chosen on 18 Nov 2026 (see above); the five-palette switcher on the home page's menu button is removed. (Replaced 21 Nov 2026, late: the three base colours plus five colours with a meaning; see that section.)
 - **Design rules** (from `design-hero/DESIGN-RULES.md`): no photo is ever cut off by the edge of the screen where it is meant to be seen, and grids of cells fit on one screen (long ones are split into several screens).
 - **Rejected directions** (don't go back to them): ruled "expediente" cards with D-DIN Condensed + Figtree; rounded white cards with petrol blue and numbered circles.
 - **Home page header:** logged-out visitors see "Entrar" and "Menú". Logged-in visitors also see a "Mi área" link to Novedades, next to "Cerrar sesión", so they aren't stuck on the home page. "Menú" is a real menu since 18 Nov 2026 (see above).

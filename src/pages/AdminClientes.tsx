@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { Link } from 'react-router'
 import AdminLayout from './AdminLayout.tsx'
 import { usePageTitle } from '../lib/usePageTitle.ts'
@@ -59,6 +59,8 @@ export default function AdminClientes() {
       // A route always exists in the routes table; its code is the fallback
       route: client.route ? routeNames.get(client.route) ?? client.route : '',
       progress: progressText(summary.get(client.id)?.progress ?? null),
+      /* For the Hecho bar under the text; null: no bar ("—") */
+      percent: summary.get(client.id)?.progress?.percent ?? null,
       lastActivity: summary.get(client.id)?.lastActivity ?? null,
     }))
   }, [shown])
@@ -108,7 +110,7 @@ export default function AdminClientes() {
                 </tr>
               </thead>
               <tbody role="rowgroup">
-                {rows.map(({ client, name, state, route, progress, lastActivity }) => (
+                {rows.map(({ client, name, state, route, progress, percent, lastActivity }) => (
                   <tr key={client.id} role="row">
                     {/* Everything from the database is plain text */}
                     <td role="cell" className={styles.nameCell}>
@@ -117,16 +119,31 @@ export default function AdminClientes() {
                         {!name && client.email && <span className={styles.email}>{client.email}</span>}
                       </Link>
                     </td>
-                    <td role="cell" data-label="Estado">
+                    {/* A paid client without a state or route: Alerta, an
+                        admin has to act (DECISIONS.md, 21 Nov 2026, late) */}
+                    <td role="cell" data-label="Estado" className={!state && client.plan === 'paid' ? styles.isAlerta : undefined}>
                       {state ? <span lang="de">{state}</span> : <span className={styles.none}>Sin estado</span>}
                     </td>
-                    <td role="cell" data-label="Ruta" className={styles.wrapCell}>
+                    <td
+                      role="cell" data-label="Ruta"
+                      className={styles.wrapCell + (!route && client.plan === 'paid' ? ' ' + styles.isAlerta : '')}
+                    >
                       {route || <span className={styles.none}>Sin ruta</span>}
                     </td>
                     <td role="cell" data-label="Plan" className={styles.nowrapCell}>
                       {client.plan === 'paid' ? 'De pago' : <span className={styles.tag}>Gratis</span>}
                     </td>
-                    <td role="cell" data-label="Progreso" className={styles.nowrapCell}>{progress}</td>
+                    <td role="cell" data-label="Progreso" className={styles.nowrapCell}>
+                      <span className={styles.progress}>
+                        {progress}
+                        {/* The words already say it: the bar is only for the eye */}
+                        {percent !== null && (
+                          <span className={styles.progressTrack} aria-hidden="true">
+                            <span className={styles.progressFill} style={{ '--fill': percent / 100 } as CSSProperties} />
+                          </span>
+                        )}
+                      </span>
+                    </td>
                     <td role="cell" data-label="Última actividad" className={styles.nowrapCell}>
                       {lastActivity
                         ? <time dateTime={lastActivity}>{formatBerlinDateTime(lastActivity)}</time>

@@ -155,7 +155,7 @@ export default function NovedadPost() {
           </div>
         ) : (
           <div className={styles.posts}>
-            <FullPost post={current.post} links={current.links} />
+            <FullPost post={current.post} readerState={stateId} links={current.links} />
           </div>
         )}
       </main>
@@ -188,12 +188,17 @@ async function fileLinks(client: NonNullable<typeof supabase>, post: NewsPost): 
     the other. Title and body are plain text only (never HTML); web
     addresses in the body become links (linkify, built as React elements).
     The files come after the text, in the admin's order. */
-function FullPost({ post, links }: { post: NewsPost; links: Links }) {
+function FullPost({ post, readerState, links }: {
+  post: NewsPost
+  /** The reader's own Bundesland, for the colour of the date cell */
+  readerState: string | null
+  links: Links
+}) {
   const text = useMemo(() => linkify(post.body), [post.body])
   const files = useMemo(() => sortAttachments(post.news_attachments ?? []), [post.news_attachments])
   return (
     <article className={styles.post}>
-      <NewsMeta publishedAt={post.published_at} state={post.state} />
+      <NewsMeta publishedAt={post.published_at} state={post.state} readerState={readerState} />
       <div className={styles.postBody}>
         {/* Line breaks kept by CSS */}
         <h1 className={styles.postTitle}>{post.title}</h1>
