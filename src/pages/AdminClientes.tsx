@@ -6,7 +6,7 @@ import { supabase } from '../lib/supabase.ts'
 import { dataErrorMessage } from '../lib/dataErrors.ts'
 import { formatBerlinDateTime } from '../lib/berlinTime.ts'
 import {
-  clientName, loadOverview, progressText, sortClients, stateName, summarise, type Overview,
+  clientName, loadOverview, progressText, setupMissing, sortClients, stateName, summarise, type Overview,
 } from '../lib/adminData.ts'
 import styles from './Admin.module.css'
 
@@ -62,11 +62,13 @@ export default function AdminClientes() {
       /* For the Hecho bar under the text; null: no bar ("—") */
       percent: summary.get(client.id)?.progress?.percent ?? null,
       lastActivity: summary.get(client.id)?.lastActivity ?? null,
+      /* A paid client without a state or route: Alerta cells */
+      missing: setupMissing(client),
     }))
   }, [shown])
 
   return (
-    <AdminLayout title="Clientes" wide>
+    <AdminLayout title="Clientes" back={{ to: '/admin', label: 'Administración' }}>
       <section className={styles.list} aria-labelledby="clients-heading" aria-busy={loading}>
         <div className={styles.listHead}>
           <h2 className={styles.sectionTitle} id="clients-heading">
@@ -110,7 +112,7 @@ export default function AdminClientes() {
                 </tr>
               </thead>
               <tbody role="rowgroup">
-                {rows.map(({ client, name, state, route, progress, percent, lastActivity }) => (
+                {rows.map(({ client, name, state, route, progress, percent, lastActivity, missing }) => (
                   <tr key={client.id} role="row">
                     {/* Everything from the database is plain text */}
                     <td role="cell" className={styles.nameCell}>
@@ -121,12 +123,12 @@ export default function AdminClientes() {
                     </td>
                     {/* A paid client without a state or route: Alerta, an
                         admin has to act (DECISIONS.md, 21 Nov 2026, late) */}
-                    <td role="cell" data-label="Estado" className={!state && client.plan === 'paid' ? styles.isAlerta : undefined}>
+                    <td role="cell" data-label="Estado" className={missing.state ? styles.isAlerta : undefined}>
                       {state ? <span lang="de">{state}</span> : <span className={styles.none}>Sin estado</span>}
                     </td>
                     <td
                       role="cell" data-label="Ruta"
-                      className={styles.wrapCell + (!route && client.plan === 'paid' ? ' ' + styles.isAlerta : '')}
+                      className={styles.wrapCell + (missing.route ? ' ' + styles.isAlerta : '')}
                     >
                       {route || <span className={styles.none}>Sin ruta</span>}
                     </td>

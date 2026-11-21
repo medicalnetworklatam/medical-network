@@ -1,26 +1,35 @@
 /* ------------------------------------------------------------------
-   Admin screens (/admin, /admin/clientes/<id>, /admin/novedades), in the
-   new look: ruled cells split by thin 1px lines, small spaced labels, big
-   lowercase titles ending in a full stop, square buttons. Fonts and
-   colour tokens come from src/styles/redesign.css (never a hard-coded
-   colour).
+   Admin screens (/admin, /admin/clientes, /admin/clientes/<id> and its
+   three pages, /admin/novedades, /admin/novedades/nueva,
+   /admin/novedades/<id> and its two pages), in the new look: ruled cells split by
+   thin 1px lines, small spaced labels, big lowercase titles ending in a
+   full stop (a client's name keeps its capitals), square buttons. Fonts
+   and colour tokens come from src/styles/redesign.css (never a
+   hard-coded colour).
 
-   Desktop:  dark top bar | tab cells | "ADMINISTRACIÓN / clientes." |
-             the page's cells (the client table across the whole width;
-             a client's settings | checklist; the news form | the list).
-   Up to 900px: one column; the client table turns every row into a
-             block of "label .... value" lines.
+   Desktop:  dark top bar (the page's one back link, "Cerrar sesión") |
+             "ADMINISTRACIÓN / clientes." (low on a section page, with
+             "Actualizar" on the right) | the page's cells: the big
+             link-buttons of a hub filling the rest of the screen; the
+             client and news tables; Estado in three columns; Expediente,
+             Documentos, Fotos y PDF and the news form in two.
+   Up to 900px: the tables turn every row into a block of
+             "label .... value" lines; Estado and the two-column pages
+             are stacked.
+   Up to 700px: the big link-buttons are stacked.
 
    Rule for this file: the site loads every page's CSS at once, so
    nothing here may target html, body, * or :root directly.
 ------------------------------------------------------------------- */
 
 .page {
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
   min-height: 100dvh;
 }
 
-/* ---------- Top bar: back to Novedades, "Cerrar sesión" ---------- */
+/* ---------- Top bar: the page's back link, "Cerrar sesión" ---------- */
 .header {
   display: flex;
   align-items: center;
@@ -30,18 +39,27 @@
   background: var(--paper);
   color: var(--ink);
 }
-/* "← Novedades": the home page's chip */
+/* "← Novedades", "← Administración", "← <client's name>": the home
+   page's chip. A long name wraps instead of running off a phone. */
 .pill {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
   min-height: 44px;
   padding: 10px 14px;
   background: var(--paper);
   color: var(--ink);
-  font: 400 clamp(17px, 1.25vw, 22px) / 1 var(--font);
+  font: 400 clamp(17px, 1.25vw, 22px) / 1.15 var(--font);
   text-decoration: none;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+}
+/* the words: at most two lines (a long name or post title) */
+.pill-text {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 .pill:hover {
   text-decoration: underline;
@@ -50,35 +68,10 @@
 }
 .pill:focus-visible { outline: 2px solid var(--ink); outline-offset: -6px; }
 
-/* ---------- Tabs: two cells, the open one inverted ---------- */
-.tabs {
-  display: flex;
-  border-bottom: 1px solid var(--rule);
-}
-.tab {
-  display: flex;
-  align-items: center;
-  min-height: 52px;
-  padding: 12px var(--gutter);
-  border-right: 1px solid var(--rule);
-  color: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: .16em;
-  text-transform: uppercase;
-  text-decoration: none;
-  transition: background-color .15s ease, color .15s ease;
-}
-.tab:hover,
-.tab[aria-current="page"] {
-  background: var(--accent);
-  color: var(--ink);
-}
-.tab:focus-visible { outline: 2px solid currentColor; outline-offset: -5px; }
-
 /* ---------- Title cell: "ADMINISTRACIÓN" over "clientes." ---------- */
 .main {
   display: flex;
+  flex: 1 0 auto;
   flex-direction: column;
 }
 .head {
@@ -115,25 +108,57 @@
   text-transform: lowercase;
   overflow-wrap: break-word;
 }
+/* A client's hub: a little smaller, so a long name (or "sin nombre." with
+   the email) takes two lines rather than four on a phone */
+.page-title.is-client {
+  font-size: clamp(2.25rem, 6vw, 4.5rem);
+  font-size: min(clamp(2.25rem, 6vw, 4.5rem), 100cqi / (var(--title-chars, 10) * var(--k)));
+  line-height: 1;
+  letter-spacing: -.03em;
+  overflow-wrap: anywhere;
+}
+/* A client's name: their own capitals, no full stop */
+.page-title.is-name { text-transform: none; }
+/* …and as the small label over a client page's title */
+.head-label.is-name {
+  font-size: 15px;
+  letter-spacing: .02em;
+  text-transform: none;
+  overflow-wrap: anywhere;
+}
+/* The email under "sin nombre." */
+.title-note {
+  margin: 0;
+  font-size: 15px;
+  color: color-mix(in srgb, var(--accent) 72%, transparent);
+  overflow-wrap: anywhere;
+}
+/* A section page: a low cell, the label over a smaller title on the left,
+   "Actualizar" on the right */
+.head.is-compact {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 8px 24px;
+  padding: clamp(18px, 2.4vw, 32px) var(--gutter) clamp(14px, 1.6vw, 22px);
+}
+.head.is-compact > * { grid-column: 1; }
+.head.is-compact > .head-action { grid-column: 2; grid-row: 1 / span 2; }
+.page-title.is-compact {
+  font-size: clamp(2rem, 4.5vw, 3.75rem);
+  font-size: min(clamp(2rem, 4.5vw, 3.75rem), 100cqi / (var(--title-chars, 10) * var(--k)));
+  line-height: 1;
+}
+.head-action { display: flex; }
 
 /* ---------- The page's cells ---------- */
-.body {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  align-content: start;
-}
-.body > * { grid-column: 1 / -1; }
-/* The client screen's left column: "Estado, ruta y plan" over "Documentos" */
-.body > .side-cards,
-.body > .news-form { grid-column: 1; }
-.side-cards {
+.body { min-width: 0; }
+/* A hub: the big link-buttons take the rest of the screen */
+.body.is-hub {
   display: flex;
+  flex: 1 0 auto;
   flex-direction: column;
-  min-width: 0;
 }
-.body > .checklist-card,
-.body > .news-list { grid-column: 2; border-left: 1px solid var(--rule); }
-.body.is-wide { display: block; }
 
 .card {
   display: flex;
@@ -157,28 +182,6 @@
   border-bottom: 1px solid var(--rule);
 }
 .card > .list-head { padding: 0; border: 0; }
-
-/* "← Todos los clientes" */
-.back {
-  margin: 0;
-  border-bottom: 1px solid var(--rule);
-}
-.back-link {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 52px;
-  padding: 8px var(--gutter);
-  color: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: .16em;
-  text-transform: uppercase;
-  text-decoration: none;
-  transition: background-color .15s ease, color .15s ease;
-}
-.back-link:hover { background: var(--accent); color: var(--ink); }
-.back-link:focus-visible { outline: 2px solid currentColor; outline-offset: -5px; }
 
 /* Loading / empty / errors: one cell; errors inverted, no red */
 .message {
@@ -387,17 +390,194 @@
 }
 
 /* ---------- One client ---------- */
-.client-title {
+/* Estado: Estado | Ruta | Plan side by side, each a ruled column with
+   the current value big; the confirmation opens inside its column */
+.estado-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-bottom: 1px solid var(--rule);
+}
+.estado-grid > .setting {
   margin: 0;
-  font-size: clamp(26px, 2.8vw, 40px);
-  font-weight: 700;
-  line-height: 1.1;
-  letter-spacing: -.03em;
+  padding: clamp(20px, 2.4vw, 34px) var(--gutter);
+  border-top: 0;
+}
+.estado-grid > .setting + .setting { border-left: 1px solid var(--rule); }
+.estado-grid .setting-value strong {
+  display: block;
+  margin-top: 4px;
+  font: 700 clamp(22px, 2.2vw, 30px) / 1.15 var(--font);
+  letter-spacing: -.02em;
   overflow-wrap: anywhere;
 }
-.client-title .email { margin-top: 6px; font-size: 15px; letter-spacing: 0; }
-/* the name may take two lines (name + email): "Actualizar" stays at the top */
-.client-card .list-head { align-items: flex-start; }
+.estado-grid .setting-row .select { min-width: 0; }
+
+/* Expediente, Documentos, Fotos y PDF: a column on the left (progress,
+   details and dudas; adding a file) and the main list on the right */
+.exp-grid,
+.docs-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  align-items: start;
+  border-bottom: 1px solid var(--rule);
+}
+.exp-side,
+.exp-steps,
+.docs-side,
+.docs-list {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 0 var(--gutter);
+}
+.exp-steps,
+.docs-list { min-height: 100%; border-left: 1px solid var(--rule); }
+/* the left column stays in view while the steps scroll by */
+.exp-side {
+  position: sticky;
+  top: 0;
+  max-height: 100vh;
+  max-height: 100dvh;
+  overflow-y: auto;
+}
+.exp-side > .setting:first-child,
+.exp-steps > .setting:first-child { border-top: 0; }
+.exp-side > .setting:last-child { padding-bottom: 24px; }
+.exp-steps > .setting:last-child { padding-bottom: 0; }
+.side-note { margin: 0; padding: 18px 0; font-size: 15px; }
+.exp-side > .error { margin: 18px 0; }
+/* "33 % (1 de 3)" big, with the Hecho bar under it */
+.progress-big {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  font: 700 clamp(26px, 2.6vw, 36px) / 1.1 var(--font);
+  letter-spacing: -.02em;
+}
+.progress-big .progress-track { max-width: 18rem; }
+
+.docs-side { gap: 16px; padding-block: clamp(20px, 2.4vw, 32px); }
+.docs-list { padding: 0; }
+.docs-list > .note { padding: clamp(20px, 2.4vw, 32px) var(--gutter); }
+.docs-side .section-title:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+/* one compact ruled row per file: name and details on the left, buttons
+   on the right; the "¿Eliminar…?" question opens across the row */
+.docs-list .file-list { border-top: 0; }
+.docs-list .file-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px 16px;
+  padding: 14px var(--gutter);
+}
+.docs-list .file-item > * { grid-column: 1; }
+.docs-list .file-item > .file-btns { grid-column: 2; grid-row: 1 / span 2; justify-content: flex-end; }
+.docs-list .file-item > .confirm { grid-column: 1 / -1; margin-top: 8px; }
+
+/* The news form: title and text | Bundesland, date, ticks, button */
+.news-form-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 24px clamp(24px, 3vw, 48px);
+  align-items: start;
+}
+.textarea.news-body { min-height: clamp(180px, 40vh, 420px); }
+
+/* The big link-buttons of /admin and a client's hub: filled black cells
+   with cream text, split by thin cream lines; side by side, stacked on a
+   phone. Each one is a whole-cell link. */
+.big-nav {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+}
+.big-list {
+  display: grid;
+  flex: 1 0 auto;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.big-item { display: flex; min-width: 0; }
+.big-link {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 10px;
+  min-width: 0;
+  min-height: clamp(104px, 22svh, 320px);
+  padding: clamp(18px, 2.2vw, 34px) var(--gutter);
+  background: var(--accent);
+  color: var(--ink);
+  text-decoration: none;
+}
+/* A paid client without a state or route: Alerta (DECISIONS.md, 21 Nov 2026, late) */
+.big-link.is-alerta { background: var(--alerta); color: var(--on-alerta); }
+.big-title {
+  font: 700 clamp(28px, 3.6vw, 56px) / 1 var(--font);
+  letter-spacing: -.03em;
+  overflow-wrap: break-word;
+}
+.big-status {
+  font-size: 16px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+/* top right of the cell, the same place on every button */
+.big-arrow {
+  position: absolute;
+  top: clamp(14px, 2vw, 30px);
+  right: var(--gutter);
+  font: 400 clamp(24px, 2.4vw, 36px) / 1 var(--font);
+}
+.big-link:hover .big-title {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: .12em;
+}
+/* Expediente on a client's hub: a ring in the middle of the cell that
+   fills with the progress (Hecho green on a faint cream track) */
+.big-visual {
+  align-self: center;
+  width: clamp(110px, 42%, 230px);
+  margin: auto;
+}
+.ring {
+  /* the % inside is sized on the ring's width */
+  container-type: inline-size;
+  position: relative;
+  display: block;
+  aspect-ratio: 1;
+}
+.ring-svg { display: block; width: 100%; height: 100%; }
+.ring-track,
+.ring-fill { fill: none; stroke-width: 8; }
+.ring-track { stroke: color-mix(in srgb, var(--ink) 22%, transparent); }
+.ring-fill { stroke: var(--hecho); stroke-linecap: butt; }
+.ring-text {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font: 700 24cqi / 1 var(--font);
+  letter-spacing: -.03em;
+  white-space: nowrap;
+}
+
+/* A single low button at the top of a list page ("Nueva novedad") */
+.big-nav.is-low { flex: 0 0 auto; }
+.big-nav.is-low .big-link { min-height: clamp(76px, 10svh, 110px); justify-content: center; }
+.big-nav.is-low .big-arrow { top: 50%; transform: translateY(-50%); }
+/* the error cell over the buttons is black too: a cream line between */
+.body.is-hub > .message { border-bottom-color: var(--ink); }
+.big-link:focus-visible { outline: 3px solid var(--ink); outline-offset: -9px; }
+.big-link.is-alerta:focus-visible { outline-color: var(--on-alerta); }
 
 /* Estado, Ruta, Plan: one ruled row each */
 .setting {
@@ -619,15 +799,7 @@ legend.label { margin-bottom: 8px; padding: 0; }
   gap: 8px;
 }
 
-/* ---------- Photos and PDF of the post in the form (AdminNewsFiles.tsx) ---------- */
-.files {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  padding-top: 22px;
-  border-top: 1px solid var(--rule);
-}
-.files .section-title:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+/* ---------- Files: Fotos y PDF (AdminNewsFiles.tsx) and Documentos ---------- */
 /* One ruled row per file: kind and name, description, buttons */
 .file-list {
   margin: 0;
@@ -686,30 +858,6 @@ legend.label { margin-bottom: 8px; padding: 0; }
   color: color-mix(in srgb, var(--accent) 72%, transparent);
 }
 
-/* ---------- News list: one ruled row per post ---------- */
-.post {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: clamp(18px, 2vw, 26px) var(--gutter);
-  border-bottom: 1px solid var(--rule);
-}
-/* The post that is in the form right now: a thick bar on its left */
-.post.is-editing { box-shadow: inset 6px 0 0 var(--accent); }
-
-.post-meta {
-  margin: 0;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px 14px;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  font-variant-numeric: tabular-nums;
-}
-
 /* "Borrador" outlined, "Programada" dashed, "Publicada" inverted */
 .status {
   display: inline-block;
@@ -725,22 +873,6 @@ legend.label { margin-bottom: 8px; padding: 0; }
 .status.is-draft { border-style: solid; }
 .status.is-scheduled { border-style: dashed; }
 .status.is-published { background: var(--accent); color: var(--ink); }
-
-/* News is plain text: keep its line breaks, and let very long words or web
-   addresses wrap instead of overflowing the row */
-.post-title,
-.post-text {
-  margin: 0;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
-.post-title { font-size: 20px; font-weight: 700; line-height: 1.25; letter-spacing: -.01em; }
-.post-text { font-size: 16px; line-height: 1.55; }
-
-.post-actions {
-  display: flex;
-  justify-content: flex-end;
-}
 
 /* Screen-reader message areas (aria-live) must always be there, but while
    empty they shouldn't take any room */
@@ -861,6 +993,11 @@ legend.label { margin-bottom: 8px; padding: 0; }
   background: var(--hecho);
   color: var(--on-hecho);
 }
+/* The client's written dudas on the Expediente page: a Para todos cell
+   (Ivan, 21 Nov 2026), every word in its own text colour */
+.setting.has-dudas { background: var(--para-todos); color: var(--on-para-todos); }
+.setting.has-dudas .hint { color: inherit; }
+
 /* "Nota para el cliente": a Para ti tag over its text box */
 .para-ti-tag {
   align-self: flex-start;
@@ -886,8 +1023,17 @@ legend.label { margin-bottom: 8px; padding: 0; }
 /* (Six columns need about 900px; an iPad held upright gets the blocks too) */
 @media (max-width: 900px) {
   .body { display: block; }
-  .body > .checklist-card,
-  .body > .news-list { border-left: 0; }
+  .estado-grid,
+  .exp-grid,
+  .docs-grid,
+  .news-form-grid { display: block; }
+  .estado-grid > .setting + .setting { border-left: 0; border-top: 1px solid var(--rule); }
+  .exp-side { position: static; max-height: none; overflow: visible; }
+  .exp-steps,
+  .docs-list { border-left: 0; border-top: 1px solid var(--rule); }
+  .exp-steps > .setting:first-child { border-top: 0; }
+  .news-form-grid > * + * { margin-top: 18px; }
+  .textarea.news-body { min-height: 180px; }
 
   .table,
   .table tbody,
@@ -941,18 +1087,43 @@ legend.label { margin-bottom: 8px; padding: 0; }
 @media (max-width: 700px) {
   .header { padding: 6px calc(var(--gutter) - 12px); }
   .pill { padding: 8px 12px; }
-  .tab { flex: 1 1 0; padding: 10px var(--gutter); letter-spacing: .1em; }
-  .tab:last-child { border-right: 0; }
+  .big-list { grid-auto-flow: row; grid-auto-rows: 1fr; }
+  /* lower cells, the arrow in the middle of the right side */
+  .big-link {
+    justify-content: center;
+    min-height: 88px;
+    padding-right: calc(var(--gutter) + 40px);
+  }
+  .big-arrow { top: 50%; transform: translateY(-50%); }
+  /* the ring: small, on the right next to the arrow */
+  .big-link.has-visual { padding-right: calc(var(--gutter) + 40px + 76px); }
+  .big-visual {
+    position: absolute;
+    top: 50%;
+    right: calc(var(--gutter) + 44px);
+    width: 64px;
+    margin: 0;
+    transform: translateY(-50%);
+  }
   .head { padding: 28px var(--gutter) 18px; gap: 12px; }
   .head-label { font-size: 12px; }
-  .post-text { font-size: 15px; }
   .setting-row { flex-wrap: wrap; }
   .setting-row .select { flex-basis: 100%; }
+  /* Estado: the list and "Cambiar" stay on one line, smaller values */
+  .estado-grid .setting-row { flex-wrap: nowrap; }
+  .estado-grid .setting-row .select { flex-basis: auto; }
+  .estado-grid > .setting { gap: 8px; padding-block: 12px 14px; }
+  .estado-grid .setting-value strong { margin-top: 2px; font-size: 20px; }
+  .head.is-compact { padding: 12px var(--gutter); gap: 6px 12px; }
+  /* several buttons on a file (Arriba, Abajo, Quitar): under its name */
+  .docs-list .file-item > .file-btns:has(> :nth-child(2)) {
+    grid-column: 1 / -1;
+    grid-row: auto;
+    justify-content: flex-start;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tab,
-  .back-link,
   .primary-btn,
   .message-btn,
   .small-btn { transition: none; }

@@ -1,6 +1,6 @@
 /* Tests for the admin screens' pure logic: German time (src/lib/berlinTime.ts)
-   and the progress %, last activity, news status and paged reads
-   (src/lib/adminData.ts).
+   and the progress %, last activity, news status, paged reads and the
+   client screen's status texts (src/lib/adminData.ts).
 
    Run with:  npm test
    It needs no database and no internet: every row below is made up here, so
@@ -11,8 +11,8 @@
 
 import { berlinToUtc, formatBerlinDateTime, utcToBerlin } from '../src/lib/berlinTime.ts'
 import {
-  clientName, lastActivity, newsStatus, progressFor, progressText, readAll, sortClients,
-  sortNews, stateName, stepApplies, STATES, summarise,
+  clientName, documentCountText, lastActivity, newsFilesText, newsStatus, progressFor, progressText, readAll,
+  setupMissing, sortClients, sortNews, stateName, stepApplies, STATES, summarise,
   type Client, type Item, type ItemSetting, type Page, type Tick,
 } from '../src/lib/adminData.ts'
 
@@ -276,6 +276,29 @@ same('spaces around the name are removed', clientName({ first_name: ' José ', l
 same('first name only', clientName({ first_name: 'José', last_names: null }), 'José')
 same('no name yet', clientName({ first_name: null, last_names: null }), '')
 same('a name of only spaces is no name', clientName({ first_name: '  ', last_names: '' }), '')
+
+/* ===========================================================================
+   What an admin has to act on, and the number of documents
+   =========================================================================== */
+
+same('paid with state and route: nothing missing', setupMissing({ plan: 'paid', main_state: 'by', route: 'r1' }), { state: false, route: false })
+same('paid without a state', setupMissing({ plan: 'paid', main_state: null, route: 'r1' }), { state: true, route: false })
+same('paid without a route', setupMissing({ plan: 'paid', main_state: 'by', route: null }), { state: false, route: true })
+same('paid without both', setupMissing({ plan: 'paid', main_state: null, route: null }), { state: true, route: true })
+same('paid with a state code the map doesn\'t know: no state', setupMissing({ plan: 'paid', main_state: 'xx', route: 'r1' }), { state: true, route: false })
+same('free without both: no Alerta', setupMissing({ plan: 'free', main_state: null, route: null }), { state: false, route: false })
+
+same('no documents', documentCountText(0), 'Sin documentos')
+same('one document', documentCountText(1), '1 documento')
+same('two documents', documentCountText(2), '2 documentos')
+same('many documents', documentCountText(25), '25 documentos')
+
+same('a post without files', newsFilesText(0, 0), 'Sin archivos')
+same('one photo', newsFilesText(1, 0), '1 foto')
+same('three photos', newsFilesText(3, 0), '3 fotos')
+same('one PDF', newsFilesText(0, 1), '1 PDF')
+same('two PDF', newsFilesText(0, 2), '2 PDF')
+same('photos and PDF', newsFilesText(2, 1), '2 fotos · 1 PDF')
 same('clients by name, without a name last (by email)', sortClients([
   client('1', null, null, { email: 'z@example.com' }),
   client('2', null, null, { first_name: 'Óscar', last_names: 'Zea' }),

@@ -15,6 +15,50 @@ Last updated: 21 Nov 2026. This is the source of truth for the project. When a d
   - Spanish only, web only
 - **Admins:** Ivan and his cousin.
 
+## Changes on 21 Nov 2026 (night, last): Comunidad as a feed, orange dudas, the progress ring
+
+Ivan's requests after the second preview, from a sketch; the plan was approved by Ivan (option A for the colour).
+
+- **Comunidad looks like a feed of posts, not a chat.** One readable column (about 760 px) under "tu / comunidad.", the same on a desktop, an iPad and a phone:
+  - At the top, the post box: the member's initials in a circle, their shown name, the line about names, a 3-line text box, the "0 / 2000" counter and "Publicar".
+  - Then one card per post, newest first: the author's initials in a circle (from the name the database shows: "José P." → "JP"), the name, "Equipo MNL" when it applies, the date, then the text. "Eliminar" is a quiet underlined word at the bottom right of the card, still only on one's own posts (every post for admins), with the same question inside the card.
+  - "Actualizar" sits small above the posts; "Ver más" stays at the bottom. On a phone the feed leaves room at the end, so the floating chat link never covers a button.
+  - Every board rule stays as in "Community" below (30 at a time, 2,000 characters, links, who may delete, free users, the reminder to choose a state). The state chat is unchanged.
+- **The client's dudas are orange** (Para todos) on the admin Expediente page, but only when the client has written some; "Sin dudas escritas." has no colour. This is an exception to "Para todos = for everyone": on this one admin screen, orange also means "the client has written dudas" (Ivan, 21 Nov 2026, option A).
+- **A progress ring** on the client hub's "Expediente" button: a faint circle that fills in Hecho green to the client's progress, with the % in the middle; small, next to the arrow, on a phone. Same sum as the status line ("no aplica" steps left out). No ring for a free client or when there is nothing to measure ("—"). Drawn already filled, without animation (motion is only tied to the scroll). Only for the eye: the status line says the same in words.
+
+## Changes on 21 Nov 2026 (night, latest): the client pages redone, Publicar split up
+
+Ivan's request after the first preview: the client pages should look and fit better on a desktop and on a phone, and Publicar should be split up like Clientes. Proposed by Claude and approved by Ivan the same night. What each section does stays the same; no database change.
+
+- **Section pages** (a client's Estado, Expediente and Documentos; a post's two pages): a low title cell, the client's name or the post's title as the small label, "Actualizar" on the right of the title where there is one. The heading that repeated the page title is kept for screen readers only.
+  - **Estado:** Estado | Ruta | Plan side by side, the current value big; each confirmation opens inside its column. Stacked on a phone, with the list and "Cambiar" on one line. Fits one screen.
+  - **Expediente:** a column on the left (progress, country and header line, the client's dudas) that stays in view while the steps scroll by on the right. Stacked on a phone.
+  - **Documentos** and a post's **Fotos y PDF:** adding a file on the left, the list on the right, one compact row per file. On a phone, adding first, then the list.
+- **Publicar** (the button on `/admin` keeps its name):
+  - `/admin/novedades`: a big "Nueva novedad" button, then every post as a table like the client overview (title, situación, date, Para, plan). A post's title opens its screen.
+  - `/admin/novedades/nueva`: the form for a new post. Once saved, its "Fotos y PDF" page opens with a notice.
+  - `/admin/novedades/<id>`: the post's title and two big buttons with a status line each: "Texto y publicación" (situación · date · Bundesland · plan) and "Fotos y PDF" ("2 fotos · 1 PDF", from counts only).
+  - `/admin/novedades/<id>/texto` (the form; after a save the page stays on the post with "Guardada") and `/admin/novedades/<id>/archivos`.
+  - Every post page checks the address is a valid ID and draws its section only once the post has loaded. Browser tab titles stay generic ("Novedad · Administración").
+  - The news form's rules don't change (German time, schedule with a future date, unpublish instead of delete, only changed fields are sent). "Cancelar edición" goes: the back link does that now.
+
+## Changes on 21 Nov 2026 (night, later): Administración as a set of simple screens
+
+Ivan's decision, from his two sketches. It replaces the admin tabs and the single long client screen. What each section does, and every admin rule below, stays the same.
+
+- **Easy to take in first.** The admin screens may bend the design rules where that makes the information easier to read (bigger buttons, plainer layout). The colour meanings (21 Nov, late), plain text for anything from the database, and the in-page confirmations stay.
+- **`/admin`:** the title "administración." and two big buttons: "Clientes" → `/admin/clientes`, "Publicar" → `/admin/novedades` (the news form, unchanged). The column's "Administración" row keeps pointing to `/admin`.
+- **`/admin/clientes`:** today's client overview (table, "Actualizar", the note on progress and last activity). A client's name opens their screen.
+- **`/admin/clientes/<id>`:** the client's name as the title and three big buttons: "Estado, ruta y plan", "Expediente", "Documentos".
+- **One page per button,** each with today's section, unchanged in what it does: `/admin/clientes/<id>/estado` (state, route, plan, with their confirmations), `/admin/clientes/<id>/expediente` (country, header line, the client's dudas, the steps with the client layer), `/admin/clientes/<id>/documentos` (upload and delete PDFs).
+- **Proposed by Claude, to confirm on the preview:**
+  - Back links instead of the two tabs: "← Administración", "← Clientes", "← <client's name>".
+  - A one-line status under each client button: state · route · plan; progress %; number of documents. "Estado, ruta y plan" gets Alerta when a paid client has no state or no route, as in the overview.
+  - Browser tab titles stay generic ("Cliente · Administración"), never the client's name, so names don't end up in the browser history of a shared computer.
+  - Client names keep their capitals in the admin titles (Ivan, 21 Nov 2026).
+- **No database change.** Every client page checks the address is a valid ID and loads only accounts that aren't admins, as today.
+
 ## Changes on 21 Nov 2026 (late): colour with meaning
 
 Ivan chose these colours on 21 Nov 2026 from previews. This replaces "every colour comes from three values" (17 Nov) and "there is no red colour" (18 Nov). Black `#050505` and cream `#F3F0E9` stay the base.
@@ -42,7 +86,7 @@ Ivan chose these colours on 21 Nov 2026 from previews. This replaces "every colo
   - News list: a state's tag = Para ti, "Todos los estados" = Para todos.
   - Delete confirmations elsewhere ("Sí, eliminar", "Sí, quitar" for a news file, "Sí, borrar todo" in the CV tool) = Alerta, for consistency.
   - Free accounts and everything else: no colour.
-- **Dudas del cliente:** no colour for now. A "new" marker would need a database change (remembering when an admin last opened them). Revisit if the owner misses new dudas.
+- **Dudas del cliente:** since 21 Nov 2026 (night, last), written dudas are orange (Para todos) on the admin Expediente page; see that section. A "new" marker would still need a database change (remembering when an admin last opened them). Revisit if the owner misses new dudas.
 - All colours live in `src/styles/redesign.css`; changing one is a one-line edit.
 
 ## Changes on 21 Nov 2026 (night): Mis documentos
@@ -281,6 +325,7 @@ These replace the morning's "look and feel" bullet below where they differ.
   - Free users see only "La comunidad es para miembros con el paquete completo." The page makes no request for posts (the database refuses them anyway).
   - Posts are listed newest first, 30 at a time, with "Ver más" for older ones. "Ver más" asks for posts older than the last one shown (by `created_at`, then `id` for posts with the very same time), using `created_at` exactly as the database sent it, so no post is skipped or shown twice.
   - No realtime: the list loads when the page opens, after publishing, and with an "Actualizar" button. After publishing, the new post shows at the top and the list goes back to the newest 30.
+  - Since 21 Nov 2026 (night, last) the board is shown as a feed of post cards; see that section.
   - Each post shows the author name, the date and time in the reader's own time zone (news dates stay in German time), and the body as plain text with its line breaks. Web addresses become safe links since 18 Nov 2026 (afternoon, see above).
   - The form's counter ("0 / 2000") follows the database's rule exactly: it removes only spaces, tabs, carriage returns and line breaks at both ends, and counts an emoji as one character. "Publicar" is disabled when the text is empty, over 2,000 characters, or while sending. The page sends only the body.
   - "Eliminar" is shown on the user's own posts, and on every post for admins. It asks for confirmation inside the post ("¿Eliminar esta publicación?" with "Sí, eliminar" and "Cancelar"), not with the browser's own pop-up, so every word stays in Spanish.
@@ -299,6 +344,8 @@ These replace the morning's "look and feel" bullet below where they differ.
 - **Migration 4** also removes execute rights on Supabase's `public.rls_auto_enable()` from the website's roles.
 
 ### Admin screens (decided 16 Nov 2026)
+
+Since 21 Nov 2026 (night, later) these are split into separate screens, and since 21 Nov 2026 (night, latest) Publicar too; see those sections. What each one does stays as below.
 
 - **Who sees them:** admins only. The website hides the admin pages from everyone else, but the database rules (RLS) are what actually protect the data.
 - **No database change expected.** Migrations 1 and 2 already let admins read every profile, progress and checklist item, write news, and change a client's plan, route and state (checked 16 Nov 2026). If the build turns out to need one, it comes as migration 3 with new checks in `rls_check.sql`.

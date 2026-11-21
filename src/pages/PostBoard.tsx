@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase.ts'
 import { CHECK_FAILED, dataErrorMessage, NOT_ALLOWED } from '../lib/dataErrors.ts'
 import { linkify } from '../lib/linkify.tsx'
 import ChatView from './ChatView.tsx'
+import { initials } from '../lib/initials.ts'
 import styles from './Comunidad.module.css'
 
 /** One community post as the page gets it (all plain text) */
@@ -486,15 +487,21 @@ export default function PostBoard({ userId, isAdmin, shownName, state = null }: 
     <>
       <span className="sr-only" role="status">{announcement}</span>
 
-      {/* Form */}
-      <section className={styles.card} aria-labelledby="new-post-heading">
-        <h2 className={styles.sectionTitle} id="new-post-heading">{t.formTitle}</h2>
-        <p className={styles.intro}>{t.intro} «{shownName}».</p>
-        <form className={styles.form} onSubmit={onPublish} noValidate>
+      {/* The post box at the top of the feed */}
+      <section className={styles.composer} aria-labelledby="new-post-heading">
+        <h2 className="sr-only" id="new-post-heading">{t.formTitle}</h2>
+        <div className={styles.composerHead}>
+          <span className={styles.avatar} aria-hidden="true">{initials(shownName)}</span>
+          <div className={styles.composerWho}>
+            <p className={styles.composerName}>{shownName}</p>
+            <p className={styles.composerIntro}>{t.intro} «{shownName}».</p>
+          </div>
+        </div>
+        <form className={styles.composerForm} onSubmit={onPublish} noValidate>
           <label className="sr-only" htmlFor="post-body">{t.label}</label>
           <textarea
-            ref={textRef} id="post-body" className={styles.textarea}
-            rows={5} value={draft}
+            ref={textRef} id="post-body" className={styles.textarea + ' ' + styles.composerText}
+            rows={3} value={draft}
             onChange={(e) => { setDraft(e.target.value); setFormError('') }}
             aria-describedby={'post-count' + (formError ? ' post-error' : '')}
             aria-invalid={tooLong}
@@ -517,9 +524,9 @@ export default function PostBoard({ userId, isAdmin, shownName, state = null }: 
         </form>
       </section>
 
-      {/* List */}
-      <section className={styles.list} aria-labelledby="posts-heading" aria-busy={listBusy !== null}>
-        <div className={styles.listHead}>
+      {/* The posts, newest first, one card each */}
+      <section className={styles.feedList} aria-labelledby="posts-heading" aria-busy={listBusy !== null}>
+        <div className={styles.feedHead}>
           <h2 className={styles.sectionTitle} id="posts-heading" ref={listHeadingRef} tabIndex={-1}>
             {t.listTitle}
           </h2>
@@ -571,8 +578,11 @@ export default function PostBoard({ userId, isAdmin, shownName, state = null }: 
   )
 }
 
-/** One post. The body is plain text with its web addresses as links
-    (linkify, never HTML); CSS keeps its line breaks. */
+/** One post, as a card: the author's initials in a circle, their name
+    ("Equipo MNL" when an admin wrote it) and the date, then the text, and
+    "Eliminar" as a quiet button at the bottom when allowed. The body is
+    plain text with its web addresses as links (linkify, never HTML); CSS
+    keeps its line breaks. */
 function PostCard({ post, confirmText, canDelete, confirming, deleting, error, onAsk, onCancel, onConfirm }: {
   post: Post
   confirmText: string
@@ -602,14 +612,17 @@ function PostCard({ post, confirmText, canDelete, confirming, deleting, error, o
   }
 
   return (
-    <article className={styles.post}>
-      <p className={styles.postMeta}>
-        <span className={styles.postAuthor}>{post.author_name}</span>
-        {/* Marked by the database on posts written by an admin */}
-        {post.is_staff && <span className={styles.staffBadge}>Equipo MNL</span>}
-        <time className={styles.postDate} dateTime={post.created_at}>{formatDateTime(post.created_at)}</time>
-      </p>
-      <p className={styles.postText}>{text}</p>
+    <article className={styles.postCard}>
+      <div className={styles.postHead}>
+        <span className={styles.avatar} aria-hidden="true">{initials(post.author_name)}</span>
+        <p className={styles.postWho}>
+          <span className={styles.postName}>{post.author_name}</span>
+          {/* Marked by the database on posts written by an admin */}
+          {post.is_staff && <span className={styles.staffBadge}>Equipo MNL</span>}
+          <time className={styles.postWhen} dateTime={post.created_at}>{formatDateTime(post.created_at)}</time>
+        </p>
+      </div>
+      <p className={styles.postBody}>{text}</p>
 
       {canDelete && (
         confirming ? (
@@ -625,8 +638,8 @@ function PostCard({ post, confirmText, canDelete, confirming, deleting, error, o
             </div>
           </div>
         ) : (
-          <div className={styles.postActions}>
-            <button type="button" className={styles.smallBtn} ref={deleteRef} onClick={ask}>
+          <div className={styles.postFoot}>
+            <button type="button" className={styles.textBtn} ref={deleteRef} onClick={ask}>
               Eliminar
             </button>
           </div>
