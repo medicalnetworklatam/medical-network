@@ -28,8 +28,9 @@
 /* "Abrir el formulario del currículum" under the title */
 .cv-top { margin: 0; }
 
-/* Square outline buttons: the CV links */
-.outline-btn,
+/* The CV links: a filled black block with cream text (DECISIONS.md,
+   21 Nov 2026, late). "Reintentar": a square outline. */
+.cv-btn,
 .retry-btn {
   display: inline-flex;
   align-items: center;
@@ -51,8 +52,9 @@
   cursor: pointer;
   transition: background-color .15s ease, color .15s ease;
 }
-.outline-btn:hover { background: var(--accent); color: var(--ink); }
-.outline-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.cv-btn { background: var(--accent); color: var(--ink); }
+.cv-btn:hover { background: transparent; color: var(--accent); }
+.cv-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 /* "Reintentar" sits on an inverted error cell */
 .retry-btn { margin-top: 16px; border-color: var(--ink); color: var(--ink); }
 .retry-btn:hover { background: var(--ink); color: var(--accent); }
@@ -103,7 +105,11 @@
   text-decoration-thickness: 1px;
   text-underline-offset: .2em;
 }
-/* The current screen: an inverted cell */
+/* A block whose steps are all done: Hecho, with a ✓ after its name */
+.screen-link.is-block-done { background: var(--hecho); color: var(--on-hecho); }
+.screen-link.is-block-done:not(.is-current):hover { background: var(--hecho-hover); }
+.screen-done { margin-left: .5em; }
+/* The current screen: an inverted cell (also when its block is done) */
 .screen-link.is-current { background: var(--accent); color: var(--ink); }
 .screen-link:focus-visible { outline: 2px solid currentColor; outline-offset: -5px; }
 
@@ -208,6 +214,9 @@
   color: var(--soft);
   font-size: 15px;
 }
+/* "Avance del expediente": Hecho (its text stays black, so --soft
+   still works: black at 72% on Hecho) */
+.number.is-avance { background: var(--hecho); color: var(--on-hecho); }
 
 /* The milestone bar: five cells, each with a line that fills up */
 .bar {
@@ -259,10 +268,10 @@
   font-size: 13px;
   font-variant-numeric: tabular-nums;
 }
-/* a finished milestone: an inverted cell */
-.milestone.is-done { background: var(--accent); color: var(--ink); }
-.milestone.is-done .milestone-track { border-color: var(--ink); }
-.milestone.is-done .milestone-fill { background: var(--ink); }
+/* a finished milestone: Hecho, its line full and black */
+.milestone.is-done { background: var(--hecho); color: var(--on-hecho); }
+.milestone.is-done .milestone-track { border-color: var(--on-hecho); }
+.milestone.is-done .milestone-fill { background: var(--on-hecho); }
 .milestone.is-done .milestone-count { color: inherit; }
 
 /* "Tus marcas se guardan en tu cuenta…": a ruled notice cell */
@@ -474,7 +483,8 @@
   border: 1px solid var(--accent);
   pointer-events: none;
 }
-.tick-area:has(.tick:checked)::before { background: var(--accent); }
+/* ticked: a Hecho square with a black tick */
+.tick-area:has(.tick:checked)::before { background: var(--hecho); }
 .tick-area .tick { grid-area: 1 / 1; z-index: 1; }
 .tick,
 .tick-na {
@@ -498,8 +508,8 @@
   width: 14px;
   height: 8px;
   margin-top: -3px;
-  border-left: 3px solid var(--ink);
-  border-bottom: 3px solid var(--ink);
+  border-left: 3px solid var(--on-hecho);
+  border-bottom: 3px solid var(--on-hecho);
   transform: rotate(-45deg);
   opacity: 0;
 }
@@ -537,7 +547,7 @@
   overflow-wrap: anywhere;
 }
 
-/* Dónde | Plazo: two ruled cells */
+/* Dónde | Plazo: two Dato cells */
 .facts {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
@@ -552,7 +562,8 @@
   gap: 6px;
   min-width: 0;
   padding: 12px 14px;
-  background: var(--ink);
+  background: var(--dato);
+  color: var(--on-dato);
 }
 .fact dd {
   margin: 0;
@@ -561,7 +572,8 @@
   overflow-wrap: anywhere;
 }
 
-/* Atención, Caduca: square outline boxes. Nota para ti: inverted. */
+/* The boxes under a step, each in the colour of its meaning:
+   Atención = Alerta, Caduca = Dato, Nota para ti = Para ti */
 .box {
   display: flex;
   flex-direction: column;
@@ -577,14 +589,19 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
-.box.is-inverted { background: var(--accent); color: var(--ink); }
+.box.is-alerta { border-color: var(--alerta); background: var(--alerta); color: var(--on-alerta); }
+.box.is-dato { border-color: var(--dato); background: var(--dato); color: var(--on-dato); }
+.box.is-para-ti { border-color: var(--para-ti); background: var(--para-ti); color: var(--on-para-ti); }
 
-/* "No aplica": the step is greyed (still 4.5:1) and says why */
+/* "No aplica": the step is greyed (still 4.5:1) and says why. None of
+   the five colours: its boxes and facts go back to plain outlines. */
 .step.is-na { color: var(--soft); }
 .step.is-na .official-box,
 .step.is-na .box,
 .envelope-row.is-na .official-box { border-color: var(--soft); }
-.step.is-na .box.is-inverted { background: var(--soft); color: var(--ink); }
+.step.is-na .box { background: transparent; color: inherit; }
+.step.is-na .fact { background: var(--ink); color: inherit; }
+.step.is-na .box.is-para-ti { background: var(--soft); color: var(--ink); }
 .na-line {
   display: flex;
   flex-wrap: wrap;
@@ -642,7 +659,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .outline-btn,
+  .cv-btn,
   .retry-btn,
   .screen-link,
   .pager-link,

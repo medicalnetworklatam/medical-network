@@ -169,7 +169,7 @@ export default function Novedades() {
         ) : (
           <div className={styles.posts}>
             {current.posts.map((post) => (
-              <Post key={post.id} post={post} links={current.links} onOpen={rememberPlace} />
+              <Post key={post.id} post={post} readerState={stateId} links={current.links} onOpen={rememberPlace} />
             ))}
           </div>
         )}
@@ -209,13 +209,19 @@ async function thumbLinks(client: NonNullable<typeof supabase>, posts: NewsPost[
     The title is the only link (its accessible name is the title); CSS
     stretches its ::after layer over the whole frame, above every other part
     of the card, so clicking or tapping anywhere opens the post. */
-function Post({ post, links, onOpen }: { post: NewsPost; links: Links; onOpen: () => void }) {
+function Post({ post, readerState, links, onOpen }: {
+  post: NewsPost
+  /** The reader's own Bundesland, for the colour of the date cell */
+  readerState: string | null
+  links: Links
+  onOpen: () => void
+}) {
   const files = useMemo(() => sortAttachments(post.news_attachments ?? []), [post.news_attachments])
   const tiles = useMemo(() => previewTiles(files), [files])
   const state: FromList = { fromList: true }
   return (
     <article className={styles.post + ' ' + styles.isPreview}>
-      <NewsMeta publishedAt={post.published_at} state={post.state} filesNote={filesCount(files)} />
+      <NewsMeta publishedAt={post.published_at} state={post.state} readerState={readerState} filesNote={filesCount(files)} />
       <div className={styles.preview + (tiles.length ? ' ' + styles.hasFiles : '')}>
         <h2 className={styles.postTitle}>
           <Link className={styles.postLink} to={'/novedades/' + post.id} state={state} onClick={onOpen}>

@@ -411,9 +411,10 @@ export default function AdminNovedades() {
                 <p className={styles.postMeta}>
                   <span className={styles.status + ' ' + STATUS_CLASS[status]}>{NEWS_STATUS_LABEL[status]}</span>
                   <time dateTime={post.published_at}>{formatBerlinDateTime(post.published_at)}</time>
-                  <span>
-                    {post.state ? <span lang="de">{stateName(post.state) || post.state}</span> : 'Todos los estados'}
-                  </span>
+                  {/* A state's post: Para ti; all states: Para todos */}
+                  {post.state
+                    ? <span className={styles.newsTag + ' ' + styles.isParaTi} lang="de">{stateName(post.state) || post.state}</span>
+                    : <span className={styles.newsTag + ' ' + styles.isParaTodos}>Todos los estados</span>}
                   <span>{post.paid_only ? 'Solo de pago' : 'También gratis'}</span>
                 </p>
                 {/* Plain text only (never HTML); line breaks kept by CSS */}

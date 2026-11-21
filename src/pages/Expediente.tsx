@@ -188,7 +188,7 @@ export default function Expediente() {
           </h1>
           {ready && (
             <p className={styles.cvTop}>
-              <Link className={styles.outlineBtn} to={CV_PATH}>{CV_LABEL}</Link>
+              <Link className={styles.cvBtn} to={CV_PATH}>{CV_LABEL}</Link>
             </p>
           )}
         </div>
@@ -325,7 +325,7 @@ function Checklist({ data, userId, state, screen, name }: {
   return (
     <>
       <span className="sr-only" role="status">{announcement}</span>
-      <ScreenNav current={screen} label={label} />
+      <ScreenNav current={screen} label={label} perBlock={perBlock} />
       {body}
       <nav className={styles.pager} aria-label="Pantallas del expediente">
         {index > 0 ? (
@@ -345,7 +345,11 @@ function Checklist({ data, userId, state, screen, name }: {
 
 /** The row of the 8 screens. The current one is marked. Arrow keys move
     between the links (Tab still works as usual). */
-function ScreenNav({ current, label }: { current: Screen; label: (s: Screen) => string }) {
+function ScreenNav({ current, label, perBlock }: {
+  current: Screen
+  label: (s: Screen) => string
+  perBlock: ReturnType<typeof blockProgress>
+}) {
   const listRef = useRef<HTMLUListElement>(null)
   const currentRef = useRef<HTMLAnchorElement>(null)
   // On a phone the row scrolls sideways: keep the current screen in view
@@ -373,14 +377,19 @@ function ScreenNav({ current, label }: { current: Screen; label: (s: Screen) => 
       <ul className={styles.screenList} ref={listRef} onKeyDown={onKeyDown}>
         {SCREENS.map((s) => {
           const isCurrent = s === current
+          /* A block whose steps are all done (same rule as the finished
+             milestones on the Resumen): Hecho, a ✓ and "completo" */
+          const p = typeof s === 'number' ? perBlock[s - 1] : undefined
+          const isDone = !!p && p.done >= p.total
           return (
             <li key={String(s)}>
               <Link
                 ref={isCurrent ? currentRef : undefined}
-                className={styles.screenLink + (isCurrent ? ' ' + styles.isCurrent : '')}
+                className={styles.screenLink + (isCurrent ? ' ' + styles.isCurrent : '') + (isDone ? ' ' + styles.isBlockDone : '')}
                 to={screenPath(s)} aria-current={isCurrent ? 'page' : undefined}
               >
                 {label(s)}
+                {isDone && <><span className={styles.screenDone} aria-hidden="true">✓</span><span className="sr-only">, completo</span></>}
               </Link>
             </li>
           )
@@ -427,7 +436,7 @@ function Summary({ headingRef, cover, cards, fill, progress, perBlock, now, mile
             <p className={styles.numberValue}>Completo</p>
           )}
         </section>
-        <section className={styles.number} aria-labelledby="exp-avance">
+        <section className={styles.number + ' ' + styles.isAvance} aria-labelledby="exp-avance">
           <h3 className={board.label} id="exp-avance">Avance del expediente</h3>
           <p className={styles.numberValue}>{progress ? progress.percent + ' %' : '—'}</p>
           {progress && (
@@ -595,13 +604,13 @@ function Step({ item, view, fill, busy, error, onToggle }: {
           </dl>
         )}
 
-        {item.aviso && <Box label="Atención" text={fill(item.aviso)} />}
-        {item.caduca && <Box label="Caduca" text={fill(item.caduca)} />}
-        {view.note && <Box label="Nota para ti" text={view.note} inverted />}
+        {item.aviso && <Box label="Atención" text={fill(item.aviso)} tone="alerta" />}
+        {item.caduca && <Box label="Caduca" text={fill(item.caduca)} tone="dato" />}
+        {view.note && <Box label="Nota para ti" text={view.note} tone="paraTi" />}
 
         {item.source_code === 'p2' && (
           <p>
-            <Link className={styles.outlineBtn} to={CV_PATH}>{CV_LABEL}</Link>
+            <Link className={styles.cvBtn} to={CV_PATH}>{CV_LABEL}</Link>
           </p>
         )}
 
@@ -613,9 +622,13 @@ function Step({ item, view, fill, busy, error, onToggle }: {
   )
 }
 
-function Box({ label, text, inverted = false }: { label: string; text: string; inverted?: boolean }) {
+/** A box under a step, in the colour of its meaning (DECISIONS.md, 21 Nov
+    2026, late): Atención = Alerta, Caduca = Dato, Nota para ti = Para ti.
+    Its label always says what it is, so the colour is never the only sign. */
+function Box({ label, text, tone }: { label: string; text: string; tone: 'alerta' | 'dato' | 'paraTi' }) {
+  const toneClass = { alerta: styles.isAlerta, dato: styles.isDato, paraTi: styles.isParaTi }[tone]
   return (
-    <div className={styles.box + (inverted ? ' ' + styles.isInverted : '')}>
+    <div className={styles.box + ' ' + toneClass}>
       <p className={board.label}>{label}</p>
       <p className={styles.boxText}>{text}</p>
     </div>

@@ -340,6 +340,38 @@
 }
 /* "Sin estado", "Sin ruta" */
 .none { color: color-mix(in srgb, var(--accent) 72%, transparent); }
+/* …of a paid client: an Alerta cell, full cream text (cream at 72% would
+   be only 3.5:1 on Alerta) */
+.table td.is-alerta { background: var(--alerta); color: var(--on-alerta); }
+.table td.is-alerta .none { color: inherit; }
+/* two Alerta cells side by side (the wide table only; the blocks below
+   900px already have a line between rows): a thin cream line between */
+@media (min-width: 901px) {
+  .table td.is-alerta + td.is-alerta { box-shadow: inset 1px 0 0 var(--ink); }
+}
+
+/* Progreso: the text, and under it a thin bar filled with Hecho. The bar
+   has a black frame, so it shows on the cream page; the words say the
+   same, so screen readers skip it. */
+.progress {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.progress-track {
+  display: block;
+  width: 100%;
+  min-width: 6rem;
+  height: 8px;
+  border: 1px solid var(--accent);
+}
+.progress-fill {
+  display: block;
+  height: 100%;
+  background: var(--hecho);
+  transform: scaleX(var(--fill, 0));
+  transform-origin: left center;
+}
 .nowrap-cell { font-variant-numeric: tabular-nums; }
 
 /* "Gratis": a small outlined label */
@@ -388,7 +420,10 @@
 }
 .setting-row .select { flex: 1 1 auto; }
 
-/* "¿Cambiar el plan…?": an inverted strip */
+/* "¿Cambiar el plan…?": an inverted strip. Its "Sí, cambiar",
+   "Sí, eliminar" (Documentos) and "Sí, quitar" (Fotos y PDF) are Alerta
+   blocks with cream text (DECISIONS.md, 21 Nov 2026, late); their hover
+   gets darker, never black text on Alerta. */
 .confirm {
   display: flex;
   flex-direction: column;
@@ -408,8 +443,8 @@
   flex-wrap: wrap;
   gap: 8px;
 }
-.confirm .primary-btn { border-color: var(--ink); background: var(--ink); color: var(--accent); }
-.confirm .primary-btn:hover:not(:disabled) { background: transparent; color: var(--ink); }
+.confirm .primary-btn { border-color: var(--alerta); background: var(--alerta); color: var(--on-alerta); }
+.confirm .primary-btn:hover:not(:disabled) { border-color: var(--alerta-hover); background: var(--alerta-hover); color: var(--on-alerta); }
 .confirm .small-btn { border-color: var(--ink); color: var(--ink); }
 .confirm .small-btn:hover:not(:disabled) { background: var(--ink); color: var(--accent); }
 .confirm .primary-btn:focus-visible,
@@ -776,16 +811,25 @@ legend.label { margin-bottom: 8px; padding: 0; }
 .choices {
   display: flex;
   flex-wrap: wrap;
-  gap: 0 18px;
+  gap: 4px 8px;
+  margin-inline: -10px;
 }
 .choice {
   display: inline-flex;
   align-items: center;
   gap: 10px;
   min-height: 44px;
+  padding: 0 10px;
   font-size: 15px;
   cursor: pointer;
 }
+/* The chosen option: "Según la plantilla" Para todos, "Aplica" /
+   "No aplica" Para ti. The dot and the focus ring take the text colour. */
+.choice.is-para-todos:has(input:checked) { background: var(--para-todos); color: var(--on-para-todos); }
+.choice.is-para-ti:has(input:checked) { background: var(--para-ti); color: var(--on-para-ti); }
+.choice.is-para-todos:has(input:checked) input { accent-color: var(--on-para-todos); }
+.choice.is-para-ti:has(input:checked) input { accent-color: var(--on-para-ti); }
+.choice.is-para-ti:has(input:checked) input:focus-visible { outline-color: var(--on-para-ti); }
 .choice input {
   width: 20px;
   height: 20px;
@@ -798,12 +842,43 @@ legend.label { margin-bottom: 8px; padding: 0; }
 @media (prefers-reduced-motion: reduce) {
   .layer-summary::before { transition: none; }
 }
-/* "Guardado." after a save */
+/* "Guardado." after a save: a Hecho tag (nothing while it's empty) */
 .saved-note {
   font-size: 14px;
   font-weight: 700;
   letter-spacing: .06em;
 }
+.saved-note:not(:empty) {
+  padding: 4px 8px;
+  background: var(--hecho);
+  color: var(--on-hecho);
+}
+
+/* "Hecho · <fecha>" on a step that counts: a Hecho tag */
+.hecho-tag {
+  display: inline-block;
+  padding: 2px 6px;
+  background: var(--hecho);
+  color: var(--on-hecho);
+}
+/* "Nota para el cliente": a Para ti tag over its text box */
+.para-ti-tag {
+  align-self: flex-start;
+  padding: 3px 8px;
+  background: var(--para-ti);
+  color: var(--on-para-ti);
+}
+
+/* News list: a state's tag Para ti, "Todos los estados" Para todos */
+.news-tag {
+  display: inline-block;
+  padding: 3px 7px;
+  font-size: 11px;
+  line-height: 1.2;
+  letter-spacing: .16em;
+}
+.news-tag.is-para-ti { background: var(--para-ti); color: var(--on-para-ti); }
+.news-tag.is-para-todos { background: var(--para-todos); color: var(--on-para-todos); }
 
 .live:empty { display: none; }
 
@@ -848,6 +923,8 @@ legend.label { margin-bottom: 8px; padding: 0; }
     border-top: 1px solid var(--rule);
   }
   .table .nowrap-cell { white-space: normal; }
+  /* an Alerta cell keeps some room around its words */
+  .table td.is-alerta { padding: 8px 10px; }
   .table td[data-label]::before {
     content: attr(data-label);
     flex: 0 0 auto;
