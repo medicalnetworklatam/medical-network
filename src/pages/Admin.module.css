@@ -1,26 +1,32 @@
 /* ------------------------------------------------------------------
-   Admin screens (/admin, /admin/clientes/<id>, /admin/novedades), in the
-   new look: ruled cells split by thin 1px lines, small spaced labels, big
-   lowercase titles ending in a full stop, square buttons. Fonts and
-   colour tokens come from src/styles/redesign.css (never a hard-coded
-   colour).
+   Admin screens (/admin, /admin/clientes, /admin/clientes/<id> and its
+   three pages, /admin/novedades), in the new look: ruled cells split by
+   thin 1px lines, small spaced labels, big lowercase titles ending in a
+   full stop (a client's name keeps its capitals), square buttons. Fonts
+   and colour tokens come from src/styles/redesign.css (never a
+   hard-coded colour).
 
-   Desktop:  dark top bar | tab cells | "ADMINISTRACIÓN / clientes." |
-             the page's cells (the client table across the whole width;
-             a client's settings | checklist; the news form | the list).
+   Desktop:  dark top bar (the page's one back link, "Cerrar sesión") |
+             "ADMINISTRACIÓN / clientes." | the page's cells: the big
+             link-buttons of a hub filling the rest of the screen; the
+             client table across the whole width; a client's page in one
+             readable column; the news form | the list.
    Up to 900px: one column; the client table turns every row into a
              block of "label .... value" lines.
+   Up to 700px: the big link-buttons are stacked.
 
    Rule for this file: the site loads every page's CSS at once, so
    nothing here may target html, body, * or :root directly.
 ------------------------------------------------------------------- */
 
 .page {
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
   min-height: 100dvh;
 }
 
-/* ---------- Top bar: back to Novedades, "Cerrar sesión" ---------- */
+/* ---------- Top bar: the page's back link, "Cerrar sesión" ---------- */
 .header {
   display: flex;
   align-items: center;
@@ -30,18 +36,20 @@
   background: var(--paper);
   color: var(--ink);
 }
-/* "← Novedades": the home page's chip */
+/* "← Novedades", "← Administración", "← <client's name>": the home
+   page's chip. A long name wraps instead of running off a phone. */
 .pill {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
   min-height: 44px;
   padding: 10px 14px;
   background: var(--paper);
   color: var(--ink);
-  font: 400 clamp(17px, 1.25vw, 22px) / 1 var(--font);
+  font: 400 clamp(17px, 1.25vw, 22px) / 1.15 var(--font);
   text-decoration: none;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 .pill:hover {
   text-decoration: underline;
@@ -50,35 +58,10 @@
 }
 .pill:focus-visible { outline: 2px solid var(--ink); outline-offset: -6px; }
 
-/* ---------- Tabs: two cells, the open one inverted ---------- */
-.tabs {
-  display: flex;
-  border-bottom: 1px solid var(--rule);
-}
-.tab {
-  display: flex;
-  align-items: center;
-  min-height: 52px;
-  padding: 12px var(--gutter);
-  border-right: 1px solid var(--rule);
-  color: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: .16em;
-  text-transform: uppercase;
-  text-decoration: none;
-  transition: background-color .15s ease, color .15s ease;
-}
-.tab:hover,
-.tab[aria-current="page"] {
-  background: var(--accent);
-  color: var(--ink);
-}
-.tab:focus-visible { outline: 2px solid currentColor; outline-offset: -5px; }
-
 /* ---------- Title cell: "ADMINISTRACIÓN" over "clientes." ---------- */
 .main {
   display: flex;
+  flex: 1 0 auto;
   flex-direction: column;
 }
 .head {
@@ -115,6 +98,31 @@
   text-transform: lowercase;
   overflow-wrap: break-word;
 }
+/* A client's hub: a little smaller, so a long name (or "sin nombre." with
+   the email) takes two lines rather than four on a phone */
+.page-title.is-client {
+  font-size: clamp(2.25rem, 6vw, 4.5rem);
+  font-size: min(clamp(2.25rem, 6vw, 4.5rem), 100cqi / (var(--title-chars, 10) * var(--k)));
+  line-height: 1;
+  letter-spacing: -.03em;
+  overflow-wrap: anywhere;
+}
+/* A client's name: their own capitals, no full stop */
+.page-title.is-name { text-transform: none; }
+/* …and as the small label over a client page's title */
+.head-label.is-name {
+  font-size: 15px;
+  letter-spacing: .02em;
+  text-transform: none;
+  overflow-wrap: anywhere;
+}
+/* The email under "sin nombre." */
+.title-note {
+  margin: 0;
+  font-size: 15px;
+  color: color-mix(in srgb, var(--accent) 72%, transparent);
+  overflow-wrap: anywhere;
+}
 
 /* ---------- The page's cells ---------- */
 .body {
@@ -123,17 +131,20 @@
   align-content: start;
 }
 .body > * { grid-column: 1 / -1; }
-/* The client screen's left column: "Estado, ruta y plan" over "Documentos" */
-.body > .side-cards,
 .body > .news-form { grid-column: 1; }
-.side-cards {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-.body > .checklist-card,
 .body > .news-list { grid-column: 2; border-left: 1px solid var(--rule); }
 .body.is-wide { display: block; }
+/* A client's page: one column, narrow enough to read on a wide screen */
+.body.is-single { display: block; }
+@media (min-width: 1025px) {
+  .body.is-single > * { max-width: 960px; border-right: 1px solid var(--rule); }
+}
+/* A hub: the big link-buttons take the rest of the screen */
+.body.is-hub {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+}
 
 .card {
   display: flex;
@@ -157,28 +168,6 @@
   border-bottom: 1px solid var(--rule);
 }
 .card > .list-head { padding: 0; border: 0; }
-
-/* "← Todos los clientes" */
-.back {
-  margin: 0;
-  border-bottom: 1px solid var(--rule);
-}
-.back-link {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 52px;
-  padding: 8px var(--gutter);
-  color: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: .16em;
-  text-transform: uppercase;
-  text-decoration: none;
-  transition: background-color .15s ease, color .15s ease;
-}
-.back-link:hover { background: var(--accent); color: var(--ink); }
-.back-link:focus-visible { outline: 2px solid currentColor; outline-offset: -5px; }
 
 /* Loading / empty / errors: one cell; errors inverted, no red */
 .message {
@@ -387,17 +376,75 @@
 }
 
 /* ---------- One client ---------- */
-.client-title {
+/* "Actualizar" at the top of a client page */
+.refresh-row {
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px var(--gutter);
+  border-bottom: 1px solid var(--rule);
+}
+
+/* The big link-buttons of /admin and a client's hub: filled black cells
+   with cream text, split by thin cream lines; side by side, stacked on a
+   phone. Each one is a whole-cell link. */
+.big-nav {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+}
+.big-list {
+  display: grid;
+  flex: 1 0 auto;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  gap: 1px;
   margin: 0;
-  font-size: clamp(26px, 2.8vw, 40px);
-  font-weight: 700;
-  line-height: 1.1;
+  padding: 0;
+  list-style: none;
+}
+.big-item { display: flex; min-width: 0; }
+.big-link {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 10px;
+  min-width: 0;
+  min-height: clamp(104px, 22svh, 320px);
+  padding: clamp(18px, 2.2vw, 34px) var(--gutter);
+  background: var(--accent);
+  color: var(--ink);
+  text-decoration: none;
+}
+/* A paid client without a state or route: Alerta (DECISIONS.md, 21 Nov 2026, late) */
+.big-link.is-alerta { background: var(--alerta); color: var(--on-alerta); }
+.big-title {
+  font: 700 clamp(28px, 3.6vw, 56px) / 1 var(--font);
   letter-spacing: -.03em;
+  overflow-wrap: break-word;
+}
+.big-status {
+  font-size: 16px;
+  line-height: 1.4;
   overflow-wrap: anywhere;
 }
-.client-title .email { margin-top: 6px; font-size: 15px; letter-spacing: 0; }
-/* the name may take two lines (name + email): "Actualizar" stays at the top */
-.client-card .list-head { align-items: flex-start; }
+/* top right of the cell, the same place on every button */
+.big-arrow {
+  position: absolute;
+  top: clamp(14px, 2vw, 30px);
+  right: var(--gutter);
+  font: 400 clamp(24px, 2.4vw, 36px) / 1 var(--font);
+}
+.big-link:hover .big-title {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: .12em;
+}
+/* the error cell over the buttons is black too: a cream line between */
+.body.is-hub > .message { border-bottom-color: var(--ink); }
+.big-link:focus-visible { outline: 3px solid var(--ink); outline-offset: -9px; }
+.big-link.is-alerta:focus-visible { outline-color: var(--on-alerta); }
 
 /* Estado, Ruta, Plan: one ruled row each */
 .setting {
@@ -886,7 +933,6 @@ legend.label { margin-bottom: 8px; padding: 0; }
 /* (Six columns need about 900px; an iPad held upright gets the blocks too) */
 @media (max-width: 900px) {
   .body { display: block; }
-  .body > .checklist-card,
   .body > .news-list { border-left: 0; }
 
   .table,
@@ -941,8 +987,14 @@ legend.label { margin-bottom: 8px; padding: 0; }
 @media (max-width: 700px) {
   .header { padding: 6px calc(var(--gutter) - 12px); }
   .pill { padding: 8px 12px; }
-  .tab { flex: 1 1 0; padding: 10px var(--gutter); letter-spacing: .1em; }
-  .tab:last-child { border-right: 0; }
+  .big-list { grid-auto-flow: row; grid-auto-rows: 1fr; }
+  /* lower cells, the arrow in the middle of the right side */
+  .big-link {
+    justify-content: center;
+    min-height: 88px;
+    padding-right: calc(var(--gutter) + 40px);
+  }
+  .big-arrow { top: 50%; transform: translateY(-50%); }
   .head { padding: 28px var(--gutter) 18px; gap: 12px; }
   .head-label { font-size: 12px; }
   .post-text { font-size: 15px; }
@@ -951,8 +1003,6 @@ legend.label { margin-bottom: 8px; padding: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tab,
-  .back-link,
   .primary-btn,
   .message-btn,
   .small-btn { transition: none; }

@@ -244,7 +244,7 @@ export default function AdminNovedades() {
     : 'Publicar'
 
   return (
-    <AdminLayout title="Publicar novedades">
+    <AdminLayout title="Publicar novedades" back={{ to: '/admin', label: 'Administración' }}>
 
       {/* Form */}
       <section className={styles.card + ' ' + styles.newsForm} aria-labelledby="news-form-heading">

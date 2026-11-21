@@ -25,8 +25,12 @@ import Expediente from './pages/Expediente.tsx'
 import Documentos from './pages/Documentos.tsx'
 import Curriculum from './pages/Curriculum.tsx'
 import RequireAdmin from './pages/RequireAdmin.tsx'
+import AdminHome from './pages/AdminHome.tsx'
 import AdminClientes from './pages/AdminClientes.tsx'
 import AdminCliente from './pages/AdminCliente.tsx'
+import AdminClienteEstado from './pages/AdminClienteEstado.tsx'
+import AdminClienteExpediente from './pages/AdminClienteExpediente.tsx'
+import AdminClienteDocumentos from './pages/AdminClienteDocumentos.tsx'
 import AdminNovedades from './pages/AdminNovedades.tsx'
 
 // The state picker used to keep the chosen states in this browser only
@@ -75,8 +79,14 @@ createRoot(document.getElementById('root')!).render(
 
               {/* Admins only: everyone else is sent to /novedades */}
               <Route element={<RequireAdmin />}>
-                <Route path="/admin" element={<AdminClientes />} />
+                <Route path="/admin" element={<AdminHome />} />
+                <Route path="/admin/clientes" element={<AdminClientes />} />
                 <Route path="/admin/clientes/:id" element={<AdminCliente />} />
+                <Route path="/admin/clientes/:id/estado" element={<AdminClienteEstado />} />
+                <Route path="/admin/clientes/:id/expediente" element={<AdminClienteExpediente />} />
+                <Route path="/admin/clientes/:id/documentos" element={<AdminClienteDocumentos />} />
+                {/* Any other address under a client: their hub */}
+                <Route path="/admin/clientes/:id/*" element={<AdminCliente />} />
                 <Route path="/admin/novedades" element={<AdminNovedades />} />
               </Route>
             </Route>

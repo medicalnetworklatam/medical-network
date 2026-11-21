@@ -114,6 +114,24 @@ export function sortClients<T extends Pick<Client, 'id' | 'first_name' | 'last_n
   })
 }
 
+/* ---------- What an admin has to act on ---------- */
+
+/** What a paid client still lacks: a Bundesland (none, or a code the map
+    doesn't know) and/or a route. Each one is shown as an Alerta cell in the
+    client overview, and either one makes "Estado, ruta y plan" an Alerta
+    button on the client's screen (DECISIONS.md, 21 Nov 2026, late). A free
+    client lacks nothing here: no Alerta. */
+export function setupMissing(client: Pick<Client, 'main_state' | 'route' | 'plan'>): { state: boolean; route: boolean } {
+  const paid = client.plan === 'paid'
+  return { state: paid && !stateName(client.main_state), route: paid && !client.route }
+}
+
+/** "Sin documentos", "1 documento", "3 documentos" */
+export function documentCountText(count: number): string {
+  if (count <= 0) return 'Sin documentos'
+  return count === 1 ? '1 documento' : `${count} documentos`
+}
+
 /* ---------- Progress and last activity ---------- */
 
 export interface Progress {

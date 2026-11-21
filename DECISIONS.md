@@ -15,6 +15,22 @@ Last updated: 21 Nov 2026. This is the source of truth for the project. When a d
   - Spanish only, web only
 - **Admins:** Ivan and his cousin.
 
+## Changes on 21 Nov 2026 (night, later): Administración as a set of simple screens
+
+Ivan's decision, from his two sketches. It replaces the admin tabs and the single long client screen. What each section does, and every admin rule below, stays the same.
+
+- **Easy to take in first.** The admin screens may bend the design rules where that makes the information easier to read (bigger buttons, plainer layout). The colour meanings (21 Nov, late), plain text for anything from the database, and the in-page confirmations stay.
+- **`/admin`:** the title "administración." and two big buttons: "Clientes" → `/admin/clientes`, "Publicar" → `/admin/novedades` (the news form, unchanged). The column's "Administración" row keeps pointing to `/admin`.
+- **`/admin/clientes`:** today's client overview (table, "Actualizar", the note on progress and last activity). A client's name opens their screen.
+- **`/admin/clientes/<id>`:** the client's name as the title and three big buttons: "Estado, ruta y plan", "Expediente", "Documentos".
+- **One page per button,** each with today's section, unchanged in what it does: `/admin/clientes/<id>/estado` (state, route, plan, with their confirmations), `/admin/clientes/<id>/expediente` (country, header line, the client's dudas, the steps with the client layer), `/admin/clientes/<id>/documentos` (upload and delete PDFs).
+- **Proposed by Claude, to confirm on the preview:**
+  - Back links instead of the two tabs: "← Administración", "← Clientes", "← <client's name>".
+  - A one-line status under each client button: state · route · plan; progress %; number of documents. "Estado, ruta y plan" gets Alerta when a paid client has no state or no route, as in the overview.
+  - Browser tab titles stay generic ("Cliente · Administración"), never the client's name, so names don't end up in the browser history of a shared computer.
+  - Client names keep their capitals in the admin titles (Ivan, 21 Nov 2026).
+- **No database change.** Every client page checks the address is a valid ID and loads only accounts that aren't admins, as today.
+
 ## Changes on 21 Nov 2026 (late): colour with meaning
 
 Ivan chose these colours on 21 Nov 2026 from previews. This replaces "every colour comes from three values" (17 Nov) and "there is no red colour" (18 Nov). Black `#050505` and cream `#F3F0E9` stay the base.
@@ -299,6 +315,8 @@ These replace the morning's "look and feel" bullet below where they differ.
 - **Migration 4** also removes execute rights on Supabase's `public.rls_auto_enable()` from the website's roles.
 
 ### Admin screens (decided 16 Nov 2026)
+
+Since 21 Nov 2026 (night, later) these are split into separate screens; see that section. What each one does stays as below.
 
 - **Who sees them:** admins only. The website hides the admin pages from everyone else, but the database rules (RLS) are what actually protect the data.
 - **No database change expected.** Migrations 1 and 2 already let admins read every profile, progress and checklist item, write news, and change a client's plan, route and state (checked 16 Nov 2026). If the build turns out to need one, it comes as migration 3 with new checks in `rls_check.sql`.
