@@ -15,6 +15,18 @@ Last updated: 21 Nov 2026. This is the source of truth for the project. When a d
   - Spanish only, web only
 - **Admins:** Ivan and his cousin.
 
+## Changes on 21 Nov 2026 (night, last): Comunidad as a feed, orange dudas, the progress ring
+
+Ivan's requests after the second preview, from a sketch; the plan was approved by Ivan (option A for the colour).
+
+- **Comunidad looks like a feed of posts, not a chat.** One readable column (about 760 px) under "tu / comunidad.", the same on a desktop, an iPad and a phone:
+  - At the top, the post box: the member's initials in a circle, their shown name, the line about names, a 3-line text box, the "0 / 2000" counter and "Publicar".
+  - Then one card per post, newest first: the author's initials in a circle (from the name the database shows: "José P." → "JP"), the name, "Equipo MNL" when it applies, the date, then the text. "Eliminar" is a quiet underlined word at the bottom right of the card, still only on one's own posts (every post for admins), with the same question inside the card.
+  - "Actualizar" sits small above the posts; "Ver más" stays at the bottom. On a phone the feed leaves room at the end, so the floating chat link never covers a button.
+  - Every board rule stays as in "Community" below (30 at a time, 2,000 characters, links, who may delete, free users, the reminder to choose a state). The state chat is unchanged.
+- **The client's dudas are orange** (Para todos) on the admin Expediente page, but only when the client has written some; "Sin dudas escritas." has no colour. This is an exception to "Para todos = for everyone": on this one admin screen, orange also means "the client has written dudas" (Ivan, 21 Nov 2026, option A).
+- **A progress ring** on the client hub's "Expediente" button: a faint circle that fills in Hecho green to the client's progress, with the % in the middle; small, next to the arrow, on a phone. Same sum as the status line ("no aplica" steps left out). No ring for a free client or when there is nothing to measure ("—"). Drawn already filled, without animation (motion is only tied to the scroll). Only for the eye: the status line says the same in words.
+
 ## Changes on 21 Nov 2026 (night, latest): the client pages redone, Publicar split up
 
 Ivan's request after the first preview: the client pages should look and fit better on a desktop and on a phone, and Publicar should be split up like Clientes. Proposed by Claude and approved by Ivan the same night. What each section does stays the same; no database change.
@@ -74,7 +86,7 @@ Ivan chose these colours on 21 Nov 2026 from previews. This replaces "every colo
   - News list: a state's tag = Para ti, "Todos los estados" = Para todos.
   - Delete confirmations elsewhere ("Sí, eliminar", "Sí, quitar" for a news file, "Sí, borrar todo" in the CV tool) = Alerta, for consistency.
   - Free accounts and everything else: no colour.
-- **Dudas del cliente:** no colour for now. A "new" marker would need a database change (remembering when an admin last opened them). Revisit if the owner misses new dudas.
+- **Dudas del cliente:** since 21 Nov 2026 (night, last), written dudas are orange (Para todos) on the admin Expediente page; see that section. A "new" marker would still need a database change (remembering when an admin last opened them). Revisit if the owner misses new dudas.
 - All colours live in `src/styles/redesign.css`; changing one is a one-line edit.
 
 ## Changes on 21 Nov 2026 (night): Mis documentos
@@ -313,6 +325,7 @@ These replace the morning's "look and feel" bullet below where they differ.
   - Free users see only "La comunidad es para miembros con el paquete completo." The page makes no request for posts (the database refuses them anyway).
   - Posts are listed newest first, 30 at a time, with "Ver más" for older ones. "Ver más" asks for posts older than the last one shown (by `created_at`, then `id` for posts with the very same time), using `created_at` exactly as the database sent it, so no post is skipped or shown twice.
   - No realtime: the list loads when the page opens, after publishing, and with an "Actualizar" button. After publishing, the new post shows at the top and the list goes back to the newest 30.
+  - Since 21 Nov 2026 (night, last) the board is shown as a feed of post cards; see that section.
   - Each post shows the author name, the date and time in the reader's own time zone (news dates stay in German time), and the body as plain text with its line breaks. Web addresses become safe links since 18 Nov 2026 (afternoon, see above).
   - The form's counter ("0 / 2000") follows the database's rule exactly: it removes only spaces, tabs, carriage returns and line breaks at both ends, and counts an emoji as one character. "Publicar" is disabled when the text is empty, over 2,000 characters, or while sending. The page sends only the body.
   - "Eliminar" is shown on the user's own posts, and on every post for admins. It asks for confirmation inside the post ("¿Eliminar esta publicación?" with "Sí, eliminar" and "Cancelar"), not with the browser's own pop-up, so every word stays in Spanish.

@@ -541,6 +541,35 @@
   text-decoration-thickness: 2px;
   text-underline-offset: .12em;
 }
+/* Expediente on a client's hub: a ring in the middle of the cell that
+   fills with the progress (Hecho green on a faint cream track) */
+.big-visual {
+  align-self: center;
+  width: clamp(110px, 42%, 230px);
+  margin: auto;
+}
+.ring {
+  /* the % inside is sized on the ring's width */
+  container-type: inline-size;
+  position: relative;
+  display: block;
+  aspect-ratio: 1;
+}
+.ring-svg { display: block; width: 100%; height: 100%; }
+.ring-track,
+.ring-fill { fill: none; stroke-width: 8; }
+.ring-track { stroke: color-mix(in srgb, var(--ink) 22%, transparent); }
+.ring-fill { stroke: var(--hecho); stroke-linecap: butt; }
+.ring-text {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font: 700 24cqi / 1 var(--font);
+  letter-spacing: -.03em;
+  white-space: nowrap;
+}
+
 /* A single low button at the top of a list page ("Nueva novedad") */
 .big-nav.is-low { flex: 0 0 auto; }
 .big-nav.is-low .big-link { min-height: clamp(76px, 10svh, 110px); justify-content: center; }
@@ -964,6 +993,11 @@ legend.label { margin-bottom: 8px; padding: 0; }
   background: var(--hecho);
   color: var(--on-hecho);
 }
+/* The client's written dudas on the Expediente page: a Para todos cell
+   (Ivan, 21 Nov 2026), every word in its own text colour */
+.setting.has-dudas { background: var(--para-todos); color: var(--on-para-todos); }
+.setting.has-dudas .hint { color: inherit; }
+
 /* "Nota para el cliente": a Para ti tag over its text box */
 .para-ti-tag {
   align-self: flex-start;
@@ -1061,6 +1095,16 @@ legend.label { margin-bottom: 8px; padding: 0; }
     padding-right: calc(var(--gutter) + 40px);
   }
   .big-arrow { top: 50%; transform: translateY(-50%); }
+  /* the ring: small, on the right next to the arrow */
+  .big-link.has-visual { padding-right: calc(var(--gutter) + 40px + 76px); }
+  .big-visual {
+    position: absolute;
+    top: 50%;
+    right: calc(var(--gutter) + 44px);
+    width: 64px;
+    margin: 0;
+    transform: translateY(-50%);
+  }
   .head { padding: 28px var(--gutter) 18px; gap: 12px; }
   .head-label { font-size: 12px; }
   .setting-row { flex-wrap: wrap; }

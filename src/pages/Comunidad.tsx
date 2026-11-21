@@ -7,8 +7,10 @@ import { useAuth } from '../lib/auth.ts'
 import { authorName, useProfile } from '../lib/profile.ts'
 import styles from './Comunidad.module.css'
 
-/** The community board: one board for all members (text only). Paid members
-    and admins read and write; free users only see a short message. */
+/** The community board: one board for all members (text only), shown as a
+    feed of posts: the post box at the top, then one card per post, newest
+    first (DECISIONS.md, 21 Nov 2026, night, latest). Paid members and
+    admins read and write; free users only see a short message. */
 export default function Comunidad() {
   usePageTitle('Comunidad MNL · Medical Network')
   const { session } = useAuth()
@@ -41,7 +43,7 @@ export default function Comunidad() {
         )}
 
         {canRead && userId && profile ? (
-          <div className={styles.board}>
+          <div className={styles.feed}>
             <PostBoard
               key={userId}
               userId={userId}

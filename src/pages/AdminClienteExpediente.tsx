@@ -167,7 +167,12 @@ function ExpedienteScreen({ clientId, client, routes, attempt, loading }: Client
               key={'details-' + attempt} clientId={clientId} details={details}
               disabled={loading} onSaved={setDetails}
             />
-            <div className={styles.setting} role="group" aria-labelledby="dudas-heading">
+            {/* Written dudas: a Para todos (orange) cell, so they stand out
+                (Ivan, 21 Nov 2026); no dudas: no colour */}
+            <div
+              className={styles.setting + (currentExtra.dudas?.body ? ' ' + styles.hasDudas : '')}
+              role="group" aria-labelledby="dudas-heading"
+            >
               <h3 className={styles.settingLabel} id="dudas-heading">Dudas del cliente (solo lectura)</h3>
               {currentExtra.dudas && currentExtra.dudas.body ? (
                 <>

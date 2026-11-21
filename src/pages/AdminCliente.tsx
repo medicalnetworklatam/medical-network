@@ -130,6 +130,10 @@ function ClientHub({ clientId, client }: ClientPage) {
             status: free
               ? 'Plan gratis: el cliente no ve su expediente.'
               : line(current?.progress, (progress) => progressText(progress)),
+            // A ring that fills with the progress, when there is one to show
+            visual: !free && current?.progress.ok && current.progress.value
+              ? <ProgressRing percent={current.progress.value.percent} />
+              : undefined,
           },
           {
             to: `/admin/clientes/${clientId}/documentos`,
@@ -139,5 +143,31 @@ function ClientHub({ clientId, client }: ClientPage) {
         ]}
       />
     </>
+  )
+}
+
+/* The ring's circle: 100 × 100, radius 44 */
+const RADIUS = 44
+const AROUND = 2 * Math.PI * RADIUS
+
+/** A ring that fills clockwise from the top with the progress (Hecho
+    green), the % in the middle. Drawn already filled: no animation. Only
+    for the eye: the status line says the same in words. The lengths are
+    SVG attributes, not style="..." (which the CSP blocks). */
+function ProgressRing({ percent }: { percent: number }) {
+  const filled = (Math.max(0, Math.min(100, percent)) / 100) * AROUND
+  return (
+    <span className={styles.ring}>
+      <svg className={styles.ringSvg} viewBox="0 0 100 100" focusable="false">
+        <circle className={styles.ringTrack} cx="50" cy="50" r={RADIUS} />
+        {filled > 0 && (
+          <circle
+            className={styles.ringFill} cx="50" cy="50" r={RADIUS}
+            strokeDasharray={`${filled} ${AROUND}`} transform="rotate(-90 50 50)"
+          />
+        )}
+      </svg>
+      <span className={styles.ringText}>{percent} %</span>
+    </span>
   )
 }

@@ -89,6 +89,8 @@ export interface BigLinkItem {
   /** Plain text (or text with lang="de" spans); nothing = no status line */
   status?: ReactNode
   alerta?: boolean
+  /** A picture for the eye only (the Expediente ring); the words say it too */
+  visual?: ReactNode
 }
 
 export function BigLinks({ label, items, low = false }: {
@@ -102,7 +104,11 @@ export function BigLinks({ label, items, low = false }: {
       <ul className={styles.bigList}>
         {items.map((item) => (
           <li key={item.to} className={styles.bigItem}>
-            <Link className={styles.bigLink + (item.alerta ? ' ' + styles.isAlerta : '')} to={item.to}>
+            <Link
+              className={styles.bigLink + (item.alerta ? ' ' + styles.isAlerta : '') + (item.visual ? ' ' + styles.hasVisual : '')}
+              to={item.to}
+            >
+              {item.visual && <span className={styles.bigVisual} aria-hidden="true">{item.visual}</span>}
               <span className={styles.bigTitle}>{item.title}</span>
               {item.status && <span className={styles.bigStatus}>{item.status}</span>}
               <span className={styles.bigArrow} aria-hidden="true">→</span>
