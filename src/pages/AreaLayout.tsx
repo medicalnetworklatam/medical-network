@@ -7,15 +7,18 @@ import { MAP_SHAPES } from '../estados/mapShapes.ts'
 import styles from './AreaLayout.module.css'
 
 /** Which page is open, so the column can mark it */
-export type AreaPage = 'novedades' | 'comunidad' | 'chat'
+export type AreaPage = 'novedades' | 'comunidad' | 'chat' | 'contacto'
 
-/** The client area's frame, shared by Novedades, Comunidad and Chat: the
-    dark column on the left (on a phone, a bar with "Menú"), the page's own
-    content on the right, and on a phone a floating link to the chat.
+/** The client area's frame, shared by Novedades, Comunidad, Chat and
+    Contacto: the dark column on the left (on a phone, a bar with "Menú"),
+    the page's own content on the right, and on a phone a floating link to
+    the chat.
 
-    Column order (DECISIONS.md, 18 Nov 2026, afternoon): Mi perfil,
+    Column order (DECISIONS.md, 18 Nov 2026, afternoon; Contacto added by
+    Ivan on 20 Nov 2026): Mi perfil,
     Novedades, Comunidad MNL, Chat de <Bundesland>, Administración (admins
-    only), Calendario, Cerrar sesión. The current page is marked. */
+    only), Calendario, Contacto, Cerrar sesión. The current page is
+    marked. */
 export default function AreaLayout({ current, children }: { current: AreaPage; children: ReactNode }) {
   const { profile } = useProfile()
   const firstName = profile?.first_name?.trim().split(/\s+/)[0] ?? ''
@@ -79,6 +82,8 @@ export default function AreaLayout({ current, children }: { current: AreaPage; c
 
           {/* Calendar: preview only, it doesn't work yet */}
           <CalendarPreview />
+
+          {row('contacto', '/contacto', 'Contacto')}
 
           <div className={styles.session}>
             <SessionButton />
