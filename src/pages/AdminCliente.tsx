@@ -15,6 +15,7 @@ import {
   type ClientDetails, type ClientItemSetting, type Dudas, type TemplateRow,
 } from '../lib/expediente.ts'
 import { DetailsForm, StepLayer } from './AdminExpediente.tsx'
+import AdminDocumentos from './AdminDocumentos.tsx'
 import styles from './Admin.module.css'
 
 /* What a client ID looks like. Anything else in the address is not asked for. */
@@ -287,65 +288,71 @@ function ClientScreen({ clientId }: { clientId: string }) {
         </div>
       </section>
 
-      {/* The three things an admin may change */}
-      <section className={styles.card + ' ' + styles.settingsCard} aria-labelledby="settings-heading">
-        <h2 className={styles.sectionTitle} id="settings-heading">Estado, ruta y plan</h2>
+      {/* Left column (on wide screens): the settings, then the client's
+          documents ("Mis documentos", migration 8) */}
+      <div className={styles.sideCards}>
+        {/* The three things an admin may change */}
+        <section className={styles.card} aria-labelledby="settings-heading">
+          <h2 className={styles.sectionTitle} id="settings-heading">Estado, ruta y plan</h2>
 
-        <Setting
-          label="Estado (Bundesland)"
-          selectLabel="Nuevo estado"
-          current={currentState ? <span lang="de">{currentState}</span> : 'Sin estado'}
-          value={client.main_state ?? ''}
-          options={[{ value: '', label: 'Sin estado' }, ...STATES.map((s) => ({ value: s.id, label: s.name, lang: 'de' }))]}
-          busy={busy}
-          question={(value) => value
-            ? <>¿Cambiar el estado de {who} a <span lang="de">{stateName(value)}</span>?{keptProgress}</>
-            : <>¿Quitar el estado de {who}? Podrá elegirlo una vez más en el mapa.{keptProgress}</>}
-          onSave={(value) => save(
-            { main_state: value || null },
-            (saved) => 'Estado guardado: ' + (stateName(saved.main_state) || 'sin estado') + '.',
-          )}
-        />
-
-        {routes.length === 0 ? (
-          <div className={styles.setting}>
-            <h3 className={styles.settingLabel}>Ruta</h3>
-            <p className={styles.settingValue}>Sin rutas todavía</p>
-          </div>
-        ) : (
           <Setting
-            label="Ruta"
-            selectLabel="Nueva ruta"
-            current={routeName(client.route) || 'Sin ruta'}
-            value={client.route ?? ''}
-            options={[{ value: '', label: 'Sin ruta' }, ...routeOptions]}
+            label="Estado (Bundesland)"
+            selectLabel="Nuevo estado"
+            current={currentState ? <span lang="de">{currentState}</span> : 'Sin estado'}
+            value={client.main_state ?? ''}
+            options={[{ value: '', label: 'Sin estado' }, ...STATES.map((s) => ({ value: s.id, label: s.name, lang: 'de' }))]}
             busy={busy}
             question={(value) => value
-              ? <>¿Cambiar la ruta de {who} a «{routeName(value)}»?</>
-              : <>¿Quitar la ruta de {who}?</>}
+              ? <>¿Cambiar el estado de {who} a <span lang="de">{stateName(value)}</span>?{keptProgress}</>
+              : <>¿Quitar el estado de {who}? Podrá elegirlo una vez más en el mapa.{keptProgress}</>}
             onSave={(value) => save(
-              { route: value || null },
-              (saved) => 'Ruta guardada: ' + (saved.route ? routeName(saved.route) : 'sin ruta') + '.',
+              { main_state: value || null },
+              (saved) => 'Estado guardado: ' + (stateName(saved.main_state) || 'sin estado') + '.',
             )}
           />
-        )}
 
-        <Setting
-          label="Plan"
-          selectLabel="Nuevo plan"
-          current={client.plan === 'paid' ? 'De pago' : 'Gratis'}
-          value={client.plan}
-          options={[{ value: 'paid', label: 'De pago' }, { value: 'free', label: 'Gratis' }]}
-          busy={busy}
-          question={(value) => value === 'paid'
-            ? <>¿Cambiar el plan de {who} a «De pago»? Podrá ver su checklist y la comunidad.</>
-            : <>¿Cambiar el plan de {who} a «Gratis»? Dejará de ver su checklist y la comunidad.</>}
-          onSave={(value) => save(
-            { plan: value === 'paid' ? 'paid' : 'free' },
-            (saved) => 'Plan guardado: ' + (saved.plan === 'paid' ? 'de pago' : 'gratis') + '.',
+          {routes.length === 0 ? (
+            <div className={styles.setting}>
+              <h3 className={styles.settingLabel}>Ruta</h3>
+              <p className={styles.settingValue}>Sin rutas todavía</p>
+            </div>
+          ) : (
+            <Setting
+              label="Ruta"
+              selectLabel="Nueva ruta"
+              current={routeName(client.route) || 'Sin ruta'}
+              value={client.route ?? ''}
+              options={[{ value: '', label: 'Sin ruta' }, ...routeOptions]}
+              busy={busy}
+              question={(value) => value
+                ? <>¿Cambiar la ruta de {who} a «{routeName(value)}»?</>
+                : <>¿Quitar la ruta de {who}?</>}
+              onSave={(value) => save(
+                { route: value || null },
+                (saved) => 'Ruta guardada: ' + (saved.route ? routeName(saved.route) : 'sin ruta') + '.',
+              )}
+            />
           )}
-        />
-      </section>
+
+          <Setting
+            label="Plan"
+            selectLabel="Nuevo plan"
+            current={client.plan === 'paid' ? 'De pago' : 'Gratis'}
+            value={client.plan}
+            options={[{ value: 'paid', label: 'De pago' }, { value: 'free', label: 'Gratis' }]}
+            busy={busy}
+            question={(value) => value === 'paid'
+              ? <>¿Cambiar el plan de {who} a «De pago»? Podrá ver su checklist y la comunidad.</>
+              : <>¿Cambiar el plan de {who} a «Gratis»? Dejará de ver su checklist y la comunidad.</>}
+            onSave={(value) => save(
+              { plan: value === 'paid' ? 'paid' : 'free' },
+              (saved) => 'Plan guardado: ' + (saved.plan === 'paid' ? 'de pago' : 'gratis') + '.',
+            )}
+          />
+        </section>
+
+        <AdminDocumentos clientId={clientId} isFree={client.plan === 'free'} disabled={loading} />
+      </div>
 
       {/* Expediente: country and header line, the client's dudas, and per
           step their tick (read-only) and the client layer */}

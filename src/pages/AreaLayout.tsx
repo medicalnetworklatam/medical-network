@@ -7,18 +7,20 @@ import { MAP_SHAPES } from '../estados/mapShapes.ts'
 import styles from './AreaLayout.module.css'
 
 /** Which page is open, so the column can mark it */
-export type AreaPage = 'novedades' | 'expediente' | 'comunidad' | 'chat' | 'contacto'
+export type AreaPage = 'novedades' | 'expediente' | 'documentos' | 'comunidad' | 'chat' | 'contacto'
   /* no row of its own: opened from Mi expediente, so nothing is marked */
   | 'curriculum'
 
-/** The client area's frame, shared by Novedades, Mi expediente, Comunidad,
-    Chat and Contacto: the dark column on the left (on a phone, a bar with "Menú"),
+/** The client area's frame, shared by Novedades, Mi expediente, Mis
+    documentos, Comunidad, Chat and Contacto: the dark column on the left
+    (on a phone, a bar with "Menú"),
     the page's own content on the right, and on a phone a floating link to
     the chat.
 
     Column order (DECISIONS.md, 18 Nov 2026, afternoon; Contacto added by
-    Ivan on 20 Nov 2026, Mi expediente on 21 Nov 2026): Mi perfil,
-    Novedades, Mi expediente, Comunidad MNL, Chat de <Bundesland>, Administración (admins
+    Ivan on 20 Nov 2026, Mi expediente on 21 Nov 2026, Mis documentos on
+    21 Nov 2026, night): Mi perfil, Novedades, Mi expediente, Mis
+    documentos, Comunidad MNL, Chat de <Bundesland>, Administración (admins
     only), Calendario, Contacto, Cerrar sesión. The current page is
     marked. */
 export default function AreaLayout({ current, children }: { current: AreaPage; children: ReactNode }) {
@@ -74,6 +76,7 @@ export default function AreaLayout({ current, children }: { current: AreaPage; c
         <div className={styles.menuBody} id="area-menu">
           {row('novedades', '/novedades', 'Novedades')}
           {row('expediente', '/expediente', 'Mi expediente')}
+          {row('documentos', '/documentos', 'Mis documentos')}
           {row('comunidad', '/comunidad', 'Comunidad MNL')}
           {row('chat', '/chat', chatLabel)}
 

@@ -1,0 +1,137 @@
+/* ------------------------------------------------------------------
+   "Mis documentos" (Documentos.tsx). The title cell, the small labels
+   and the message cells come from Comunidad.module.css; this file has
+   the page's own list. Fonts and colour tokens come from
+   src/styles/redesign.css (never a hard-coded colour).
+
+   Wide (iPad, desktop):  one ruled row per document:
+                          name and date | "ABRIR PDF"
+   Narrow (phone, or little room beside the dark column): the same rows,
+                          with "ABRIR PDF" under the name, full width.
+
+   Rule for this file: the site loads every page's CSS at once, so
+   nothing here may target html, body, * or :root directly.
+------------------------------------------------------------------- */
+
+.list {
+  /* each row looks at the list's own width (below), not the screen's */
+  container-name: document-list;
+  container-type: inline-size;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* One document: a ruled cell */
+.item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--gutter);
+  row-gap: 14px;
+  padding: clamp(18px, 2vw, 28px) var(--gutter);
+  border-bottom: 1px solid var(--rule);
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+/* The file's name: plain text; a very long name wraps instead of
+   overflowing the row */
+.name {
+  margin: 0;
+  font-size: clamp(17px, 1.4vw, 21px);
+  font-weight: 700;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+/* "21 nov 2026, 14:05": small spaced capitals, in the secondary text
+   colour (never lighter, so it keeps at least 4.5:1 contrast) */
+.date {
+  margin: 0;
+  color: color-mix(in srgb, var(--accent) 72%, transparent);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+
+/* "Abrir PDF": a square outline, filled on hover */
+.open-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 22px;
+  border: 1px solid var(--accent);
+  background: transparent;
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color .15s ease, color .15s ease;
+}
+.open-btn:hover { background: var(--accent); color: var(--ink); }
+.open-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+/* A document whose link couldn't be made: a ruled notice */
+.missing {
+  margin: 0;
+  max-width: 34ch;
+  padding: 12px 14px;
+  border: 1px solid var(--rule);
+  color: color-mix(in srgb, var(--accent) 72%, transparent);
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+/* The error cell: its text, then "Reintentar" */
+.error-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+/* "Reintentar": a light square block on the inverted cell */
+.retry-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 22px;
+  border: 1px solid var(--ink);
+  border-radius: 0;
+  background: var(--ink);
+  color: var(--accent);
+  font-family: var(--font-grotesk);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color .15s ease, color .15s ease;
+}
+.retry-btn:hover { background: transparent; color: var(--ink); }
+.retry-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+
+/* ---------- Narrow list: "Abrir PDF" under the name, full width ---------- */
+@container document-list (max-width: 520px) {
+  .item { grid-template-columns: minmax(0, 1fr); }
+  .open-btn { width: 100%; }
+  .missing { max-width: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .open-btn,
+  .retry-btn { transition: none; }
+}

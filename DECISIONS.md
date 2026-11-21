@@ -15,6 +15,14 @@ Last updated: 21 Nov 2026. This is the source of truth for the project. When a d
   - Spanish only, web only
 - **Admins:** Ivan and his cousin.
 
+## Changes on 21 Nov 2026 (night): Mis documentos
+
+- **Mis documentos** is a login-only page, `/documentos`, in the column right after "Mi expediente". A paid client sees the files the team uploaded for them, newest first: name, date (German time) and "Abrir PDF" in a new tab. Free clients see "Mis documentos es para miembros con el paquete completo."; with no files: "Todavía no hay documentos para ti."
+- **Only admins upload and delete,** on the client's admin screen, in a "Documentos" section. Clients never upload. Deleting asks for confirmation inside the page.
+- **PDF only, up to 10 MB** (default until the owner says otherwise; allowing Word later is a small change).
+- **Storage:** a private bucket `client-files`, files at `<client id>/<random uuid>.pdf` (the uploaded file's own name is never in the path). A table `client_documents` (client, path, file name, upload date). A client reads a file only when a `client_documents` row with exactly that path is theirs, enforced by the database on the table and on the stored files, as for news files. Shown through signed links valid 1 hour.
+- **Known limit, accepted:** deleting a login removes its rows; its files stay in storage, invisible to everyone but admins. Signed links expire after 1 hour, so a page left open longer needs a reload to open a PDF. Files of a deleted login have no row, so no screen lists them.
+
 ## Changes on 21 Nov 2026: Mi expediente and the CV page
 
 - **Mi expediente** is a login-only page, `/expediente`, in the column right after Novedades. A paid client with a state and a route sees their checklist. Otherwise one message: free → "El expediente es para miembros con el paquete completo."; no state → "Aún no has elegido tu estado." with "Elegir mi estado"; no route → "Tu ruta todavía no está asignada. Escríbenos si tienes dudas." with a link to Contacto; no template for their state and route yet → "Tu expediente todavía no está listo. Te avisaremos."
