@@ -1,0 +1,117 @@
+{
+  "meta": {
+    "plantilla": "Plantilla de prueba · Saarland · Dentista · título de la UE",
+    "reglas": "Reglas de prueba",
+    "generada": "2026-01-15",
+    "datos_de_clientes": "ninguno",
+    "marcadores": { "{pais}": "Texto de prueba." },
+    "reglas_de_no_aplica": { "x2": "Regla del generador, no se copia." }
+  },
+  "portada": {
+    "eyebrow": "Prueba",
+    "titulo": "Expediente de {nombre}",
+    "subtitulo": "{perfil} · Una portada inventada para las pruebas.",
+    "barra_de_avance": { "titulo": "Mi avance", "hitos": ["Uno", "Dos"] },
+    "metricas": ["Ahora mismo"]
+  },
+  "bloques": [
+    { "bloque": 1, "titulo": "Bloque uno", "subtitulo": "Primero." },
+    { "bloque": 2, "titulo": "Bloque dos", "subtitulo": "Segundo." },
+    { "bloque": 3, "titulo": "Bloque tres", "subtitulo": "Tercero." },
+    { "bloque": 4, "titulo": "Bloque cuatro", "subtitulo": "Cuarto." },
+    { "bloque": 5, "titulo": "Bloque cinco", "subtitulo": "Quinto." }
+  ],
+  "pasos": [
+    {
+      "codigo": "x1",
+      "bloque": 1,
+      "numero_oficial": "1",
+      "titulo": "Un papel inventado de {pais}",
+      "descripcion": "Copia simple. Estás {genero:listo|lista} cuando lo tengas.",
+      "donde": "Una oficina inventada ({nota_personal})",
+      "plazo": "1 semana",
+      "aviso": "Al llegar vives en el Saarland ({nota_personal}).",
+      "caduca": null,
+      "no_aplica_estado": false,
+      "motivo_no_aplica": null
+    },
+    {
+      "codigo": "x2",
+      "bloque": 1,
+      "numero_oficial": "2",
+      "titulo": "Un papel que casi nunca hace falta",
+      "descripcion": "Solo en un caso raro.",
+      "donde": "Registro inventado",
+      "plazo": "1 mes",
+      "aviso": null,
+      "caduca": null,
+      "no_aplica_estado": true,
+      "motivo_no_aplica": "No aplica salvo el caso raro."
+    },
+    {
+      "codigo": "x_3",
+      "bloque": 2,
+      "numero_oficial": "—",
+      "titulo": "La carta del 'Amt' con $$ y $tag$",
+      "descripcion": "O'Higgins escribió: $$ no es SQL $$; tampoco '); drop table public.routes; -- ni C:\\carpeta\\nueva.",
+      "donde": "Tú",
+      "plazo": "—",
+      "aviso": "{nota_personal}",
+      "caduca": "Vale 3 meses desde que 'llega'.",
+      "no_aplica_estado": false,
+      "motivo_no_aplica": null
+    },
+    {
+      "codigo": "x4",
+      "bloque": 3,
+      "numero_oficial": "Antrag",
+      "titulo": "El formulario inventado",
+      "descripcion": "Firmado en la página 5.",
+      "donde": "Web de la autoridad",
+      "plazo": "1 semana",
+      "aviso": null,
+      "caduca": null,
+      "no_aplica_estado": false,
+      "motivo_no_aplica": "Solo si ejerciste en los últimos tres años."
+    },
+    {
+      "codigo": "x5",
+      "bloque": 5,
+      "numero_oficial": "—",
+      "titulo": "El final inventado",
+      "descripcion": "Llega por correo.",
+      "donde": "—",
+      "plazo": "—",
+      "aviso": null,
+      "caduca": null,
+      "no_aplica_estado": false,
+      "motivo_no_aplica": null
+    }
+  ],
+  "tarjetas": {
+    "aviso_guardado": "Tus marcas se guardan en este dispositivo.",
+    "leyenda": "Una leyenda de prueba.",
+    "sobre": {
+      "titulo": "El sobre",
+      "orden": ["A · Antrag", "1", "2 (si aplica)"],
+      "pie": "Por correo."
+    },
+    "mis_dudas": {
+      "titulo": "Mis dudas",
+      "ayuda": "Lo revisa el equipo.",
+      "marcador_vacio": "Escribe aquí.",
+      "boton": "Mandar por WhatsApp",
+      "explicacion": "Se manda por WhatsApp."
+    },
+    "autoridad_y_costos": {
+      "titulo": "La autoridad",
+      "filas": {
+        "Zeta": "última letra, primera fila",
+        "Bundesland": "Saarland",
+        "Ruta": "{genero:Dentista|Dentista} · título de la UE",
+        "Alfa": "primera letra, última fila"
+      }
+    },
+    "pie": "Un pie de prueba."
+  }
+}

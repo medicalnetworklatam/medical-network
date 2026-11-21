@@ -1,6 +1,6 @@
 # MNL client area: decisions log
 
-Last updated: 18 Nov 2026. This is the source of truth for the project. When a decision changes, update this file in the Claude project knowledge and in the code repository.
+Last updated: 20 Nov 2026. This is the source of truth for the project. When a decision changes, update this file in the Claude project knowledge and in the code repository.
 
 ## Context
 
@@ -14,6 +14,29 @@ Last updated: 18 Nov 2026. This is the source of truth for the project. When a d
   - about 25 accounts in the first 12 months
   - Spanish only, web only
 - **Admins:** Ivan and his cousin.
+
+## Changes on 20 Nov 2026: the owner's tools join the client area
+
+Based on the owner's own Claude explaining how he works today, and the Baden-Württemberg template it produced as JSON.
+
+- **Five additions, all before the end of 2026** (Ivan, 20 Nov): a contact page, the checklist ("Mi expediente") built from the owner's templates, "Mis documentos", the CV and cover letter tool, and the diagnostic. They extend the first-version scope below.
+- **Checklist = a template per Bundesland + route, plus a client layer** (Ivan, 20 Nov):
+  - **Template:** the steps (block 1–5, official number, title, description, Dónde, Plazo, warning, Caduca, "no aplica" by default with its reason), the block titles and the info cards. Shared by every client on that Bundesland + route.
+  - **Client layer,** set by admins on the client's admin screen: the client's country (`{pais}`), an optional header line, and for any step "aplica" / "no aplica" with a reason, and a personal note. A client reads only their own.
+  - **Personal notes are their own box under the step,** never inside the template's sentences (20 Nov). The template's inline `{nota_personal}` markers are removed on import.
+  - **"Mis dudas":** the client writes it; admins read it.
+  - **Progress %** leaves out "no aplica" steps of both kinds (template default and client layer).
+  - **The owner's generator rules are not copied into the site.** His Claude stays the place where the rules live; admins set the client layer by hand.
+- **No gender field; neutral wording** (Ivan, 20 Nov). `{genero:x|y}` shows both forms, shortened when they differ only in the ending ("médico/a", "habilitado/a", "listo/a"), otherwise both in full ("Arzt/Ärztin").
+- **Routes:** the owner's four route keys are our permanent route codes: `medico_drittstaat` (Médico · título de fuera de la UE), `medico_ue` (Médico · título de la UE, el EEE o Suiza), `dentista_drittstaat` (Dentista · título de fuera de la UE), `dentista_ue` (Dentista · título de la UE, el EEE o Suiza). The Berufserlaubnis is part of each checklist, not a route.
+- **Step codes:** the owner's codes are not stable over time (they changed with the BW reform of 01/11/2026, and `b1` now means a different step). Our readable code is `<Bundesland>-<route>-<owner's code>`, e.g. `bw-medico_drittstaat-bw8`. Progress still uses the permanent ID.
+- **Template updates:** same step with new wording → edited in place, ticks stay. A step that now means something else gets a new code, and the old step is archived. A step missing from a new version of the template is archived. Nothing is deleted.
+- **Template content may be in the public repository** (Ivan, 20 Nov): the owner's JSON, with no client data. The repository will be made private later. Client data, real client checklists and access words never go in.
+- **First template:** Baden-Württemberg, `medico_drittstaat`, with the post-reform rules (01/11/2026). More templates come from the owner in the same JSON format.
+- **Mis documentos** (Ivan, 20 Nov): a private storage bucket with one folder per client. Admins upload on the client's admin screen; a client sees only their own files, through links valid 1 hour. Clients never upload. Same pattern as news files (migration 5). File types: pending the owner (default: PDF only).
+- **Contact page** (to confirm): a login-only page in the column with WhatsApp and email links. No form, nothing stored. Anything in the site's code is public.
+- **CV tool** (to confirm): a page in the client area, saved only on the device as today, with "copiar texto" to send. Not saved to the account. Checklist step `p2` links to it. "Mandárselo a Ivan" becomes "al equipo MNL" unless the owner prefers otherwise.
+- **Diagnostic** (to confirm): a public page, also linked from the column. Nothing stored. PDF through the browser's print dialog (outside libraries are blocked by our security headers). Redesigned for Flatline. Waiting for the owner to confirm which version is live.
 
 ## Changes on 18 Nov 2026 (evening): Novedades as previews, full post on its own page
 
@@ -40,7 +63,7 @@ Last updated: 18 Nov 2026. This is the source of truth for the project. When a d
     - **Novedades:** photos inside the post, whole, never taller than the screen; tapping opens the full photo in a new tab. PDFs are a row with the name and "Abrir PDF", in a new tab. One request makes the signed links (valid 1 hour) for every file on the page.
     - **Known limits, accepted:** signed links expire after 1 hour, so after that a PDF or a full-size photo needs a page reload (photos already on screen stay). Deleting a post by hand in the SQL Editor leaves its files in storage, invisible to clients.
 - **Links in text:** web addresses in Novedades, Comunidad and Chat become links: `http://` and `https://` addresses, addresses starting with `www.`, and bare domains whose ending is on a fixed list (com, org, net, info, eu, de, at, ch, es, ec, pe, co, mx, ar, cl, bo, ve, uy, py, gob, gov, edu; lowercase only, so "Alemania.De hecho" stays text). Addresses without `http(s)://` open as `https://`. Anything with "@" before the host (emails, disguised addresses) stays plain text (Ivan, 18 Nov 2026, option C).
-- **The dark column is shared** by Novedades, Comunidad and Chat, in this order: Mi perfil, Novedades, Comunidad MNL, Chat de <Bundesland>, Administración (admins only), Calendario, Cerrar sesión. The current page is marked. The "← Novedades" links on Comunidad and Chat go. (Ivan gave the order; using the column on all three pages is Claude's reading of his answer, to be confirmed on the preview.)
+- **The dark column is shared** by Novedades, Comunidad and Chat, in this order: Mi perfil, Novedades, Comunidad MNL, Chat de <Bundesland>, Administración (admins only), Calendario, Contacto, Cerrar sesión. The current page is marked. The "← Novedades" links on Comunidad and Chat go. (Ivan gave the order; using the column on all three pages is Claude's reading of his answer, to be confirmed on the preview.) Contacto added 20 Nov 2026: a login-only page open to every logged-in user, title "equipo mnl" over "contacto.".
 - **"Comunidad" is called "Comunidad MNL"** in the column and the browser tab title. The page heading stays "tu" over "comunidad.".
 - **Calendar:** still a non-working preview labelled "Próximamente". It shows the current month and today's date (German time) and a few example events of one type, "Webinars / reuniones", in one event colour, with a small legend that says they are examples. This one colour is the only exception to "every colour comes from three values", and it is used only in the calendar.
 - **Novedades posts are redesigned** so each one reads as a separate post, not as lines of a log or chat. What the page shows and who sees what stay the same.
@@ -239,7 +262,7 @@ These replace the morning's "look and feel" bullet below where they differ.
   - one row per account that isn't an admin, free accounts marked as free; the `+prueba` test account shows until it's deleted before launch
   - columns: name ("first_name last_names"), Bundesland, route, plan, progress %, last activity (the client's most recent tick)
   - a client who hasn't done the name step shows "Sin nombre" with their email in small text
-  - progress % = ticked items ÷ non-archived items for the client's current Bundesland and route; "—" when the client has no state, no route, or there are no items yet
+  - progress % = ticked items ÷ non-archived items for the client's current Bundesland and route; "—" when the client has no state, no route, or there are no items yet. Since 20 Nov 2026, "no aplica" steps are left out (see the 20 Nov section).
   - last activity is shown in German time (Europe/Berlin)
 - **One client's screen:**
   - their checklist, read-only
@@ -266,7 +289,7 @@ These replace the morning's "look and feel" bullet below where they differ.
 - **Data design** (built in migration 1, `supabase/migrations/20261113120000_initial_schema.sql`, 13 Nov 2026):
   - `profiles`: first name (`first_name`, nombre/s) and last names (`last_names`, apellidos), each up to 100 characters; email (a copy of the login email, kept in sync), main Bundesland, route, plan (free/paid), is_admin, created date. Created automatically when a user is invited; the names can come from the invite's `first_name` and `last_names` metadata.
     - Migration 2 replaced the single `full_name` with `first_name` and `last_names`. An existing `full_name` was moved into `first_name`.
-  - `routes`: permanent short code, Spanish name, sort order, archived. Starts empty; Ivan will give the route names later.
+  - `routes`: permanent short code, Spanish name, sort order, archived. Starts empty. The four route codes were decided on 20 Nov 2026 (see the 20 Nov section).
   - `followed_states`: user_id, Bundesland, for news. **Removed in migration 2 (15 Nov decision).**
   - `community_posts` (migration 2): id, author_id (deleted together with the author's account), author_name, body (plain text, 1 to 2,000 characters, trimmed), created date. The website sends only the body; the database sets everything else. Listed newest first. Migration 4 adds `state` (the Bundesland; empty = the board, sent by the website for chat messages) and `is_staff` ("Equipo MNL", set by the database): see "State chat".
   - `checklist_items`: permanent automatic ID (what progress uses), optional unique readable code (like `by-kp-010`, for humans and spreadsheet imports), Bundesland, route, title, text, sort order, archived
@@ -335,8 +358,12 @@ These replace the morning's "look and feel" bullet below where they differ.
 6. News for the client's one Bundesland
 7. The community board for all members (added 15 Nov 2026)
 8. The chat per Bundesland (added 17 Nov 2026, see "State chat")
+9. A contact page (added 20 Nov 2026)
+10. "Mis documentos": files admins upload for one client (added 20 Nov 2026)
+11. The CV and cover letter tool (added 20 Nov 2026)
+12. The diagnostic, as a public page (added 20 Nov 2026)
 
-**Checklist content:** 6 of the 16 Bundesländer, 4 routes each. The cousin is researching the other 10, which isn't urgent.
+**Checklist content:** the owner has 7 Bundesländer × 4 routes in his own tools (Niedersachsen, Nordrhein-Westfalen, Baden-Württemberg, Bayern, Rheinland-Pfalz, Saarland, Berlin). Only Baden-Württemberg medico_drittstaat follows the rules in force since 01/11/2026; it is the first template on the site. The rest come from the owner as JSON templates (updated 20 Nov 2026).
 
 **Out of the first version:**
 - payment inside the site (clients pay through an external link; an admin switches the plan to paid by hand)
@@ -349,6 +376,7 @@ These replace the morning's "look and feel" bullet below where they differ.
 - real-time updates in the chat per Bundesland (the chat itself is built: see "State chat")
 - possibly a calendar and alerts
 - features for free users, if a use for them appears
+- an admin screen to import checklist templates (until then, a script turns the JSON into SQL that Ivan pastes)
 
 ## Open decisions (suggested default in brackets)
 
@@ -358,6 +386,7 @@ These replace the morning's "look and feel" bullet below where they differ.
   - The plain-HTML mock-up now lives in `design-mockup/`.
   - The new home page prototype lives in `design-hero/` (17 Nov 2026). Everything in it is public, photos included.
   - The React + Vite + TypeScript version is merged into `main` (pull request #3) and live on Cloudflare Pages. GitHub Pages is turned off.
+  - It will be made private later (20 Nov 2026); checklist templates may be in it until then.
 
 - **What a news post can include:** decided 18 Nov 2026 (afternoon): title, plain text with automatic links, photos and PDFs (up to 10 files per post). No comments or likes.
 - **Replies to community posts** (none in the prototype; replies can be added later)
@@ -384,4 +413,7 @@ The owner will hire a law firm for all legal work (decided 15 Nov 2026). Ivan an
   - rules for members
   - how a post is reported and removed
   - showing "María G." names to other members
+- **Client documents ("Mis documentos"):** how long they are kept and how they are deleted.
+- **CV tool:** saving it to the account would store health and family periods.
+- **Diagnostic:** its Calendly button sends the visitor's answers to Calendly.
 - **Timing** (suggested by Claude, not yet confirmed): done before the first real client gets an invite.
