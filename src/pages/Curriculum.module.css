@@ -1,0 +1,352 @@
+/* ------------------------------------------------------------------
+   The CV and cover letter tool (Curriculum.tsx). The title cell, the
+   small labels, the buttons, the notice cell and the confirmation strip
+   come from Comunidad.module.css, "← Mi expediente" from
+   Novedades.module.css; this file has the page's own cells. Fonts and
+   colour tokens come from src/styles/redesign.css (never a hard-coded
+   colour).
+
+   Wide (desktop, iPad landscape):  each step is a row of ruled cells:
+              its head on the left (PASO 1 / mis datos. and the text) |
+              its fields, periods and buttons on the right.
+   Narrow (phone, iPad, a small window): the same cells, one
+              above the other.
+
+   Rule for this file: the site loads every page's CSS at once, so
+   nothing here may target html, body, * or :root directly.
+------------------------------------------------------------------- */
+
+/* The <h1>: "MI CURRÍCULUM" over "para alemania." (both are the heading,
+   so screen readers hear "Mi currículum para Alemania") */
+.title {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: clamp(12px, 1.4vw, 22px);
+  margin: 0;
+  font-weight: inherit;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+}
+
+/* The intro under the title */
+.cover {
+  padding: clamp(20px, 2.4vw, 32px) var(--gutter);
+  border-bottom: 1px solid var(--rule);
+}
+.cover:focus { outline: none; }
+.cover-text {
+  margin: 0;
+  max-width: 62ch;
+  font-size: clamp(17px, 1.4vw, 21px);
+  line-height: 1.5;
+}
+
+/* ---------- A step: head | body ---------- */
+.step {
+  display: grid;
+  grid-template-columns: minmax(260px, 24rem) minmax(0, 1fr);
+  border-bottom: 1px solid var(--rule);
+}
+/* the head's line runs down the whole step */
+.step-head { border-right: 1px solid var(--rule); }
+.step-body { min-width: 0; }
+
+.step-head {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: clamp(22px, 2.4vw, 36px) var(--gutter);
+}
+.step-title {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0;
+}
+/* "mis datos.": big, bold, lowercase, ending with a full stop */
+.step-name {
+  font-family: var(--font);
+  font-size: clamp(28px, 2.8vw, 44px);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -.04em;
+  text-transform: lowercase;
+  overflow-wrap: break-word;
+}
+.step-text {
+  margin: 0;
+  max-width: 62ch;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+/* ---------- Fields: ruled cells ----------
+   Each cell draws its own right and bottom line; the wrapper hides the
+   lines on the outer edges (so an empty spot at the end of the last row
+   stays empty). */
+.grid-wrap {
+  overflow: hidden;
+  border-bottom: 1px solid var(--rule);
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  margin: 0 -1px -1px 0;
+}
+.grid-wide { grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); }
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 16px var(--gutter) 18px;
+  border-right: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+.field-full { grid-column: 1 / -1; }
+
+.field-label {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+.hint {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+  color: color-mix(in srgb, var(--accent) 72%, transparent);
+}
+
+.input,
+.select,
+.textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 0 14px;
+  border: 1px solid var(--accent);
+  border-radius: 0;
+  background-color: transparent;
+  color: var(--accent);
+  font-family: var(--font-grotesk);
+  font-size: 16px; /* 16px or more: iPhones don't zoom in when typing */
+}
+.input,
+.select { height: 48px; }
+.input::placeholder,
+.textarea::placeholder { color: color-mix(in srgb, var(--accent) 72%, transparent); }
+.textarea {
+  min-height: 120px;
+  padding: 12px 14px;
+  line-height: 1.5;
+  resize: vertical;
+}
+.input:focus-visible,
+.select:focus-visible,
+.textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Our own arrow on the list, as on the admin screens (two gradients in
+   the text colour, no image) */
+.select {
+  -webkit-appearance: none;
+  appearance: none;
+  padding-right: 44px;
+  text-overflow: ellipsis;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--accent) 50%),
+    linear-gradient(135deg, var(--accent) 50%, transparent 50%);
+  background-position: calc(100% - 22px) 50%, calc(100% - 16px) 50%;
+  background-size: 6px 6px;
+  background-repeat: no-repeat;
+  cursor: pointer;
+}
+
+/* Month fields: on iPhone/iPad they otherwise ignore their width and
+   centre their text */
+.input[type="month"] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  line-height: 46px;
+  text-align: left;
+}
+.input::-webkit-date-and-time-value { text-align: left; }
+
+/* ---------- Periods ---------- */
+/* Two fields per row (one on narrow screens), so the month fields and
+   the longest period type ("Año práctico / internado / rural") fit */
+.period {
+  container-name: cv-period;
+  container-type: inline-size;
+  border-bottom: 1px solid var(--rule);
+}
+.period .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@container cv-period (max-width: 520px) {
+  .period .grid { grid-template-columns: minmax(0, 1fr); }
+}
+.period .grid-wrap { border-bottom: 0; }
+/* "PERIODO 1" | Quitar */
+.period-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px var(--gutter);
+  border-bottom: 1px solid var(--rule);
+}
+
+.empty {
+  margin: 0;
+  padding: 18px var(--gutter);
+  border-bottom: 1px solid var(--rule);
+  font-size: 15px;
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--accent) 72%, transparent);
+}
+
+/* Buttons in a row, with the "Guardado…" / "Copiado…" note */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+  padding: 16px var(--gutter);
+  border-bottom: 1px solid var(--rule);
+}
+.saved {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  color: color-mix(in srgb, var(--accent) 72%, transparent);
+}
+
+/* ---------- The gap check ---------- */
+/* A notice is a ruled cell; "Te faltan meses" is an inverted cell, as
+   errors are everywhere on the site (no red) */
+.check {
+  padding: 18px var(--gutter);
+  border-bottom: 1px solid var(--rule);
+  font-size: 15px;
+  line-height: 1.5;
+}
+.check p { margin: 0; max-width: 68ch; }
+.check .check-lead {
+  margin-bottom: 6px;
+  font-size: 16px;
+  font-weight: 700;
+}
+.check.is-inverted {
+  background: var(--accent);
+  color: var(--ink);
+}
+.gaps {
+  margin: 10px 0 0;
+  padding-left: 20px;
+  font-variant-numeric: tabular-nums;
+}
+.gaps li { margin-bottom: 4px; }
+
+/* The timeline: covered months solid, gaps striped (so they differ
+   without colour), the first month and "hoy" under it */
+.line {
+  padding: 16px var(--gutter) 18px;
+  border-bottom: 1px solid var(--rule);
+}
+.bar {
+  display: flex;
+  height: 22px;
+  border: 1px solid var(--accent);
+  overflow: hidden;
+}
+.bar > span {
+  display: block;
+  flex-basis: 0;
+  min-width: 0;
+}
+.bar-covered { background: var(--accent); }
+.bar-gap {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--accent) 0 2px,
+    transparent 2px 7px
+  );
+}
+.axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Paso 4 ---------- */
+.confirm {
+  margin: 0;
+  padding: 14px var(--gutter);
+  border-bottom: 1px solid var(--rule);
+}
+
+.output {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px var(--gutter);
+  border-bottom: 1px solid var(--rule);
+}
+.output[hidden] { display: none; }
+.output-text {
+  min-height: 300px;
+  font-size: 14px;
+  line-height: 1.6;
+  font-variant-numeric: tabular-nums;
+}
+.output-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.note {
+  margin: 0;
+  padding: 16px var(--gutter) 20px;
+  max-width: calc(68ch + 2 * var(--gutter));
+  font-size: 14px;
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--accent) 72%, transparent);
+}
+
+/* ---------- Footer ---------- */
+.footer {
+  padding: clamp(22px, 2.6vw, 36px) var(--gutter) clamp(32px, 4vw, 56px);
+  font-size: 13px;
+  line-height: 1.7;
+  color: color-mix(in srgb, var(--accent) 72%, transparent);
+}
+.footer p { margin: 0; }
+.footer b { color: var(--accent); }
+
+/* ---------- Narrow: one column ----------
+   Decided by the width beside the dark column (Comunidad's .main, named
+   area-main), not the screen's */
+@container area-main (max-width: 980px) {
+  .step { display: block; }
+  .step-head {
+    border-right: 0;
+    border-bottom: 1px solid var(--rule);
+  }
+}
+
+/* ---------- Phone ---------- */
+@media (max-width: 700px) {
+  .step-text { font-size: 15px; }
+  .output-text { font-size: 13px; }
+}
