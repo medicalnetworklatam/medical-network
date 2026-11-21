@@ -19,8 +19,9 @@ type Result =
 /** Admin overview: one row per client account (admins are not listed), with
     their Bundesland, route, plan, progress % and last activity.
 
-    Four reads in total (profiles, routes, checklist items, progress), all
-    with the admin's own login; the percentages are worked out here. */
+    Five reads in total (profiles, routes, checklist items, progress, the
+    client layer's "aplica" / "no aplica"), all with the admin's own login;
+    the percentages are worked out here. */
 export default function AdminClientes() {
   usePageTitle('Clientes · Administración · Medical Network')
 
@@ -49,7 +50,7 @@ export default function AdminClientes() {
 
   const rows = useMemo(() => {
     if (!shown) return []
-    const summary = summarise(shown.clients, shown.items, shown.ticks)
+    const summary = summarise(shown.clients, shown.items, shown.ticks, shown.settings)
     const routeNames = new Map(shown.routes.map((route) => [route.code, route.name]))
     return sortClients(shown.clients).map((client) => ({
       client,

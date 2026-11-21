@@ -21,6 +21,7 @@ import Perfil from './pages/Perfil.tsx'
 import Comunidad from './pages/Comunidad.tsx'
 import Chat from './pages/Chat.tsx'
 import Contacto from './pages/Contacto.tsx'
+import Expediente from './pages/Expediente.tsx'
 import Curriculum from './pages/Curriculum.tsx'
 import RequireAdmin from './pages/RequireAdmin.tsx'
 import AdminClientes from './pages/AdminClientes.tsx'
@@ -63,6 +64,8 @@ createRoot(document.getElementById('root')!).render(
               <Route path="/estados" element={<Estados />} />
               <Route path="/novedades" element={<Novedades />} />
               <Route path="/novedades/:id" element={<NovedadPost />} />
+              {/* Mi expediente and its screens (/expediente/1, /sobre…) */}
+              <Route path="/expediente/*" element={<Expediente />} />
               <Route path="/comunidad" element={<Comunidad />} />
               <Route path="/chat" element={<Chat />} />
               <Route path="/contacto" element={<Contacto />} />
