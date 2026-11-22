@@ -1,6 +1,6 @@
 /* "Entrar" / "Cerrar sesión" (SessionButton.tsx): a square chip in the
-   page's colours, like the home page's "Menú" and "Mi área"
-   (Home.module.css, .chip): keep the two in step. */
+   page's colours, like the home page's "Menú"
+   (Home.module.css, .menu-btn): keep the two in step. */
 
 .chip {
   display: inline-flex;

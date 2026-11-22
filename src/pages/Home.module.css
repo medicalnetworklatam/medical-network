@@ -48,29 +48,8 @@
 }
 .site-header > * { pointer-events: auto; }
 
-/* "Mi área" (logged in) and SessionButton ("Entrar" / "Cerrar sesión"),
-   left of "Menú". SessionButton gets the same look from its own
-   stylesheet (SessionButton.module.css, .redesign): keep the two in step. */
-.header-actions {
-  display: flex;
-  gap: 8px;
-}
-.chip {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;             /* tap target (CLAUDE.md) */
-  padding: 10px 14px;
-  background: var(--paper);
-  color: var(--ink);
-  font: 400 clamp(17px, 1.25vw, 22px) / 1 var(--font);
-  text-decoration: none;
-  white-space: nowrap;
-}
-.chip:hover {
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: .2em;
-}
+/* Only "Menú" in the header since 23 Nov 2026: "Entrar", or "Mi área" and
+   "Cerrar sesión", are inside it (HomeMenu.tsx). */
 
 .menu {
   position: relative;
@@ -94,8 +73,7 @@
   min-height: 44px;             /* tap target (CLAUDE.md) */
 }
 /* a ring inside the chip, so it shows over dark and light sections alike */
-.menu-btn:focus-visible,
-.chip:focus-visible {
+.menu-btn:focus-visible {
   outline: 2px solid var(--ink);
   outline-offset: -6px;
 }
@@ -166,7 +144,7 @@
 ------------------------------------------------------------------- */
 .hero-track { position: relative; }
 .hero-track__grow { height: 140svh; } /* scroll spent growing the circle */
-.hero-track__rest { height: 50svh; }  /* then still, fully open, before "mi historia" */
+.hero-track__rest { height: 35svh; }  /* then still, fully open, before "mi historia" (50 -> 35svh, 23 Nov 2026) */
 
 .hero {
   position: sticky;
@@ -513,6 +491,9 @@
 .story__photo figcaption {
   padding: 12px var(--gutter);
   border-top: 1px solid var(--rule);
+  /* "Mis inicios", "Hoy, especialista": on Para todos (DECISIONS.md, 23 Nov 2026) */
+  background: var(--para-todos);
+  color: var(--on-para-todos);
   font-size: 12px;
   letter-spacing: .16em;
   text-transform: uppercase;
@@ -560,7 +541,7 @@
 .phases {
   --tone-1: color-mix(in oklab, var(--paper), var(--ink) 12%);
   --tone-1-fg: var(--ink);
-  --tone-2: color-mix(in oklab, var(--paper), var(--ink) 55%);
+  --tone-2: color-mix(in oklab, var(--paper), var(--ink) 75%); /* black text 9.0:1 (was 55%, 4.7:1; 23 Nov 2026) */
   --tone-2-fg: var(--paper);
   --tone-3: var(--ink);
   --tone-3-fg: var(--accent);
@@ -1110,6 +1091,11 @@
   border-bottom: 1px solid var(--rule);
 }
 .bonus:nth-child(odd) { border-right: 1px solid var(--rule); }
+/* the same four colours as the first screen's cells (DECISIONS.md, 23 Nov 2026) */
+.bonus:nth-child(1) { background: var(--para-ti); color: var(--on-para-ti); }
+.bonus:nth-child(2) { background: var(--dato); color: var(--on-dato); }
+.bonus:nth-child(3) { background: var(--hecho); color: var(--on-hecho); }
+.bonus:nth-child(4) { background: var(--para-todos); color: var(--on-para-todos); }
 .includes__total {
   margin: 0;
   padding: clamp(28px, 4vw, 64px) var(--gutter);
@@ -1121,10 +1107,9 @@
   letter-spacing: -.02em;
 }
 
-/* ---- "evidencia real": text | photo, then Andrea's words | her
-   screenshot. The photo's frame is never taller than the screen, so it
-   can always be seen whole (cropped to the frame); the screenshot is never
-   cropped, only made smaller to fit. ---- */
+/* ---- "evidencia real": text | photo, then Andrea's words. The photo's
+   frame is never taller than the screen, so it can always be seen whole
+   (cropped to the frame). ---- */
 .proof__row {
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
@@ -1161,7 +1146,8 @@
   height: 100%;
   object-fit: cover;
 }
-.testimony { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+.testimony { grid-template-columns: minmax(0, 1fr); }
+.testimony .proof__text { border-right: 0; }
 .quote {
   display: flex;
   flex-direction: column;
@@ -1172,21 +1158,16 @@
   max-width: 46ch;
   font-size: clamp(17px, 1.3vw, 22px);
 }
+/* Andrea's words alone on their row (no screenshot since 23 Nov 2026):
+   set larger and wider, so the row doesn't look half empty */
+.testimony .proof__text .quote p {
+  max-width: 52ch;
+  font-size: clamp(18px, 1.9vw, 30px);
+  line-height: 1.5;
+}
 .quote-name {
   font-size: clamp(17px, 1.3vw, 22px);
   font-weight: 700;
-}
-.shot {
-  display: grid;
-  place-items: center;
-  padding: clamp(24px, 3vw, 48px) var(--gutter);
-}
-.shot img {
-  display: block;
-  width: auto;
-  height: auto;
-  max-width: 100%;
-  max-height: min(var(--screen) - 2 * clamp(24px, 3vw, 48px), 760px);
 }
 
 /* ---- "preguntas frecuentes": one ruled row per question, the browser's
@@ -1410,8 +1391,7 @@
     padding: calc(12px - var(--k, 0) * 4px) calc(14px - var(--k, 0) * 2px);
   }
   .phases.is-staged .phase__media { flex: 1 1 0; aspect-ratio: auto; opacity: calc(1 - var(--k, 0)); }
-  .menu-btn,
-  .chip { padding: 8px 12px; }
+  .menu-btn { padding: 8px 12px; }
 
   /* The call bar: 10px + a 48px button + 10px, plus the iPhone's bottom
      safe area. The pinned screens after the first hero are this much
@@ -1500,12 +1480,15 @@
     border-bottom: 1px solid var(--rule);
   }
   .proof__text p:not(.label),
-  .proof__text .quote p { font-size: 16px; }
+  .proof__text .quote p,
+  .testimony .proof__text .quote p { font-size: 16px; line-height: 1.6; }
   .quote-name { font-size: 16px; }
   /* never taller than the screen above the bar (a phone turned sideways) */
   .proof__photo { min-height: 0; aspect-ratio: 3 / 2; max-height: calc(var(--screen) - 24px); }
-  .shot { padding: 20px var(--gutter); }
 
   .faq-q { min-height: 56px; padding: 16px var(--gutter); font-size: 17px; }
+  /* the last section: room at the end for the call bar, so the last
+     question can be scrolled above it */
+  .faq { padding-bottom: var(--bar-h); }
   .faq-a { font-size: 16px; }
 }

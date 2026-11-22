@@ -11,8 +11,11 @@ import { one } from './dom.ts'
     - from the point where the circle has fully opened "yo soy tu / ruta."
       (the first hero has gone; the same point the first slide's arrow
       scrolls to)
-    - until the closing slide (.cta) reaches the screen: then it hides, and
-      it shows again when you scroll back up above the closing slide.
+    - except while the closing slide (.cta) is on screen, even in part: it
+      hides there (the slide has its own button) and shows again on the
+      FAQ under it, or when you scroll back up above it. The FAQ, the last
+      section, ends with room for the bar, so its last row is never
+      covered.
 
   While the home menu is open the bar hides too (a CSS rule, .page:has()).
   Hidden means visibility: hidden, so Tab and screen readers skip it.
@@ -43,7 +46,8 @@ export function useCallBar(rootRef: RefObject<HTMLElement | null>): void {
 
     function update(): void {
       const opened = track!.getBoundingClientRect().top + grow!.offsetHeight <= 1
-      const ctaOnScreen = cta!.getBoundingClientRect().top < window.innerHeight
+      const c = cta!.getBoundingClientRect()
+      const ctaOnScreen = c.top < window.innerHeight && c.bottom > 0
       bar!.classList.toggle(styles.isShown, opened && !ctaOnScreen)
       // the bar keeps its size while hidden (only its visibility changes)
       html.style.scrollPaddingBottom = phone.matches ? bar!.offsetHeight + 'px' : ''

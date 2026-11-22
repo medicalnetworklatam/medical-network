@@ -35,6 +35,14 @@ Ivan's decisions after the home page analysis (project doc `docs/home-page-analy
   - **Left out for now:** "¿Cómo accedo al precio especial?" (the workshop isn't on the page; it comes back when a workshop with a date is announced, and "cupos limitados" must be true then).
   - **The Widerruf answer is included as written,** by Ivan's choice (23 Nov 2026). This is an exception to "legal texts come from the law firm" (15 Nov): see "For the law firm". It names the Widerrufsbelehrung, which doesn't exist on the site yet, so it has no link until it does.
 - **Shorter pauses** (30 % less): the "mi historia" rests (`--story-hold`) 50 → 35svh each; the rest before the phases 75 → 52.5svh (push spacer 160 → 137.5svh); the rest on the finished phases before the circle closes 75 → 52.5svh (closing spacer 195 → 172.5svh). The circle's own growth, the hero's rest and the rests between phases stay.
+- **After the first preview** (Ivan, 23 Nov 2026):
+  - The rest on "yo soy tu / ruta." before "mi historia" is 30 % shorter: 50 → 35svh (`.hero-track__rest`).
+  - Andrea's WhatsApp screenshot is removed; her name and words stay.
+  - The closing slide ("Tu homologación / necesita / una ruta") moves before the FAQ, which becomes the last section. The phone bar hides only while the closing slide is on screen and shows again on the FAQ, which ends with room for it.
+  - The four bonus cells use the same colours as the first "qué incluye" screen: Para ti, Dato, Hecho, Para todos.
+  - Phase 02 ("documentación") gets more contrast: its tone goes from 55 % to 75 % cream (black text 4.7:1 → 9.0:1).
+  - **Home header: only "Menú"** at the top right, logged in or not. "Entrar", or "Mi área" and "Cerrar sesión", are inside the menu. This replaces the header chips of 17 Nov (evening) and 18 Nov.
+  - The photo captions "Mis inicios" and "Hoy, especialista" are on Para todos (orange).
 - **Not chosen for now** (open): a "who it's for" line on the first screen, collapsed phases showing their result, a still version for reduced motion, a smaller hero photo, and a footer with Impressum and Datenschutz (waits for the law firm).
 
 ## Changes on 22 Nov 2026 (evening): the diagnostic is the owner's sales tool
@@ -136,7 +144,7 @@ Ivan chose these colours on 21 Nov 2026 from previews. This replaces "every colo
   - Text on them is black or cream as above, each at least 4.5:1: cream on Alerta and on Para ti 5.4:1; black on Para todos 8.1:1, on Hecho 9.8:1, on Dato 14.1:1.
   - Labels, ticks and words stay, so colour never carries the meaning alone.
   - "No aplica" steps stay greyed, with none of these colours. Errors stay inverted black cells. The dark column is unchanged.
-  - Exception: the first screen of "qué incluye" on the home page uses four of them as decoration (see "Changes on 23 Nov 2026 (night)").
+  - Exception: on the home page, the first screen of "qué incluye", the bonus cells and the "mi historia" photo captions use them as decoration (see "Changes on 23 Nov 2026 (night)").
 - **Client screens:**
   - Mi expediente: "Atención" = Alerta. "Dónde", "Plazo" and "Caduca" = Dato. A ticked step's tick box, the "Avance del expediente" cell (no new bar), finished milestones, and a block tab whose block is fully done = Hecho. "Nota para ti" = Para ti (instead of black).
   - "Abrir el formulario del currículum" is a filled black button with cream text, at the top of Mi expediente and in step `p2`.
@@ -579,5 +587,5 @@ The owner will hire a law firm for all legal work (decided 15 Nov 2026). Ivan an
 - **CV tool:** saving it to the account would store health and family periods.
 - **Diagnostic:** its Calendly button sends the visitor's answers to Calendly. (22 Nov 2026: only if the button stays; Claude proposed dropping it, since the owner uses the diagnostic during the call itself.) The owner types a prospect's answers into it during the call; nothing is stored, but the PDF he hands over contains them.
 - **Home page FAQ "¿Tengo derecho de desistimiento?"** (added 23 Nov 2026, the owner's wording, included by Ivan's choice): check the answer (14 days, §§ 312g, 355 BGB) and write the Widerrufsbelehrung it refers to.
-- **Testimonials:** Andrea's consent to her name, words and WhatsApp screenshot on the home page (given, per Ivan); how it is recorded.
+- **Testimonials:** Andrea's consent to her name, words and WhatsApp screenshot on the home page (given, per Ivan); how it is recorded. (Since 23 Nov 2026 only her name and words are shown.)
 - **Timing** (suggested by Claude, not yet confirmed): done before the first real client gets an invite.

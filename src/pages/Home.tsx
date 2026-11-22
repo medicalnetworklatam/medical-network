@@ -1,6 +1,4 @@
 import { useLayoutEffect, useRef, type FocusEvent, type ReactNode } from 'react'
-import { Link } from 'react-router'
-import SessionButton from './SessionButton.tsx'
 import HomeMenu from './home/HomeMenu.tsx'
 import CallLink from './home/CallLink.tsx'
 import { useFit } from './home/fit.ts'
@@ -9,7 +7,6 @@ import { usePush } from './home/push.ts'
 import { usePhases } from './home/phases.ts'
 import { useStory } from './home/story.ts'
 import { useCallBar } from './home/callBar.ts'
-import { useAuth } from '../lib/auth.ts'
 import { usePageTitle } from '../lib/usePageTitle.ts'
 import heroHouse from '../assets/hero-house.jpg'
 import lagoon from '../assets/lagoon.jpg'
@@ -17,15 +14,14 @@ import ejecucion from '../assets/ejecucion.jpg'
 import antes from '../assets/antes.webp'
 import hoy from '../assets/hoy.jpg'
 import quirofano from '../assets/prueba-quirofano.webp'
-import testimonioAndrea from '../assets/testimonio-andrea.webp'
 import styles from './Home.module.css'
 
 /* Home page (/), from Ivan's prototype in design-hero/ (index.html).
    Notes in design-hero/HERO-NOTES.md, rules in design-hero/DESIGN-RULES.md.
    Since 23 Nov 2026 (DECISIONS.md, "the home page sells") it also has the
-   Calendly buttons, the phone's call bar, and three sections after the
-   phases ("qué incluye", "evidencia real", "preguntas frecuentes"), with
-   the closing slide moved to the end.
+   Calendly buttons, the phone's call bar, only "Menú" in the header, and
+   three sections after the phases ("qué incluye", "evidencia real",
+   "preguntas frecuentes"), with the closing slide just before the FAQ.
 
    The motion hooks (src/pages/home/) are the prototype's scripts. They run
    only while this page is open, in this order, and remove everything they
@@ -411,9 +407,9 @@ export default function Home() {
           <p className={styles.includesTotal}>Todo incluido: pago único 3.500&nbsp;€.</p>
         </div>
 
-        {/* Evidencia real: the owner's own process, and Andrea's words with
-            her WhatsApp screenshot (her consent: DECISIONS.md, 23 Nov 2026).
-            Photos sit in frames that always fit on the screen. */}
+        {/* Evidencia real: the owner's own process, and Andrea's words (her
+            consent: DECISIONS.md, 23 Nov 2026). The photo sits in a frame
+            that always fits on the screen. */}
         <section className={styles.proof} aria-labelledby="proof-title">
           <div className={styles.secHead}>
             <h2 className={styles.secTitle} id="proof-title">
@@ -456,15 +452,29 @@ export default function Home() {
               </blockquote>
               <figcaption className={styles.quoteName}>Andrea</figcaption>
             </figure>
-            <div className={styles.shot}>
-              <img
-                src={testimonioAndrea}
-                alt="Captura del mensaje de WhatsApp de Andrea"
-                width={720}
-                height={1410}
-                loading="lazy"
-              />
+          </div>
+        </section>
+
+        {/* Closing call to action, in the heroes' font: light background, dark
+            letters. The headline is justified by fit.ts like the heroes. Just
+            before the FAQ (since 23 Nov 2026 no longer pinned behind the
+            phases); the phone's call bar hides while it is on screen
+            (callBar.ts). */}
+        <section className={styles.cta} aria-labelledby="cta-title">
+          <div className={styles.ctaInner}>
+            <div className={styles.heroStage} data-fit-h="0.55">
+              <h2 className={styles.heroWords} id="cta-title">
+                <Line>Tu homologación</Line>
+                <Line>necesita</Line>
+                <Line>una ruta</Line>
+              </h2>
             </div>
+            <p className={styles.ctaPrice}>Pago único 3.500 €</p>
+            <div className={styles.call}>
+              <CallLink className={styles.callBtn} />
+              <p className={styles.callNote}>Dura unos 30 minutos. Sin costo.</p>
+            </div>
+            <p className={styles.ctaSign}>Nos vemos en Alemania</p>
           </div>
         </section>
 
@@ -516,28 +526,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Closing call to action, in the heroes' font: light background, dark
-            letters. The headline is justified by fit.ts like the heroes. The
-            last section of the page (since 23 Nov 2026 no longer pinned
-            behind the phases); the phone's call bar hides while it is on
-            screen (callBar.ts). */}
-        <section className={styles.cta} aria-labelledby="cta-title">
-          <div className={styles.ctaInner}>
-            <div className={styles.heroStage} data-fit-h="0.55">
-              <h2 className={styles.heroWords} id="cta-title">
-                <Line>Tu homologación</Line>
-                <Line>necesita</Line>
-                <Line>una ruta</Line>
-              </h2>
-            </div>
-            <p className={styles.ctaPrice}>Pago único 3.500 €</p>
-            <div className={styles.call}>
-              <CallLink className={styles.callBtn} />
-              <p className={styles.callNote}>Dura unos 30 minutos. Sin costo.</p>
-            </div>
-            <p className={styles.ctaSign}>Nos vemos en Alemania</p>
-          </div>
-        </section>
       </main>
 
       {/* Phones only: the call bar at the bottom of the screen. Hidden until
@@ -572,19 +560,13 @@ function Line({ children }: { children: ReactNode }) {
   )
 }
 
-/** Fixed header: "Mi área" (logged in only), "Entrar" / "Cerrar sesión",
-    and "Menú" (HomeMenu.tsx). Its own component, so a login
-    change redraws only the header, never the page under the motion hooks. */
+/** Fixed header: only "Menú" (HomeMenu.tsx), which holds "Entrar", or
+    "Mi área" and "Cerrar sesión" (DECISIONS.md, 23 Nov 2026). The menu
+    follows the login by itself, so a login change never redraws the page
+    under the motion hooks. */
 function HomeHeader() {
-  const { session, loading } = useAuth()
   return (
     <header className={styles.siteHeader}>
-      <div className={styles.headerActions}>
-        {!loading && session ? (
-          <Link className={styles.chip} to="/novedades">Mi área</Link>
-        ) : null}
-        <SessionButton />
-      </div>
       <HomeMenu />
     </header>
   )
