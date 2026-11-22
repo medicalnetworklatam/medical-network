@@ -1,0 +1,659 @@
+/* ------------------------------------------------------------------
+   The owner's diagnostic (/admin/diagnostico, AdminDiagnostico.tsx),
+   inside the admin frame (AdminLayout, Admin.module.css). Fonts and
+   colour tokens come from src/styles/redesign.css: never a hard-coded
+   colour.
+
+   Desktop and iPad landscape: the answers on the left (they stay in view
+   and scroll on their own), the report on the right.
+   Up to 900px: answers, then the report, stacked.
+   Up to 700px: smaller cells for a phone.
+   Print ("Guardar PDF"): only the report, on A4.
+
+   Colours with meaning (DECISIONS.md, 21 Nov 2026, late): only as
+   backgrounds, with their own text colour, and always next to a word:
+   - the timeline: a phase black, the current phase Para ti ("En curso"),
+     parallel Dato ("Paralelo"), the salary period Hecho ("Sueldo…"), a
+     finished phase "✓ hecho" on Hecho; the legend under it says so;
+   - scores: Bien Hecho, Atención Dato, Crítico Alerta, the word always
+     shown;
+   - fees "a confirmar" and their box: Alerta; the salary box and the
+     "Primer sueldo aprox." figure: Hecho;
+   - "Ahora" / "En curso": Para ti; "Hecho / no aplica" / "Completado":
+     Hecho; "Próximo": an outline; "Más adelante" / "Pendiente": none.
+
+   The report keeps the original's words and their case: no
+   text-transform in it, because the owner's Claude reads the printed
+   PDF word for word.
+
+   Rule for this file: the site loads every page's CSS at once, so
+   nothing here may target html, body, * or :root. The print rules that
+   hide the admin frame only match while this page's .tool is on screen.
+------------------------------------------------------------------- */
+
+/* ---------- Two columns: answers | report ---------- */
+.tool {
+  display: grid;
+  grid-template-columns: minmax(18rem, 1fr) minmax(0, 2fr);
+  align-items: start;
+  border-bottom: 1px solid var(--rule);
+}
+
+/* ---------- The answers ---------- */
+.answers {
+  position: sticky;
+  top: 0;
+  max-height: 100vh;
+  max-height: 100dvh;
+  overflow-y: auto;
+  min-width: 0;
+  padding: 0 var(--gutter) clamp(24px, 3vw, 40px);
+}
+.answers-head {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: clamp(20px, 2.4vw, 32px) 0 18px;
+  border-bottom: 1px solid var(--rule);
+}
+.answers-title {
+  margin: 0;
+  font: 700 clamp(20px, 1.8vw, 26px) / 1.15 var(--font);
+  letter-spacing: -.02em;
+}
+.hint {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: color-mix(in srgb, var(--accent) 72%, transparent);
+}
+.btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 6px;
+}
+.grupo {
+  padding: 18px 0 2px;
+  border-bottom: 1px solid var(--rule);
+}
+.grupo:last-child { border-bottom: 0; }
+.grupo-title {
+  margin: 0 0 14px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  margin-bottom: 16px;
+}
+.campo-label {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+/* A row of choices: square outlines, the chosen one filled black */
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.pill {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--accent);
+  border-radius: 0;
+  background: transparent;
+  color: var(--accent);
+  font-family: var(--font-grotesk);
+  font-size: 14px;
+  line-height: 1.2;
+  text-align: left;
+  cursor: pointer;
+}
+.pill[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--ink);
+  font-weight: 700;
+}
+.pill:hover:not([aria-pressed="true"]) {
+  text-decoration: underline;
+  text-underline-offset: .2em;
+}
+.pill:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- The report ---------- */
+.report {
+  min-width: 0;
+  border-left: 1px solid var(--rule);
+}
+
+/* Header: the name on a black cell, then the four figures */
+.cab { border-bottom: 1px solid var(--rule); }
+.cab-top {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: clamp(20px, 2.4vw, 32px) var(--gutter);
+  background: var(--accent);
+  color: var(--ink);
+}
+/* "Medical Network LATAM": only on paper */
+.marca {
+  display: none;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+}
+.cab-name {
+  margin: 0;
+  font: 700 clamp(28px, 3.4vw, 44px) / 1.05 var(--font);
+  letter-spacing: -.03em;
+  overflow-wrap: anywhere;
+}
+.cab-sub {
+  margin: 0;
+  font-size: 16px;
+  color: color-mix(in srgb, var(--ink) 80%, transparent);
+  overflow-wrap: anywhere;
+}
+.cab-sub:empty { display: none; }
+.mets {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0;
+}
+.met {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border-left: 1px solid var(--rule);
+}
+.met:first-child { padding-left: var(--gutter); border-left: 0; }
+.met-k {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: color-mix(in srgb, var(--accent) 72%, transparent);
+}
+.met-v {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+.met.is-hecho .met-k { color: inherit; }
+.cab-pie {
+  margin: 0;
+  padding: 12px var(--gutter);
+  border-top: 1px solid var(--rule);
+  font-size: 14px;
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--accent) 72%, transparent);
+}
+.cab-pie b { color: var(--accent); }
+
+/* One ruled cell per part of the report */
+.celda {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: clamp(20px, 2.4vw, 32px) var(--gutter);
+  border-bottom: 1px solid var(--rule);
+}
+.celda-title {
+  margin: 0;
+  font: 700 clamp(20px, 1.8vw, 26px) / 1.15 var(--font);
+  letter-spacing: -.02em;
+}
+.sub {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--accent) 72%, transparent);
+}
+.pie {
+  margin: 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--rule);
+  font-size: 14px;
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--accent) 72%, transparent);
+}
+.p-t {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+.p-d {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* A small word on a coloured or outlined block */
+.tag {
+  display: inline-block;
+  padding: 3px 8px;
+  border: 1px solid transparent;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+/* ¿De dónde sale ese tiempo?: one ruled row per stretch, its months
+   and a black bar for its share (no rainbow) */
+.tramos {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tramo {
+  display: grid;
+  grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+  padding: 8px 0;
+  border-top: 1px solid var(--rule);
+}
+.tramo:first-child { border-top: 0; }
+.tramo-text { font-size: 15px; font-variant-numeric: tabular-nums; }
+.tramo-track { display: block; height: 10px; }
+.tramo-fill {
+  display: block;
+  width: calc(var(--pct, 0) * 1%);
+  height: 100%;
+  background: var(--accent);
+}
+
+/* A box: the salary (Hecho), fees to confirm (Alerta), "Revisar
+   consistencia" (Alerta), no Berufserlaubnis (an outline) */
+.caja {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 14px 16px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+.caja p { margin: 0; }
+.report > .caja { padding: 16px var(--gutter); border-bottom: 1px solid var(--rule); }
+.c-t { font-size: 16px; font-weight: 700; }
+.caja .c-small { font-size: 13px; }
+.c-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Mis prioridades ahora */
+.prio {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.prio-item { display: flex; gap: 14px; }
+.num {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: var(--accent);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* Mi ruta planeada: a label column and a track per row */
+.gantt {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.g-fila {
+  display: grid;
+  grid-template-columns: 11rem minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 3px 0;
+}
+.g-fila.is-eje { padding: 0; }
+.g-lbl {
+  font-size: 13px;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.g-lbl.is-done {
+  text-decoration: line-through;
+  color: color-mix(in srgb, var(--accent) 72%, transparent);
+}
+.g-nota {
+  display: block;
+  font-size: 12px;
+  color: color-mix(in srgb, var(--accent) 72%, transparent);
+}
+.g-eje { position: relative; height: 16px; }
+.g-tick {
+  position: absolute;
+  left: calc(var(--x, 0) * 1%);
+  transform: translateX(-50%);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: color-mix(in srgb, var(--accent) 72%, transparent);
+}
+.g-sec {
+  margin: 12px 0 4px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.g-pista {
+  position: relative;
+  height: 28px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+}
+.g-linea {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--x, 0) * 1%);
+  width: 1px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+.g-barra {
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  left: calc(var(--left, 0) * 1%);
+  width: calc(var(--width, 0) * 1%);
+}
+/* a word inside the track ("Bescheid recibido", "✓ hecho") */
+.g-chip {
+  position: absolute;
+  top: 50%;
+  left: 6px;
+  transform: translateY(-50%);
+  font-size: 12px;
+  white-space: nowrap;
+  color: color-mix(in srgb, var(--accent) 72%, transparent);
+}
+.leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 0;
+  padding: 10px 0 0;
+  border-top: 1px solid var(--rule);
+  font-size: 13px;
+  list-style: none;
+}
+.leyenda li { display: flex; align-items: center; gap: 6px; }
+.sw { display: inline-block; flex: none; width: 12px; height: 12px; }
+
+/* Qué resolver en paralelo y cuándo */
+.par-fila {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-top: 1px solid var(--rule);
+}
+.par-fila:first-child { border-top: 0; padding-top: 0; }
+.par-fila > .tag { flex: none; align-self: flex-start; }
+
+/* Detalle de las fases */
+.fases {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 28px;
+}
+.f-t { margin: 0 0 2px; font-size: 15px; line-height: 1.5; }
+.f-n {
+  font-variant-numeric: tabular-nums;
+  color: color-mix(in srgb, var(--accent) 72%, transparent);
+}
+.f-nom { font-weight: 700; }
+.f-st { white-space: nowrap; }
+
+/* Mi presupuesto estimado */
+.reunir { margin: 4px 0 2px; font-size: 16px; font-weight: 700; }
+.meses {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--rule);
+}
+.meses-label { font-size: 14px; font-weight: 700; }
+.meses-row { display: flex; gap: 6px; }
+.paso { min-width: 48px; min-height: 48px; padding: 0; font-size: 18px; letter-spacing: 0; }
+.meses-input {
+  width: 5rem;
+  font-weight: 700;
+  text-align: center;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.meses-input::-webkit-inner-spin-button,
+.meses-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+/* "volver al cálculo (2–6)": an underlined word */
+.text-btn {
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font-family: var(--font-grotesk);
+  font-size: 14px;
+  text-decoration: underline;
+  text-underline-offset: .2em;
+  cursor: pointer;
+}
+.text-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+  line-height: 1.45;
+}
+.tabla td {
+  padding: 8px 0;
+  border-top: 1px solid var(--rule);
+  vertical-align: top;
+}
+.tabla tr:first-child td { border-top: 0; }
+.tabla td.num-c {
+  padding-left: 16px;
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.tabla tr.total td {
+  padding-top: 10px;
+  border-top: 2px solid var(--accent);
+  font-weight: 700;
+}
+.sin-pend { font-weight: 400; }
+/* on a coloured box, the lines take the box's text colour */
+.caja .tabla td { border-top-color: color-mix(in srgb, currentColor 35%, transparent); }
+.caja .tabla tr:first-child td { border-top: 0; }
+
+.notas {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--rule);
+  font-size: 14px;
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--accent) 72%, transparent);
+}
+.notas p { margin: 0; }
+.notas b { color: var(--accent); }
+
+/* Mi evaluación por áreas */
+.eval-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.puntaje {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+.puntaje-num { margin: 0; line-height: 1; }
+.puntaje-num b { font: 700 32px / 1 var(--font); }
+.puntaje-num small { font-size: 14px; color: color-mix(in srgb, var(--accent) 72%, transparent); }
+.cal-fila {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 12px;
+  border-top: 1px solid var(--rule);
+}
+.cal-cab {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+}
+.cal-area { font-size: 16px; font-weight: 700; }
+/* the score's bar: a black frame, filled in the score's colour */
+.barra {
+  display: block;
+  height: 10px;
+  border: 1px solid var(--accent);
+}
+.barra-fill {
+  display: block;
+  height: 100%;
+  transform: scaleX(var(--fill, 0));
+  transform-origin: left center;
+}
+
+.firma {
+  margin: 0;
+  padding: 16px var(--gutter) 28px;
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: center;
+  color: color-mix(in srgb, var(--accent) 72%, transparent);
+}
+
+/* ---------- Colours with meaning (always with a word) ---------- */
+.is-fase { background: var(--accent); color: var(--ink); }
+.is-hecho { background: var(--hecho); color: var(--on-hecho); }
+.is-dato { background: var(--dato); color: var(--on-dato); }
+.is-alerta { background: var(--alerta); color: var(--on-alerta); }
+.is-para-ti { background: var(--para-ti); color: var(--on-para-ti); }
+.is-outline { border: 1px solid currentColor; }
+.tag.is-plain { padding-inline: 0; color: color-mix(in srgb, var(--accent) 72%, transparent); }
+/* sand is close to cream: a black frame so the bar shows */
+.g-barra.is-dato,
+.sw.is-dato,
+.barra-fill.is-dato { box-shadow: inset 0 0 0 1px var(--accent); }
+
+/* ---------- Up to 900px: answers, then the report ---------- */
+@media (max-width: 900px) {
+  .tool { display: block; }
+  .answers {
+    position: static;
+    max-height: none;
+    overflow: visible;
+    border-bottom: 1px solid var(--rule);
+  }
+  .report { border-left: 0; }
+}
+
+/* ---------- Phone ---------- */
+@media (max-width: 700px) {
+  .mets { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .met:nth-child(odd) { padding-left: var(--gutter); border-left: 0; }
+  .met:nth-child(n + 3) { border-top: 1px solid var(--rule); }
+  .tramo { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .fases { grid-template-columns: minmax(0, 1fr); }
+  .g-fila { grid-template-columns: 6.5rem minmax(0, 1fr); gap: 8px; }
+  .g-lbl { font-size: 12px; }
+  .g-tick { font-size: 10px; }
+  .par-fila { flex-direction: column; gap: 8px; }
+}
+
+/* ---------- Print: only the report, on A4 ----------
+   A named page, so the A4 size applies only to this report (a plain
+   @page rule would apply to every page of the site). A browser that
+   ignores named pages prints with its own paper size and margins; the
+   report then simply fits that width. */
+@page diagnostico {
+  size: A4;
+  margin: 11mm;
+}
+@media print {
+  /* the admin frame: the dark top bar and the title cell */
+  div:has(> main .tool) > header,
+  main:has(.tool) > div:not(:has(.tool)) { display: none; }
+  .answers,
+  .no-print { display: none; }
+  .tool { display: block; border-bottom: 0; }
+  .report { page: diagnostico; border-left: 0; }
+  .marca { display: block; }
+  .cab,
+  .celda,
+  .caja { break-inside: avoid; page-break-inside: avoid; }
+  /* a little smaller on paper, so the report takes fewer pages */
+  .celda { gap: 8px; padding-block: 14px; }
+  .celda-title { font-size: 18px; }
+  .sub,
+  .p-d,
+  .tabla,
+  .caja,
+  .tramo-text,
+  .f-t { font-size: 13px; }
+  .p-t,
+  .c-t,
+  .cal-area { font-size: 14px; }
+  .pie,
+  .notas,
+  .cab-pie { font-size: 12px; }
+  .tabla td { padding-block: 5px; }
+  .tramo { padding-block: 4px; }
+}
+.is-fase,
+.is-hecho,
+.is-dato,
+.is-alerta,
+.is-para-ti,
+.cab-top,
+.num,
+.tramo-fill {
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
