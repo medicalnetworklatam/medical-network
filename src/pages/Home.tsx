@@ -27,6 +27,19 @@ export default function Home() {
   usePageTitle('Medical Network')
 
   const rootRef = useRef<HTMLDivElement>(null)
+  const growRef = useRef<HTMLDivElement>(null)
+
+  // The arrow on the first slide: scroll to the end of the circle's growing
+  // distance, where "yo soy tu / ruta." is fully open (the same place a
+  // scroll by hand reaches). Smooth, or a jump with reduced motion.
+  function goToNextSlide(): void {
+    const grow = growRef.current
+    const track = grow?.parentElement
+    if (!grow || !track) return
+    const top = track.getBoundingClientRect().top + window.scrollY + grow.offsetHeight
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    window.scrollTo({ top, behavior: reduce ? 'auto' : 'smooth' })
+  }
 
   // The page's own background, colour and font on <body>, only while it is open
   useLayoutEffect(() => {
@@ -71,10 +84,17 @@ export default function Home() {
               </div>
             </div>
 
-            {/* 4. an arrow at the bottom: scroll down (decoration only) */}
-            <svg className={styles.heroScroll} viewBox="0 0 24 56" aria-hidden="true" focusable="false">
-              <path d="M12 1v52M3 44l9 9 9-9" />
-            </svg>
+            {/* 4. an arrow at the bottom: a button to the next slide */}
+            <button
+              type="button"
+              className={styles.heroScroll}
+              aria-label="Ir a la siguiente sección"
+              onClick={goToNextSlide}
+            >
+              <svg viewBox="0 0 24 56" aria-hidden="true" focusable="false">
+                <path d="M12 1v52M3 44l9 9 9-9" />
+              </svg>
+            </button>
           </section>
 
           {/* Revealed through the circle (reveal.ts), then scrolls on normally. */}
@@ -99,15 +119,15 @@ export default function Home() {
           </section>
 
           {/* scroll distance spent growing the circle */}
-          <div className={styles.heroTrackGrow} aria-hidden="true"></div>
+          <div className={styles.heroTrackGrow} ref={growRef} aria-hidden="true"></div>
           {/* then a rest with "ruta." fully open, before "mi historia" comes up */}
           <div className={styles.heroTrackRest} aria-hidden="true"></div>
         </div>
 
         {/* Mi historia: one pinned screen. Under the head, the two layouts sit
-            in the same space; as you scroll, "now" (hoy, después) fades in on
-            top of "then" (bio, mis inicios, antes), from a faint blur to fully
-            clear (story.ts). */}
+            in the same space; as you scroll, "now" (hoy, después) slides up
+            from below and covers "then" (bio, mis inicios, antes), which stays
+            still underneath (story.ts). */}
         <section className={styles.story} aria-labelledby="story-title">
           <div className={styles.storyPin}>
             <div className={styles.storyHead}>

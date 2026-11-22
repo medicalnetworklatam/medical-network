@@ -233,20 +233,36 @@
   pointer-events: none;
 }
 
-/* First slide only: a thin arrow at the bottom, pointing down (scroll on).
-   It sits in the hero's bottom padding, under the words and the photo. */
+/* First slide only: a thin arrow at the bottom, pointing down. It is a
+   button that scrolls to the next slide (Home.tsx). It sits in the hero's
+   bottom padding, under the words and the photo. The button is 44px wide
+   (tap target) around the narrower arrow, and draws nothing itself. */
 .hero__scroll {
   position: absolute;
   left: 0;
   right: 0;
   bottom: clamp(20px, 4svh, 40px);
   margin-inline: auto;
+  width: 44px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.hero__scroll svg {
+  display: block;
   width: 24px;
   height: 56px;
   fill: none;
   stroke: var(--ink);
   stroke-width: 1.5;
-  pointer-events: none;
+}
+.hero__scroll:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 4px;
 }
 
 /* ------------------------------------------------------------------
@@ -363,9 +379,9 @@
 /* ------------------------------------------------------------------
    Mi historia: one pinned screen (head + a stack of two layouts in the
    same space). story.ts sets --f from 0 to 1 with the scroll: the "now"
-   layout fades in on top of "then", from faint and blurred to clear.
-   The section is one screen plus scroll for: a rest on "then"
-   (--story-hold), the fade (--story-fade), and a rest on "now".
+   layout slides up from below the stack and covers "then", which stays
+   still underneath. The section is one screen plus scroll for: a rest on
+   "then" (--story-hold), the slide (--story-fade), and a rest on "now".
    Site rule: a photo is never cut off by the edge of the screen. Photos
    sit in a frame that takes the height left over and are cropped to it.
 
@@ -377,7 +393,7 @@
 .story {
   --story-head: clamp(120px, 18svh, 170px);
   --story-hold: 50svh;          /* scroll spent at rest on "then", and again on "now" */
-  --story-fade: 90svh;          /* scroll spent fading "now" in */
+  --story-fade: 90svh;          /* scroll spent sliding "now" up */
   height: calc(100svh + 2 * var(--story-hold) + var(--story-fade));
   position: relative;
   z-index: 3;
@@ -411,7 +427,7 @@
 .story__stack {
   display: grid;
   min-height: 0;
-  overflow: hidden;             /* keep the blur inside the cell */
+  overflow: hidden;             /* clip "now" at the stack's edge while it slides */
 }
 .story__body {
   grid-area: 1 / 1;             /* both layouts in the same cell */
@@ -419,11 +435,10 @@
   min-height: 0;
   background: var(--ink);
 }
-/* "now" on top: faint and foggy at --f 0, clear at --f 1 */
+/* "now" on top: fully below the stack at --f 0, in place at --f 1 */
 .story__body--now {
-  opacity: var(--f, 0);
-  filter: blur(calc((1 - var(--f, 0)) * 16px)) saturate(calc(.4 + .6 * var(--f, 0)));
-  will-change: opacity, filter;
+  transform: translateY(calc((1 - var(--f, 0)) * 100%));
+  will-change: transform;
 }
 .story.is-now .story__body--then,
 .story:not(.is-now) .story__body--now { pointer-events: none; }
@@ -958,6 +973,17 @@
   .intro__text {
     border-right: 0;
     border-bottom: 1px solid var(--rule);
+  }
+
+  /* First slide on a phone: the arrow sits higher (closer to the words)
+     and 20% bigger (24 x 56 -> 28.8 x 67.2; its line thickens with it). */
+  .hero__scroll {
+    bottom: 14svh;
+    height: 67.2px;
+  }
+  .hero__scroll svg {
+    width: 28.8px;
+    height: 67.2px;
   }
 
   /* Mi historia on a phone: a shorter pinned head.
