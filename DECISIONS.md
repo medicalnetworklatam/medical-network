@@ -1,6 +1,6 @@
 # MNL client area: decisions log
 
-Last updated: 21 Nov 2026. This is the source of truth for the project. When a decision changes, update this file in the Claude project knowledge and in the code repository.
+Last updated: 22 Nov 2026. This is the source of truth for the project. When a decision changes, update this file in the Claude project knowledge and in the code repository.
 
 ## Context
 
@@ -14,6 +14,24 @@ Last updated: 21 Nov 2026. This is the source of truth for the project. When a d
   - about 25 accounts in the first 12 months
   - Spanish only, web only
 - **Admins:** Ivan and his cousin.
+
+## Changes on 22 Nov 2026: a demo account to show off the client area
+
+Ivan's decision (option A): a demo inside the live site, kept until launch, instead of a separate demo copy of the site.
+
+- **One demo account only.** A made-up client (no real person's data), created with Supabase's "Invite user" on a Gmail address with `+demo`. Paid, Baden-Württemberg, route `medico_drittstaat` (the only route with a template), so every client screen has something to show. No other demo accounts: its Comunidad posts and chat messages only sit next to posts from the admin account ("Equipo MNL").
+- **The `+prueba` test account stays** a test account, separate from the demo. Both are deleted before launch.
+- **Every Comunidad post, chat message and news post from before 22 Nov 2026 is deleted** (all test content, the unpublished test news post included). It can't be undone (the Free plan has no backups).
+  - Posts and messages: in Supabase's SQL Editor, `delete from public.community_posts;` and `delete from public.news_posts;`. Deleting a news post also deletes its `news_attachments` rows. No other table depends on either table.
+  - News files: deleted in Supabase's Storage screen (bucket `news-files`), never with SQL. Supabase blocks deleting stored files with SQL, and doing it would leave the files behind anyway. Afterwards the bucket is empty.
+  - This one-off cleanup is an exception to "no deleting news posts" (16 Nov); the news form still can't delete posts.
+- **Cleanup before the friendly-client test or the first real client, whichever comes first:**
+  1. As admin, delete the demo's files in its Documentos page first. A deleted login's files would otherwise stay in storage where no screen can reach them.
+  2. Delete the admin account's demo posts in Comunidad and the chat.
+  3. Delete the demo login in Supabase (Authentication → Users). Its profile, posts, messages, ticks, client layer and dudas go with it.
+  4. Unpublish any demo news that isn't real news. News can't be deleted from the form.
+- **Demo news:** preferably real posts from the owner, so they never need cleaning up.
+- **No code and no database change.**
 
 ## Changes on 21 Nov 2026 (night, last): Comunidad as a feed, orange dudas, the progress ring
 
