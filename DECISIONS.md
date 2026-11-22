@@ -15,6 +15,27 @@ Last updated: 22 Nov 2026. This is the source of truth for the project. When a d
   - Spanish only, web only
 - **Admins:** Ivan and his cousin.
 
+## Changes on 22 Nov 2026 (evening): the diagnostic is the owner's sales tool
+
+The owner's answers, relayed by Ivan on 22 Nov 2026. They replace "Diagnostic (to confirm): a public page" (20 Nov) and the "public page" in scope item 12.
+
+- **The file to adapt:** the owner has only one file, the one that asks "¿Qué resultado espero del Bescheid?" (fees "verified on 30 Aug 2026"). The "¿Qué vía elijo?" version his Claude described doesn't exist as a file. This file is ported and then adapted (Ivan, 22 Nov 2026). A reference copy is kept in the Claude project (`cousin-tools/diagnostico.html`), not in the repository.
+- **The vía question changes:** "¿Qué resultado espero del Bescheid?" becomes "¿Qué vía elijo?" (KP directa / Gutachten / aún no lo decido). How each answer changes the timeline and the budget comes from the owner's Claude; it is not invented on the site. Until then the port keeps the file's question and rules.
+- **Only the owner uses it, on screen during his sales calls.** It is not a public page and not in the client column: it is an admin-only page. Clients and logged-out visitors never see it.
+- **The PDF is handed over when the owner decides,** never automatically.
+- **Fees:** only 5 Bundesländer have verified exam fees: Niedersachsen, Nordrhein-Westfalen, Rheinland-Pfalz, Saarland and Berlin (the owner's fee document of 31 Aug 2026, quoted by his Claude on 20 Nov). Baden-Württemberg was rechecked on 18 Nov 2026. The other 10 are "por re-verificar". The file still says every fee was verified on 30 Aug 2026; that text changes with the owner's update.
+- **Before a PDF goes to a client** (proposed by Claude): the owner settles the vía rules, the verified fees and the two places where the diagnostic disagrees with the BW checklist (when the FSP can be taken; how long the Berufserlaubnis lasts; see the project doc `docs/cousin-tools-analysis-2026-11-18.md`).
+- **Proposed by Claude, to confirm:**
+  - Port now, faithfully: the content (questions, fees, phases, texts) in one data file and the calculation in one file with tests, so the owner's changes later only touch those two files.
+  - Address `/admin/diagnostico`, opened by a third big button, "Diagnóstico", on `/admin`.
+  - Nothing is stored, as today: the answers live only in the open page and are gone when it closes. No new table, no migration.
+  - The PDF is made with the browser's print dialog ("Guardar como PDF"). When the owner decides to hand it over, he uploads it in that client's Documentos, so it shows in the client's Mis documentos. No new upload feature.
+  - No Calendly button and no booking box ("Agenda tu videollamada gratuita…"): the call is already happening. This removes the law-firm item about Calendly (see "For the law firm").
+  - Fees that aren't verified follow the file's own rule: shown as "a confirmar" with the reason, and left out of the total.
+  - The browser tab title stays "Diagnóstico · Administración", never the prospect's name (the original file puts the name in the title), so names don't end up in the browser history. The owner names the PDF when he saves it.
+  - The owner's Claude reads the printed PDF to fill in his client notes, so the report keeps the original labels and their order; only the look changes.
+  - Known and accepted: the questions, the logic and the fee data are in the site's code, so anyone can read them in the public repository and in the code the browser downloads. Hiding the page stops nobody from reading that content. It contains no client data. Accepted like the checklist templates (20 Nov) until the repository is made private.
+
 ## Changes on 22 Nov 2026: a demo account to show off the client area
 
 Ivan's decision (option A): a demo inside the live site, kept until launch, instead of a separate demo copy of the site.
@@ -149,7 +170,7 @@ Based on the owner's own Claude explaining how he works today, and the Baden-Wü
 - **Mis documentos** (Ivan, 20 Nov): a private storage bucket with one folder per client. Admins upload on the client's admin screen; a client sees only their own files, through links valid 1 hour. Clients never upload. Same pattern as news files (migration 5). File types: pending the owner (default: PDF only).
 - **Contact page** (to confirm): a login-only page in the column with WhatsApp and email links. No form, nothing stored. Anything in the site's code is public.
 - **CV tool** (to confirm): a page in the client area, saved only on the device as today, with "copiar texto" to send. Not saved to the account. Checklist step `p2` links to it. "Mandárselo a Ivan" becomes "al equipo MNL" unless the owner prefers otherwise.
-- **Diagnostic** (to confirm): a public page, also linked from the column. Nothing stored. PDF through the browser's print dialog (outside libraries are blocked by our security headers). Redesigned for Flatline. Waiting for the owner to confirm which version is live.
+- **Diagnostic** (to confirm): a public page, also linked from the column. Nothing stored. PDF through the browser's print dialog (outside libraries are blocked by our security headers). Redesigned for Flatline. Waiting for the owner to confirm which version is live. (Replaced 22 Nov 2026 (evening): an admin-only tool for the owner's sales calls; see that section.)
 
 ## Changes on 18 Nov 2026 (evening): Novedades as previews, full post on its own page
 
@@ -479,7 +500,7 @@ Since 21 Nov 2026 (night, later) these are split into separate screens, and sinc
 9. A contact page (added 20 Nov 2026)
 10. "Mis documentos": files admins upload for one client (added 20 Nov 2026)
 11. The CV and cover letter tool (added 20 Nov 2026)
-12. The diagnostic, as a public page (added 20 Nov 2026)
+12. The diagnostic, as an admin-only tool for the owner's sales calls (added 20 Nov 2026 as a public page; changed 22 Nov 2026)
 
 **Checklist content:** the owner has 7 Bundesländer × 4 routes in his own tools (Niedersachsen, Nordrhein-Westfalen, Baden-Württemberg, Bayern, Rheinland-Pfalz, Saarland, Berlin). Only Baden-Württemberg medico_drittstaat follows the rules in force since 01/11/2026; it is the first template on the site. The rest come from the owner as JSON templates (updated 20 Nov 2026).
 
@@ -533,5 +554,5 @@ The owner will hire a law firm for all legal work (decided 15 Nov 2026). Ivan an
   - showing "María G." names to other members
 - **Client documents ("Mis documentos"):** how long they are kept and how they are deleted.
 - **CV tool:** saving it to the account would store health and family periods.
-- **Diagnostic:** its Calendly button sends the visitor's answers to Calendly.
+- **Diagnostic:** its Calendly button sends the visitor's answers to Calendly. (22 Nov 2026: only if the button stays; Claude proposed dropping it, since the owner uses the diagnostic during the call itself.) The owner types a prospect's answers into it during the call; nothing is stored, but the PDF he hands over contains them.
 - **Timing** (suggested by Claude, not yet confirmed): done before the first real client gets an invite.
