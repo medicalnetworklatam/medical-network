@@ -1057,6 +1057,17 @@
   padding: clamp(18px, 2.2vw, 36px) var(--gutter);
 }
 .point + .point { border-top: 1px solid var(--rule); }
+/* The colours with a meaning on this screen (DECISIONS.md, 23 Nov 2026,
+   "Colours on its first screen"): the lead on Para ti, the three points on
+   Dato, Hecho and Para todos, each with its own text colour. Alerta is not
+   used here (it means "careful"). */
+.includes__lead {
+  background: var(--para-ti);
+  color: var(--on-para-ti);
+}
+.point:nth-child(1) { background: var(--dato); color: var(--on-dato); }
+.point:nth-child(2) { background: var(--hecho); color: var(--on-hecho); }
+.point:nth-child(3) { background: var(--para-todos); color: var(--on-para-todos); }
 
 /* ---- the rest of "qué incluye": the platform (the biggest point, an
    inverted cell), "bonos / incluidos.", the price ---- */
