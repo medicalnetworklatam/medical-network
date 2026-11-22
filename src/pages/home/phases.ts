@@ -31,10 +31,12 @@ import { all, clamp, lerp, one, smooth } from './dom.ts'
   Scrolling back up returns the focus to phase 03. With reduced motion the
   choice jumps instead of gliding.
 
-  Closing (.push-track__close): the closing slide (.cta) is pinned behind
-  the phases, hidden until they fill the screen. Then a circle centred on
-  the screen closes in on the phases, pulling them slightly inward, and
-  leaves the closing slide: the "ruta." opening circle in reverse.
+  Closing (.push-track__close): the first screen of "qué incluye"
+  (.includes) is pinned behind the phases, hidden until they fill the
+  screen. Then a circle centred on the screen closes in on the phases,
+  pulling them slightly inward, and leaves "qué incluye": the "ruta."
+  opening circle in reverse. Then it scrolls on normally into the rest of
+  the page (DECISIONS.md, 23 Nov 2026).
 
   No snapping: the page rests wherever you stop, even half way through a
   step. Everything is computed from the scroll position, so scrolling up
@@ -52,7 +54,10 @@ import { all, clamp, lerp, one, smooth } from './dom.ts'
 const STEPS = [100, 70, 70, 70]
 const RESTS = [0, 50, 50, 0]
 const TOTAL = [...STEPS, ...RESTS].reduce((a, b) => a + b, 0)
-const CLOSE_REST = 75 / 195 // first share of the closing scroll (195svh): a rest on the finished phases
+// first share of the closing scroll (172.5svh, .push-track__close): a 52.5svh
+// rest on the finished phases (shortened from 75svh, 23 Nov 2026); the circle
+// keeps its 120svh
+const CLOSE_REST = 52.5 / 172.5
 const CLOSE_HOLD = 0.15 // last share of the circle's scroll spent at rest
 const ABSORB = 0.12 // how much the phases shrink while the circle closes
 const EASE = 0.14 // how quickly a choice opens, per frame at 60fps
@@ -226,7 +231,7 @@ export function usePhases(rootRef: RefObject<HTMLElement | null>): void {
         settled += hs[i]
       })
 
-      // Closing: once the phases fill the screen the closing slide can sit
+      // Closing: once the phases fill the screen "qué incluye" can sit
       // behind them; past the extra scroll and a rest, the circle closes on them.
       track!.classList.toggle(styles.isClosing, y >= end - 1)
       const rest = close ? close.offsetHeight * CLOSE_REST : 0

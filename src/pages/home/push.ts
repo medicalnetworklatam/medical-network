@@ -16,9 +16,10 @@ import { clamp, one } from './dom.ts'
   "fonts are ready" is ignored, and the classes added here are removed.
 */
 
-// The spacer is 160svh: the push takes the first 85svh, the rest is a
-// pause with both sentences on screen before the phases start to rise.
-const HOLD = 1 - 85 / 160 // last share of the push distance spent at rest
+// The spacer is 137.5svh (.push-track__push in Home.module.css): the push
+// takes the first 85svh, the last 52.5svh are a pause with both sentences on
+// screen before the phases start to rise (shortened from 75svh, 23 Nov 2026).
+const HOLD = 1 - 85 / 137.5 // last share of the push distance spent at rest
 
 export function usePush(rootRef: RefObject<HTMLElement | null>): void {
   useLayoutEffect(() => {

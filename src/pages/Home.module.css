@@ -23,6 +23,15 @@
   overflow-x: hidden;
 }
 
+/* The page's wrapper (Home.tsx). --screen is the height of a pinned
+   screen after the first hero: the whole screen, except on phones, where
+   the call bar (.call-bar) takes the bottom strip, so the bar never covers
+   a pinned photo or text (DECISIONS.md, 23 Nov 2026). */
+.page {
+  --bar-h: 0px;
+  --screen: 100svh;
+}
+
 /* ------------------------------------------------------------------
    Header
 ------------------------------------------------------------------- */
@@ -392,9 +401,9 @@
 ------------------------------------------------------------------- */
 .story {
   --story-head: clamp(120px, 18svh, 170px);
-  --story-hold: 50svh;          /* scroll spent at rest on "then", and again on "now" */
+  --story-hold: 35svh;          /* scroll spent at rest on "then", and again on "now" (50 -> 35svh, 23 Nov 2026) */
   --story-fade: 90svh;          /* scroll spent sliding "now" up */
-  height: calc(100svh + 2 * var(--story-hold) + var(--story-fade));
+  height: calc(var(--screen) + 2 * var(--story-hold) + var(--story-fade));
   position: relative;
   z-index: 3;
   background: var(--ink);
@@ -405,7 +414,7 @@
 .story__pin {
   position: sticky;
   top: 0;
-  height: 100svh;
+  height: var(--screen);
   display: grid;
   grid-template-rows: var(--story-head) minmax(0, 1fr);
 }
@@ -730,26 +739,27 @@
 .push-track__push,
 .push-track__phases,
 .push-track__close { display: none; }
-/* 85svh of pushing, then a 75svh rest before the phases (push.ts) */
-.push-track.is-pushing .push-track__push { display: block; height: 160svh; }
+/* 85svh of pushing, then a 52.5svh rest before the phases (HOLD in push.ts) */
+.push-track.is-pushing .push-track__push { display: block; height: 137.5svh; }
 .push-track.is-staged .push-track__phases { display: block; height: 410svh; } /* TOTAL in phases.ts */
-/* a rest on the finished phases (first 75svh), then the closing circle
-   (CLOSE_REST in phases.ts) */
-.push-track.is-staged .push-track__close { display: block; height: 195svh; }
+/* a rest on the finished phases (first 52.5svh), then the closing circle
+   (120svh; CLOSE_REST in phases.ts) */
+.push-track.is-staged .push-track__close { display: block; height: 172.5svh; }
 
-/* The closing slide, staged: pinned behind the phases (above the hero),
-   hidden until the phases fill the screen (.is-closing, phases.ts); then
-   the circle closing on the phases leaves it on screen. */
-.push-track.is-staged .cta {
+/* "qué incluye", first screen, staged: pinned behind the phases (above the
+   hero), hidden until the phases fill the screen (.is-closing, phases.ts);
+   then the circle closing on the phases leaves it on screen, and it
+   scrolls on with the end of the track. It is one screen tall; if a very
+   short screen (a phone turned sideways) needs more, it grows instead of
+   cutting its text, and starts scrolling a little earlier. */
+.push-track.is-staged .includes {
   position: sticky;
   top: 0;
   z-index: 2;
-  height: 100svh;
-  min-height: 0;
-  margin-top: -100svh;
+  margin-top: calc(-1 * var(--screen));
   visibility: hidden;
 }
-.push-track.is-closing .cta { visibility: visible; }
+.push-track.is-closing .includes { visibility: visible; }
 .phases.is-staged { transform-origin: 50% 50%; }
 
 /* Classes that only the motion hooks look for (push.ts, phases.ts). A CSS
@@ -760,6 +770,7 @@
 .push-track__more {}
 
 .hero--two {
+  height: var(--screen);        /* leaves room for the phone's call bar */
   display: flex;
   flex-direction: column;
   justify-content: space-around;
@@ -785,8 +796,8 @@
 .phases.is-staged {
   position: sticky;
   top: 0;
-  height: 100svh;
-  margin-top: -100svh;          /* lie exactly over the pinned hero */
+  height: var(--screen);
+  margin-top: calc(-1 * var(--screen)); /* lie exactly over the pinned hero */
   overflow: hidden;
   background: color-mix(in srgb, var(--paper) calc(var(--e0, 0) * 100%), transparent);
   border-top: 0;
@@ -884,13 +895,37 @@
   color: var(--accent);
 }
 
-/* the button: a plain dark block, square like the cells */
-.cta__btn {
-  display: inline-block;
+/* ------------------------------------------------------------------
+   The Calendly buttons (CallLink.tsx): early in "ruta.", in the closing
+   slide and in the phone's call bar. All the same plain dark block, square
+   like the cells, in the heroes' font, with "Dura unos 30 minutos. Sin
+   costo." under the first two (.call__note).
+------------------------------------------------------------------- */
+.call {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+.cta .call { align-items: center; }
+.call .call__note {             /* (two classes: over ".intro__text p") */
+  margin: 0;
+  font-family: var(--font-grotesk);
+  font-size: 14px;
+  letter-spacing: .02em;
+  color: color-mix(in srgb, var(--accent) 72%, transparent);
+}
+.call-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;             /* tap target (CLAUDE.md) */
+  text-align: center;
   padding: clamp(16px, 1.6vw, 22px) clamp(28px, 3vw, 44px);
   border: 1px solid var(--paper);
   background: var(--paper);
   color: var(--ink);
+  font-family: var(--font);
   font-size: clamp(14px, 1.1vw, 17px);
   font-weight: 400;
   letter-spacing: .16em;
@@ -898,11 +933,11 @@
   text-decoration: none;
   transition: background-color .2s, color .2s;
 }
-.cta__btn:hover {
+.call-btn:hover {
   background: transparent;
   color: var(--paper);
 }
-.cta__btn:focus-visible {
+.call-btn:focus-visible {
   outline: 2px solid var(--paper);
   outline-offset: 4px;
 }
@@ -915,11 +950,306 @@
 }
 
 /* ------------------------------------------------------------------
+   After the phases (DECISIONS.md, 23 Nov 2026): "qué incluye", "evidencia
+   real" and "preguntas frecuentes". Ruled cells on the light background,
+   everything in Space Grotesk. They scroll normally; only the first screen
+   of "qué incluye" (.includes) is pinned behind the phases (above).
+   Titles: a small label over a big lowercase word, both inside the
+   heading (so screen readers hear "qué incluye"), the full stop hidden
+   from screen readers.
+------------------------------------------------------------------- */
+.includes,
+.includes-more,
+.proof,
+.faq {
+  position: relative;
+  z-index: 3;
+  background: var(--ink);
+  color: var(--accent);
+  font-family: var(--font-grotesk);
+}
+.proof,
+.faq { border-top: 1px solid var(--rule); }
+
+.sec-head {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: clamp(28px, 4svh, 56px) var(--gutter) clamp(12px, 1.4vw, 20px);
+  border-bottom: 1px solid var(--rule);
+}
+.sec-title {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(4px, .8vw, 12px);
+}
+.sec-title .label,
+.sec-title .display { display: block; }
+.sec-title .display { font-size: clamp(2.6rem, 6.5vw, 7rem); }
+
+/* a title + one or two lines: the three points, the bonuses, "mi propio
+   proceso" */
+.point-title {
+  margin: 0;
+  font-size: clamp(20px, 1.9vw, 30px);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -.02em;
+}
+.point p,
+.bonus p {
+  margin: 0;
+  max-width: 44ch;
+  font-size: clamp(16px, 1.15vw, 19px);
+  line-height: 1.5;
+}
+
+/* ---- "qué incluye", first screen (pinned): title; lead | three points.
+   Desktop:  head            Phone:  head
+             lead | points           lead
+                                     points                          ---- */
+.includes {
+  min-height: var(--screen);
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  grid-template-rows: minmax(30svh, auto) minmax(0, 1fr);
+  grid-template-areas:
+    "head head"
+    "lead points";
+}
+.includes > .sec-head { grid-area: head; }
+.includes__lead {
+  grid-area: lead;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1em;
+  padding: clamp(28px, 4vw, 72px) var(--gutter);
+  border-right: 1px solid var(--rule);
+}
+.includes__lead p {
+  margin: 0;
+  max-width: 34ch;
+  font-size: clamp(17px, 1.45vw, 24px);
+  line-height: 1.6;
+  letter-spacing: .015em;
+}
+.includes__lead .lead-strong {
+  font-size: clamp(22px, 2.2vw, 36px);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -.02em;
+}
+.points {
+  grid-area: points;
+  display: grid;
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.point {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  padding: clamp(18px, 2.2vw, 36px) var(--gutter);
+}
+.point + .point { border-top: 1px solid var(--rule); }
+
+/* ---- the rest of "qué incluye": the platform (the biggest point, an
+   inverted cell), "bonos / incluidos.", the price ---- */
+.platform {
+  --rule: color-mix(in srgb, var(--ink) 28%, transparent); /* lines on a dark cell */
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  background: var(--accent);
+  color: var(--ink);
+}
+.platform__title {
+  margin: 0;
+  padding: clamp(32px, 5vw, 96px) var(--gutter);
+  border-right: 1px solid var(--rule);
+  font-size: clamp(2.2rem, 4.6vw, 5rem);
+  font-weight: 700;
+  line-height: .95;
+  letter-spacing: -.04em;
+}
+.platform p {
+  align-self: center;
+  margin: 0;
+  max-width: 44ch;
+  padding: clamp(32px, 5vw, 96px) var(--gutter);
+  font-size: clamp(18px, 1.6vw, 26px);
+  line-height: 1.55;
+}
+.bonuses {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.bonus {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: clamp(24px, 3vw, 48px) var(--gutter);
+  border-bottom: 1px solid var(--rule);
+}
+.bonus:nth-child(odd) { border-right: 1px solid var(--rule); }
+.includes__total {
+  margin: 0;
+  padding: clamp(28px, 4vw, 64px) var(--gutter);
+  background: var(--accent);
+  color: var(--ink);
+  font-size: clamp(24px, 3vw, 48px);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -.02em;
+}
+
+/* ---- "evidencia real": text | photo, then Andrea's words | her
+   screenshot. The photo's frame is never taller than the screen, so it
+   can always be seen whole (cropped to the frame); the screenshot is never
+   cropped, only made smaller to fit. ---- */
+.proof__row {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  border-bottom: 1px solid var(--rule);
+}
+.proof__row:last-child { border-bottom: 0; }
+.proof__text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+  margin: 0;
+  padding: clamp(28px, 4vw, 72px) var(--gutter);
+  border-right: 1px solid var(--rule);
+}
+.proof__text p { margin: 0; }
+.proof__text p:not(.label) {
+  max-width: 40ch;
+  font-size: clamp(17px, 1.45vw, 24px);
+  line-height: 1.6;
+  letter-spacing: .015em;
+}
+.proof__photo {
+  position: relative;
+  margin: 0;
+  min-height: min(40vw, var(--screen) - 48px); /* about 3:2 on the 3fr column */
+  overflow: hidden;
+}
+.proof__photo img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.testimony { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+.quote {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+  margin: 0;
+}
+.proof__text .quote p {
+  max-width: 46ch;
+  font-size: clamp(17px, 1.3vw, 22px);
+}
+.quote-name {
+  font-size: clamp(17px, 1.3vw, 22px);
+  font-weight: 700;
+}
+.shot {
+  display: grid;
+  place-items: center;
+  padding: clamp(24px, 3vw, 48px) var(--gutter);
+}
+.shot img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: min(var(--screen) - 2 * clamp(24px, 3vw, 48px), 760px);
+}
+
+/* ---- "preguntas frecuentes": one ruled row per question, the browser's
+   own open/close (<details>); a thin + that turns into a − when open ---- */
+.faq-item { border-bottom: 1px solid var(--rule); }
+.faq-item:last-child { border-bottom: 0; }
+.faq-q {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  min-height: 64px;             /* tap target (CLAUDE.md) */
+  padding: clamp(18px, 2vw, 28px) var(--gutter);
+  list-style: none;             /* no triangle */
+  cursor: pointer;
+  font-size: clamp(18px, 1.6vw, 26px);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -.01em;
+}
+.faq-q::-webkit-details-marker { display: none; }
+.faq-q:hover > span:first-child {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: .2em;
+}
+.faq-q:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -4px;
+}
+.faq-sign {
+  position: relative;
+  flex: none;
+  width: 18px;
+  height: 18px;
+}
+.faq-sign::before,
+.faq-sign::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1.5px;
+  margin-top: -.75px;
+  background: currentColor;
+}
+.faq-sign::after {
+  transform: rotate(90deg);
+  transition: transform .25s ease;
+}
+.faq-item[open] .faq-sign::after { transform: none; }
+.faq-a {
+  margin: 0;
+  max-width: calc(62ch + 2 * var(--gutter));
+  padding: 0 var(--gutter) clamp(22px, 2.4vw, 32px);
+  font-size: clamp(16px, 1.2vw, 19px);
+  line-height: 1.6;
+}
+
+/* ---- the phone's call bar (callBar.ts): not drawn above 700px; on a
+   phone fixed at the bottom, hidden until callBar.ts shows it ---- */
+.call-bar { display: none; }
+
+/* ------------------------------------------------------------------
    Entrance: words rise in, photo opens from its centre
 ------------------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
   .menu-item,
-  .menu-btn__icon { transition: none; }
+  .menu-btn__icon,
+  .call-btn,
+  .faq-sign::after,
+  .call-bar,
+  .call-bar.is-shown { transition: none; }
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -1071,4 +1401,100 @@
   .phases.is-staged .phase__media { flex: 1 1 0; aspect-ratio: auto; opacity: calc(1 - var(--k, 0)); }
   .menu-btn,
   .chip { padding: 8px 12px; }
+
+  /* The call bar: 10px + a 48px button + 10px, plus the iPhone's bottom
+     safe area. The pinned screens after the first hero are this much
+     shorter (--screen), so the bar sits under them. */
+  .page {
+    --bar-h: calc(68px + env(safe-area-inset-bottom, 0px));
+    --screen: calc(100svh - var(--bar-h));
+  }
+  .call-bar {
+    display: block;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9;                 /* under the header and its menu (10) */
+    height: var(--bar-h);
+    padding: 10px var(--gutter) calc(10px + env(safe-area-inset-bottom, 0px));
+    background: var(--ink);
+    border-top: 1px solid var(--rule);
+    transform: translateY(100%);
+    visibility: hidden;         /* hidden: Tab and screen readers skip it */
+    transition: transform .3s ease, visibility 0s linear .3s;
+  }
+  .call-bar.is-shown {
+    transform: none;
+    visibility: visible;
+    transition: transform .3s ease, visibility 0s;
+  }
+  /* hidden while the home menu is open */
+  .page:has(.menu-btn[aria-expanded="true"]) .call-bar {
+    transform: translateY(100%);
+    visibility: hidden;
+  }
+  .call-bar-btn {
+    display: flex;
+    width: 100%;
+    height: 48px;
+    padding: 0 16px;
+    font-size: 14px;
+  }
+
+  /* After the phases, on a phone: every cell stacked. The first screen of
+     "qué incluye" fits a 375 x 667 phone minus the bar. */
+  .sec-head { padding: 24px var(--gutter) 12px; }
+  .sec-title .display { font-size: clamp(36px, 11.5vw, 56px); }
+  .point-title { font-size: 19px; }
+  .point p,
+  .bonus p { font-size: 16px; }
+
+  .includes {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr);
+    grid-template-areas:
+      "head"
+      "lead"
+      "points";
+  }
+  .includes__lead {
+    gap: .6em;
+    padding: 18px var(--gutter);
+    border-right: 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .includes__lead p { font-size: 16px; line-height: 1.5; }
+  .includes__lead .lead-strong { font-size: 21px; }
+  .point { gap: 4px; padding: 14px var(--gutter); }
+
+  .platform { grid-template-columns: minmax(0, 1fr); }
+  .platform__title {
+    padding: 28px var(--gutter) 18px;
+    border-right: 0;
+    border-bottom: 1px solid var(--rule);
+    font-size: 38px;
+  }
+  .platform p { padding: 18px var(--gutter) 28px; font-size: 17px; }
+  .bonuses { grid-template-columns: minmax(0, 1fr); }
+  .bonus { padding: 22px var(--gutter); }
+  .bonus:nth-child(odd) { border-right: 0; }
+  .includes__total { padding: 24px var(--gutter); font-size: 24px; }
+
+  .proof__row,
+  .testimony { grid-template-columns: minmax(0, 1fr); }
+  .proof__text {
+    padding: 24px var(--gutter);
+    border-right: 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .proof__text p:not(.label),
+  .proof__text .quote p { font-size: 16px; }
+  .quote-name { font-size: 16px; }
+  /* never taller than the screen above the bar (a phone turned sideways) */
+  .proof__photo { min-height: 0; aspect-ratio: 3 / 2; max-height: calc(var(--screen) - 24px); }
+  .shot { padding: 20px var(--gutter); }
+
+  .faq-q { min-height: 56px; padding: 16px var(--gutter); font-size: 17px; }
+  .faq-a { font-size: 16px; }
 }
