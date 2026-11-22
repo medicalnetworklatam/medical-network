@@ -36,6 +36,7 @@ import AdminNovedadNueva from './pages/AdminNovedadNueva.tsx'
 import AdminNovedad from './pages/AdminNovedad.tsx'
 import AdminNovedadTexto from './pages/AdminNovedadTexto.tsx'
 import AdminNovedadArchivos from './pages/AdminNovedadArchivos.tsx'
+import AdminDiagnostico from './pages/AdminDiagnostico.tsx'
 
 // The state picker used to keep the chosen states in this browser only
 // ("mn_estados"). The state is now saved to the account: remove the old copy.
@@ -98,6 +99,8 @@ createRoot(document.getElementById('root')!).render(
                 <Route path="/admin/novedades/:id/archivos" element={<AdminNovedadArchivos />} />
                 {/* Any other address under a post: its hub */}
                 <Route path="/admin/novedades/:id/*" element={<AdminNovedad />} />
+                {/* The owner's diagnostic for his sales calls: nothing stored */}
+                <Route path="/admin/diagnostico" element={<AdminDiagnostico />} />
               </Route>
             </Route>
 
