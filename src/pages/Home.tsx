@@ -105,9 +105,9 @@ export default function Home() {
         </div>
 
         {/* Mi historia: one pinned screen. Under the head, the two layouts sit
-            in the same space; as you scroll, "now" (hoy, después) fades in on
-            top of "then" (bio, mis inicios, antes), from a faint blur to fully
-            clear (story.ts). */}
+            in the same space; as you scroll, "now" (hoy, después) slides up
+            from below and covers "then" (bio, mis inicios, antes), which stays
+            still underneath (story.ts). */}
         <section className={styles.story} aria-labelledby="story-title">
           <div className={styles.storyPin}>
             <div className={styles.storyHead}>

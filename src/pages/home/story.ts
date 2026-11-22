@@ -4,8 +4,8 @@ import { one } from './dom.ts'
 
 /*
   Mi historia (from design-hero/story.js): one pinned screen in which the
-  "now" layout (hoy, después) fades in on top of "then" (bio, mis inicios,
-  antes) as you scroll, from a faint blur to fully clear.
+  "now" layout (hoy, después) slides up from below and covers "then" (bio,
+  mis inicios, antes) as you scroll, while "then" stays still underneath.
 
   Each layout has a rest zone (--story-hold of scroll) where nothing
   changes: "then" stays put for a while after it fills the screen, and
@@ -13,7 +13,7 @@ import { one } from './dom.ts'
   scroll while reading does not tip you into the next one.
 
   No snapping (owner's choice): the page rests wherever you stop, even half
-  way through the fade. It follows the scroll both ways.
+  way through the slide. It follows the scroll both ways.
 
   Clean-up when the page is left: every listener is removed (one
   AbortController), the waiting animation frame is cancelled, and the class
@@ -29,11 +29,11 @@ export function useStory(rootRef: RefObject<HTMLElement | null>): void {
     const ac = new AbortController()
     const { signal } = ac
 
-    // the fade runs from a ("then" fully shown, after its rest) to b ("now"
-    // fully clear, before its rest)
+    // the slide runs from a ("then" fully shown, after its rest) to b ("now"
+    // fully in place, before its rest)
     function points(): [number, number] {
       const top = story!.getBoundingClientRect().top + window.scrollY
-      const extra = story!.offsetHeight - pin!.offsetHeight // 2 rests + the fade
+      const extra = story!.offsetHeight - pin!.offsetHeight // 2 rests + the slide
       const cs = getComputedStyle(story!)
       const H = parseFloat(cs.getPropertyValue('--story-hold'))
       const F = parseFloat(cs.getPropertyValue('--story-fade'))
