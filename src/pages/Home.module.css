@@ -959,6 +959,14 @@
     border-bottom: 1px solid var(--rule);
   }
 
+  /* First slide on a phone: the arrow sits higher (closer to the words)
+     and 20% bigger (24 x 56 -> 28.8 x 67.2; its line thickens with it). */
+  .hero__scroll {
+    bottom: 14svh;
+    width: 28.8px;
+    height: 67.2px;
+  }
+
   /* Mi historia on a phone: a shorter pinned head.
      First layout: bio, photo, then antes.  Second: photo, después. */
   .story { --story-head: clamp(88px, 14svh, 120px); }
