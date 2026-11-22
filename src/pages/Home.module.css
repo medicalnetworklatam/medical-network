@@ -233,20 +233,36 @@
   pointer-events: none;
 }
 
-/* First slide only: a thin arrow at the bottom, pointing down (scroll on).
-   It sits in the hero's bottom padding, under the words and the photo. */
+/* First slide only: a thin arrow at the bottom, pointing down. It is a
+   button that scrolls to the next slide (Home.tsx). It sits in the hero's
+   bottom padding, under the words and the photo. The button is 44px wide
+   (tap target) around the narrower arrow, and draws nothing itself. */
 .hero__scroll {
   position: absolute;
   left: 0;
   right: 0;
   bottom: clamp(20px, 4svh, 40px);
   margin-inline: auto;
+  width: 44px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.hero__scroll svg {
+  display: block;
   width: 24px;
   height: 56px;
   fill: none;
   stroke: var(--ink);
   stroke-width: 1.5;
-  pointer-events: none;
+}
+.hero__scroll:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 4px;
 }
 
 /* ------------------------------------------------------------------
@@ -963,6 +979,9 @@
      and 20% bigger (24 x 56 -> 28.8 x 67.2; its line thickens with it). */
   .hero__scroll {
     bottom: 14svh;
+    height: 67.2px;
+  }
+  .hero__scroll svg {
     width: 28.8px;
     height: 67.2px;
   }
