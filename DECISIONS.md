@@ -19,7 +19,8 @@ Last updated: 22 Nov 2026. This is the source of truth for the project. When a d
 
 Ivan's decision (option A): a demo inside the live site, kept until launch, instead of a separate demo copy of the site.
 
-- **One demo account only.** A made-up client (no real person's data), created with Supabase's "Invite user" on a Gmail address with `+demo`. Paid, Baden-Württemberg, route `medico_drittstaat` (the only route with a template), so every client screen has something to show. No other demo accounts: its Comunidad posts and chat messages only sit next to posts from the admin account ("Equipo MNL").
+- **One demo account only:** Ivan's own login on his personal email address (created 22 Nov 2026 with Supabase's "Invite user"; the address is kept out of this public file). Paid, Baden-Württemberg, route `medico_drittstaat` (the only route with a template), so every client screen has something to show. No other demo accounts: its Comunidad posts and chat messages only sit next to posts from the admin account ("Equipo MNL").
+- **Its name is "Ivan Bruckner"** (Ivan's choice, 22 Nov 2026), shown as "Ivan B." in Comunidad and the chat. Known and accepted: the owner has the same name. A post keeps the name it was written with, so changing the name later on `/perfil` doesn't change old posts.
 - **The `+prueba` test account stays** a test account, separate from the demo. Both are deleted before launch.
 - **Every Comunidad post, chat message and news post from before 22 Nov 2026 is deleted** (all test content, the unpublished test news post included). It can't be undone (the Free plan has no backups).
   - Posts and messages: in Supabase's SQL Editor, `delete from public.community_posts;` and `delete from public.news_posts;`. Deleting a news post also deletes its `news_attachments` rows. No other table depends on either table.
