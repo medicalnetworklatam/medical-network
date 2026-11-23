@@ -1,6 +1,6 @@
 # MNL client area: decisions log
 
-Last updated: 22 Nov 2026. This is the source of truth for the project. When a decision changes, update this file in the Claude project knowledge and in the code repository.
+Last updated: 23 Nov 2026. This is the source of truth for the project. When a decision changes, update this file in the Claude project knowledge and in the code repository.
 
 ## Context
 
@@ -14,6 +14,39 @@ Last updated: 22 Nov 2026. This is the source of truth for the project. When a d
   - about 25 accounts in the first 12 months
   - Spanish only, web only
 - **Admins:** Ivan and his cousin.
+
+## Changes on 23 Nov 2026 (night): the home page sells
+
+Ivan's decisions after the home page analysis (project doc `docs/home-page-analysis-2026-11-22.md`). They replace "same text, order and scroll motion" (17 Nov) for the parts below; the look and the motion style stay. The menu's "Aplicar a Ruta Approbation" (18 Nov) is replaced too.
+
+- **One label for every Calendly button** (menu, new early button, phone bar, closing button): "Agenda tu llamada gratuita". Under the early and the closing button: "Dura unos 30 minutos. Sin costo." (the owner's call is free and about 30 minutes, relayed by Ivan).
+- **An early button** under the text of "yo soy tu / ruta.".
+- **A bar at the bottom of the screen on phones** (up to 700 px) with the same button. It appears once the first hero has scrolled away and hides while the closing slide is on screen. It never covers a photo where it is meant to be seen (design rule 1).
+- **New order:** hero → "yo soy tu / ruta." → "mi / historia." → second hero → "las 3 / fases." → **qué incluye** → **evidencia real** → **preguntas frecuentes** → closing slide (headline, price, button). The circle that closes on the phases now opens onto "qué incluye"; the closing slide keeps its look and becomes the last section. The new sections scroll normally (not pinned) and use the ruled cells, never the rounded cards of the owner's old site (a rejected direction).
+- **Qué incluye** (texts from the owner's current site, adapted):
+  - Lead: "Acompañamiento durante todo tu proceso." / "No hay una duración fija: cada homologación avanza a su propio ritmo, y el acompañamiento sigue el tuyo."
+  - **The platform, as the biggest point:** "Tu plataforma MNL": "Un área privada solo para clientes: tu expediente paso a paso según tu Bundesland y tu ruta, las novedades de tu estado, la Comunidad MNL, el chat de tu Bundesland, tus documentos y la herramienta para tu currículum. Incluye acceso gratuito a las nuevas herramientas que se desarrollen." (replaces the old bonus "Futuras plataformas"). The calendar isn't mentioned (still a preview).
+  - "Agenda de videollamadas conmigo": "Para revisar avances, objetivos y próximos pasos." / "WhatsApp directo conmigo": "Para dudas y situaciones importantes." / "Acompañamiento en cada etapa": "Planificación, documentación y ejecución."
+  - **Bonos incluidos:** "Guía de diagnóstico" (tiempos y costos aproximados del proceso), "Guía de alemán A1–B1" (ejercicios y prompts de IA), "Guía de preparación FSP" (material de apoyo para preparar la Fachsprachprüfung), "Cooperaciones" (curso de preparación FSP online desde tu país con perfectgerman, con 50 % de descuento, y posibilidad de una beca BAMF para un curso de preparación FSP al estar en Alemania). WhatsApp and videollamadas aren't repeated as bonuses.
+  - Closing line of the section: "Todo incluido: pago único 3.500 €."
+  - **Colours on its first screen** (Ivan, 23 Nov 2026, after the first build): the lead "Acompañamiento durante todo tu proceso." on Para ti, the three points on Dato, Hecho and Para todos, each with its own text colour. An exception to "each colour has one meaning" (21 Nov, late), for this screen only. Alerta isn't used (it means "careful", which doesn't fit a selling point).
+- **Evidencia real:** "Mi propio proceso de homologación" ("De mi llegada en 2015 a la Approbation en 2017, y después la especialidad.") with the owner's photo(s), and Andrea's testimonial: her three paragraphs as real text, word for word, plus her WhatsApp screenshot (number covered). Andrea agreed to be shown with her name, words and screenshot (Ivan, 23 Nov 2026). The operating-room photo is the owner's own (Ivan, 23 Nov 2026); its file carried keywords from a stock-photo upload tool, which are removed with the rest of its hidden data.
+- **Preguntas frecuentes** (the owner's texts, word for word; native open/close rows, closed at first): ¿Haces el proceso de homologación por mí? / ¿Cuánto dura el programa? / ¿Me garantizas la homologación o un tiempo determinado? / ¿Cómo es el acompañamiento? / ¿Qué necesito para aplicar? / ¿Qué métodos de pago aceptas? / ¿Tengo derecho de desistimiento?
+  - **Left out for now:** "¿Cómo accedo al precio especial?" (the workshop isn't on the page; it comes back when a workshop with a date is announced, and "cupos limitados" must be true then).
+  - **The Widerruf answer is included as written,** by Ivan's choice (23 Nov 2026). This is an exception to "legal texts come from the law firm" (15 Nov): see "For the law firm". It names the Widerrufsbelehrung, which doesn't exist on the site yet, so it has no link until it does.
+- **Shorter pauses** (30 % less): the "mi historia" rests (`--story-hold`) 50 → 35svh each; the rest before the phases 75 → 52.5svh (push spacer 160 → 137.5svh); the rest on the finished phases before the circle closes 75 → 52.5svh (closing spacer 195 → 172.5svh). The circle's own growth, the hero's rest and the rests between phases stay.
+- **After the first preview** (Ivan, 23 Nov 2026):
+  - The rest on "yo soy tu / ruta." before "mi historia" is 30 % shorter, twice: 50 → 35 → 24.5svh (`.hero-track__rest`).
+  - The second hero's second sentence says "Por eso creé / Ruta Approbation" (without "la").
+  - The four bonus cells stay a 2 × 2 grid on phones too.
+  - Andrea's WhatsApp screenshot is removed; her name and words stay.
+  - The closing slide ("Tu homologación / necesita / una ruta") moves before the FAQ, which becomes the last section. The phone bar hides only while the closing slide is on screen and shows again on the FAQ, which ends with room for it.
+  - The four bonus cells use the same colours as the first "qué incluye" screen: Para ti, Dato, Hecho, Para todos.
+  - Phase 02 ("documentación") gets more contrast: its tone goes from 55 % to 75 % cream (black text 4.7:1 → 9.0:1).
+  - **Home header: only "Menú"** at the top right, logged in or not. "Entrar", or "Mi área" and "Cerrar sesión", are inside the menu. This replaces the header chips of 17 Nov (evening) and 18 Nov.
+  - The photo captions "Mis inicios" and "Hoy, especialista" are on Para todos (orange).
+  - **Andrea's testimonial comes first** in "evidencia real", before the owner's own process, as one big quote in a dark cell: only her last sentence ("Le recomendaría la asesoría con Iván…"), word for word, signed "Andrea" with the label "Cliente actual". Her first two paragraphs are no longer shown.
+- **Not chosen for now** (open): a "who it's for" line on the first screen, collapsed phases showing their result, a still version for reduced motion, a smaller hero photo, and a footer with Impressum and Datenschutz (waits for the law firm).
 
 ## Changes on 22 Nov 2026 (evening): the diagnostic is the owner's sales tool
 
@@ -114,6 +147,7 @@ Ivan chose these colours on 21 Nov 2026 from previews. This replaces "every colo
   - Text on them is black or cream as above, each at least 4.5:1: cream on Alerta and on Para ti 5.4:1; black on Para todos 8.1:1, on Hecho 9.8:1, on Dato 14.1:1.
   - Labels, ticks and words stay, so colour never carries the meaning alone.
   - "No aplica" steps stay greyed, with none of these colours. Errors stay inverted black cells. The dark column is unchanged.
+  - Exception: on the home page, the first screen of "qué incluye", the bonus cells and the "mi historia" photo captions use them as decoration (see "Changes on 23 Nov 2026 (night)").
 - **Client screens:**
   - Mi expediente: "Atención" = Alerta. "Dónde", "Plazo" and "Caduca" = Dato. A ticked step's tick box, the "Avance del expediente" cell (no new bar), finished milestones, and a block tab whose block is fully done = Hecho. "Nota para ti" = Para ti (instead of black).
   - "Abrir el formulario del currículum" is a filled black button with cream text, at the top of Mi expediente and in step `p2`.
@@ -555,4 +589,6 @@ The owner will hire a law firm for all legal work (decided 15 Nov 2026). Ivan an
 - **Client documents ("Mis documentos"):** how long they are kept and how they are deleted.
 - **CV tool:** saving it to the account would store health and family periods.
 - **Diagnostic:** its Calendly button sends the visitor's answers to Calendly. (22 Nov 2026: only if the button stays; Claude proposed dropping it, since the owner uses the diagnostic during the call itself.) The owner types a prospect's answers into it during the call; nothing is stored, but the PDF he hands over contains them.
+- **Home page FAQ "¿Tengo derecho de desistimiento?"** (added 23 Nov 2026, the owner's wording, included by Ivan's choice): check the answer (14 days, §§ 312g, 355 BGB) and write the Widerrufsbelehrung it refers to.
+- **Testimonials:** Andrea's consent to her name, words and WhatsApp screenshot on the home page (given, per Ivan); how it is recorded. (Since 23 Nov 2026 only her name and words are shown.)
 - **Timing** (suggested by Claude, not yet confirmed): done before the first real client gets an invite.
