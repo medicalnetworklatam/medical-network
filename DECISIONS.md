@@ -1,6 +1,6 @@
 # MNL client area: decisions log
 
-Last updated: 23 Nov 2026. This is the source of truth for the project. When a decision changes, update this file in the Claude project knowledge and in the code repository.
+Last updated: 23 Nov 2026 (late night). This is the source of truth for the project. When a decision changes, update this file in the Claude project knowledge and in the code repository.
 
 ## Context
 
@@ -14,6 +14,23 @@ Last updated: 23 Nov 2026. This is the source of truth for the project. When a d
   - about 25 accounts in the first 12 months
   - Spanish only, web only
 - **Admins:** Ivan and his cousin.
+
+## Changes on 23 Nov 2026 (late night): no animations on the home page
+
+Ivan's decision (23 Nov 2026): every animation on the home page goes, and scrolling it should be as easy as possible. This replaces "same text, order and scroll motion" (17 Nov evening) and "the look and the motion style stay" (23 Nov night). Text, order, colours, fonts, photos and the Calendly buttons stay as built in PR #38. The state map keeps its animations (it isn't the home page).
+
+**To build** (details proposed by Claude, to confirm on the preview):
+- **Plain scrolling only.** Nothing is pinned, nothing moves with the scroll, no rests (scroll that changes nothing), no snapping, no smooth-scroll code. Each section is as tall as its content, one after the other, in the same order: hero → "yo soy tu / ruta." → "mi historia." → second hero → "las 3 / fases." → qué incluye → evidencia real → closing slide → preguntas frecuentes.
+- **The first hero** stays one screen tall (photo whole, design rule 1). Its arrow becomes a plain link that jumps straight to "yo soy tu / ruta.".
+- **"mi historia.":** the "then" layout (bio, mis inicios, antes), then the "now" layout (hoy, después) under it.
+- **The second hero:** both sentences shown together; no push.
+- **"las 3 / fases.":** all three phases open in full, one row each, with their result; no rising, no shrinking, no choosing a phase. This settles "collapsed phases showing their result" (23 Nov night, open).
+- **No circle:** no growing or closing circle anywhere.
+- **No movement at all:** no entrance animations (words rising, the photo opening, the arrow nudging), and no transitions (menu, buttons, the FAQ's +/−, the phone bar). Hover colours change instantly. The page is the same with or without "reduce motion", which settles "a still version for reduced motion" (23 Nov night, open).
+- **The justified headlines stay** (they are sizing, not motion).
+- **The phone bar** works as before (shows once the first hero has scrolled away, hides while the closing slide is on screen), appearing and disappearing instantly.
+- **A visible scrollbar on the home page** (proposed by Claude; Ivan can drop it): an exception to "hidden scrollbars" for this page only, so visitors see how long the page is and where they are, and can drag it with a mouse.
+- The scroll-motion files that are no longer used are deleted; `design-hero/` stays untouched as the reference of the old motion.
 
 ## Changes on 23 Nov 2026 (night): the home page sells
 

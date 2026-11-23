@@ -23,10 +23,34 @@
   overflow-x: hidden;
 }
 
-/* The page's wrapper (Home.tsx). --screen is the height of a pinned
-   screen after the first hero: the whole screen, except on phones, where
-   the call bar (.call-bar) takes the bottom strip, so the bar never covers
-   a pinned photo or text (DECISIONS.md, 23 Nov 2026). */
+/* A visible scrollbar on the home page only (DECISIONS.md, 23 Nov 2026,
+   late night): an exception to the hidden scrollbars of global.css, so
+   visitors see how long the page is and where they are. Only a rule on
+   <html> reaches the page's own scrollbar, so this is the one place where
+   this file targets html: only while <html> holds a <body> with this
+   page's class, so it ends when the page is left. The browser's own
+   scrollbar, in the page's colours: a light thumb on the dark track.
+   (scrollbar-color for Chrome, Edge and Firefox; the -webkit- rules for
+   Safari, which shows its own thin bar on the iPad and iPhone.) */
+:global(html):has(> .page-body) {
+  scrollbar-width: auto;
+  scrollbar-color: color-mix(in srgb, var(--ink) 55%, var(--paper)) var(--paper);
+}
+:global(html):has(> .page-body)::-webkit-scrollbar {
+  display: block;
+  width: 12px;
+  background: var(--paper);
+}
+:global(html):has(> .page-body)::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--ink) 55%, var(--paper));
+  border: 3px solid var(--paper);
+}
+
+/* The page's wrapper (Home.tsx). --screen is the height of the
+   screen-sized frames ("yo soy tu / ruta." and both "mi historia"
+   layouts): the whole screen, except on phones, where the call bar
+   (.call-bar) takes the bottom strip, so the bar never covers their
+   photos or text (DECISIONS.md, 23 Nov 2026). */
 .page {
   --bar-h: 0px;
   --screen: 100svh;
@@ -82,7 +106,6 @@
   width: 34px;
   height: 8px;
   border-block: 2px solid currentColor;
-  transition: height .3s ease;
 }
 .menu-btn:hover .menu-btn__icon { height: 12px; }
 
@@ -126,7 +149,6 @@
   text-align: left;
   text-decoration: none;
   cursor: pointer;
-  transition: background-color .15s ease, color .15s ease;
 }
 .menu-item:hover {
   background: var(--ink);
@@ -142,14 +164,9 @@
 /* ------------------------------------------------------------------
    Hero
 ------------------------------------------------------------------- */
-.hero-track { position: relative; }
-.hero-track__grow { height: 140svh; } /* scroll spent growing the circle */
-.hero-track__rest { height: 24.5svh; } /* then still, fully open, before "mi historia" (50 -> 35 -> 24.5svh, 23 Nov 2026) */
-
+/* The first hero is one screen (the second one: .hero--two) */
 .hero {
-  position: sticky;
-  top: 0;
-  z-index: 1;
+  position: relative;
   height: 100svh;
   overflow: hidden;
   display: grid;
@@ -221,9 +238,10 @@
 }
 
 /* First slide only: a thin arrow at the bottom, pointing down. It is a
-   button that scrolls to the next slide (Home.tsx). It sits in the hero's
-   bottom padding, under the words and the photo. The button is 44px wide
-   (tap target) around the narrower arrow, and draws nothing itself. */
+   plain link that jumps straight to "yo soy tu / ruta." (#ruta, Home.tsx).
+   It sits in the hero's bottom padding, under the words and the photo. The
+   link is 44px wide (tap target) around the narrower arrow, and draws
+   nothing itself. */
 .hero__scroll {
   position: absolute;
   left: 0;
@@ -253,24 +271,21 @@
 }
 
 /* ------------------------------------------------------------------
-   Intro: revealed through a circle in the letters' colour.
-   It sits pinned on top of the hero; reveal.ts grows the circle
-   (--r) from the centre of the screen (--cy), then it scrolls on.
-   Cells divided by thin lines, everything in Space Grotesk.
+   Intro ("yo soy tu / ruta."): right under the first hero, one screen
+   (--screen: above the call bar on a phone). The first hero's arrow
+   jumps here. Cells divided by thin lines, everything in Space Grotesk.
 ------------------------------------------------------------------- */
 .intro {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  margin-top: -100svh;          /* lie exactly over the pinned hero */
-  min-height: 100svh;
+  min-height: var(--screen);
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
-  grid-template-rows: minmax(38svh, auto) minmax(62svh, auto);
+  grid-template-rows: minmax(38svh, auto) minmax(0, 1fr);
   background: var(--ink);
   color: var(--accent);
   font-family: var(--font-grotesk);
-  clip-path: circle(var(--r, 0px) at 50% var(--cy, 50svh));
+  /* the arrow's jump lands exactly on the section's top: this cancels the
+     header's top scroll padding (HEADER_ROOM in Home.tsx) */
+  scroll-margin-top: calc(-1 * (44px + 2 * var(--gutter)));
 }
 
 .intro__head {
@@ -328,29 +343,12 @@
   overflow: hidden;
 }
 
-/* ---- the title ("ruta.") first ----
-   reveal.ts drives one progress value, from 0 (only the word, centred in
-   a small circle) to 1 (word in its place, everything visible):
-     --tx / --ty  how far the word still is from its place
-     --o          opacity of the rest of the section and its lines
-   Without JS these stay at their defaults and the section shows normally. */
-.intro {
-  --o: 1;
-  --rule: rgb(var(--accent-rgb) / calc(.4 * var(--o)));
-}
 .intro__title {
-  align-self: flex-start;       /* box as wide as the word, so it centres on the word */
+  align-self: flex-start;
   /* "ruta." has no tall letter (like the h of "historia."), so its letters
      start lower in their box: pulled up so the gap you see under "yo soy tu"
      matches the one under "mi" */
   margin-top: -.07em;
-  transform: translate(var(--tx, 0px), var(--ty, 0px));
-  will-change: transform;
-}
-.intro__eyebrow,
-.intro__copy,
-.intro__media {
-  opacity: var(--o);
 }
 
 .intro__media img {
@@ -364,37 +362,23 @@
 }
 
 /* ------------------------------------------------------------------
-   Mi historia: one pinned screen (head + a stack of two layouts in the
-   same space). story.ts sets --f from 0 to 1 with the scroll: the "now"
-   layout slides up from below the stack and covers "then", which stays
-   still underneath. The section is one screen plus scroll for: a rest on
-   "then" (--story-hold), the slide (--story-fade), and a rest on "now".
-   Site rule: a photo is never cut off by the edge of the screen. Photos
-   sit in a frame that takes the height left over and are cropped to it.
+   Mi historia: the title cell, then the "then" layout, then the "now"
+   layout under it. Each layout is one screen minus the title cell
+   (--screen: above the call bar on a phone), and grows if its text needs
+   more. Site rule: a photo is never cut off by the edge of the screen.
+   Photos sit in a frame that takes the height left over and are cropped
+   to it.
 
-   Desktop:  head (pinned)          head (pinned)
-             bio   | photo    →     photo | después
-             antes | photo
-   Phone:    bio, photo, antes  →   photo, después
+   Desktop:  head                   Phone:  head
+             bio   | photo                  bio, photo, antes
+             antes | photo                  photo, después
+             photo | después
 ------------------------------------------------------------------- */
 .story {
   --story-head: clamp(120px, 18svh, 170px);
-  --story-hold: 35svh;          /* scroll spent at rest on "then", and again on "now" (50 -> 35svh, 23 Nov 2026) */
-  --story-fade: 90svh;          /* scroll spent sliding "now" up */
-  height: calc(var(--screen) + 2 * var(--story-hold) + var(--story-fade));
-  position: relative;
-  z-index: 3;
   background: var(--ink);
   color: var(--accent);
   font-family: var(--font-grotesk);
-}
-
-.story__pin {
-  position: sticky;
-  top: 0;
-  height: var(--screen);
-  display: grid;
-  grid-template-rows: var(--story-head) minmax(0, 1fr);
 }
 
 .story__head {
@@ -411,30 +395,18 @@
 
 .story__head .display { font-size: clamp(2.6rem, 6.5vw, 7rem); }
 
-.story__stack {
-  display: grid;
-  min-height: 0;
-  overflow: hidden;             /* clip "now" at the stack's edge while it slides */
-}
 .story__body {
-  grid-area: 1 / 1;             /* both layouts in the same cell */
   display: grid;
-  min-height: 0;
+  min-height: calc(var(--screen) - var(--story-head));
   background: var(--ink);
 }
-/* "now" on top: fully below the stack at --f 0, in place at --f 1 */
-.story__body--now {
-  transform: translateY(calc((1 - var(--f, 0)) * 100%));
-  will-change: transform;
-}
-.story.is-now .story__body--then,
-.story:not(.is-now) .story__body--now { pointer-events: none; }
+.story__body--now { border-top: 1px solid var(--rule); }
 /* left column 42% (30% thinner than the old 60%); the bio on top, "antes"
-   under it with 37% of the height (120% taller than its old ~17%) and
-   never less than its text */
+   under it with 37% of the height (120% taller than its old ~17%); neither
+   is ever less than its text */
 .story__body--then {
   grid-template-columns: minmax(0, 42fr) minmax(0, 58fr);
-  grid-template-rows: minmax(0, 63fr) minmax(auto, 37fr);
+  grid-template-rows: minmax(auto, 63fr) minmax(auto, 37fr);
   grid-template-areas:
     "bio   photo"
     "was   photo";
@@ -545,33 +517,20 @@
   --tone-2-fg: var(--paper);
   --tone-3: var(--ink);
   --tone-3-fg: var(--accent);
-  position: relative;
-  z-index: 3;
   background: var(--ink);
   color: var(--accent);
   font-family: var(--font-grotesk);
   border-top: 1px solid var(--rule);
 }
 
-/* The title cell takes the colour of the newest phase as it rises:
-   light while it comes in alone, then dark with 01, middle with 02 and
-   light again with 03. phases.ts sets --e1..--e3 (0 to 1, each phase's
-   progress); without JS they stay 0 and the cell stays light. */
+/* The title cell: light, like the page */
 .phases__head {
-  --hb1: color-mix(in oklab, var(--tone-1) calc(var(--e1, 0) * 100%), var(--ink));
-  --hb2: color-mix(in oklab, var(--tone-2) calc(var(--e2, 0) * 100%), var(--hb1));
-  --bg:  color-mix(in oklab, var(--tone-3) calc(var(--e3, 0) * 100%), var(--hb2));
-  --hf1: color-mix(in oklab, var(--tone-1-fg) calc(var(--e1, 0) * 100%), var(--accent));
-  --hf2: color-mix(in oklab, var(--tone-2-fg) calc(var(--e2, 0) * 100%), var(--hf1));
-  --fg:  color-mix(in oklab, var(--tone-3-fg) calc(var(--e3, 0) * 100%), var(--hf2));
-  --rule: color-mix(in srgb, var(--fg) 40%, transparent);
+  --rule: color-mix(in srgb, var(--accent) 40%, transparent);
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
   gap: clamp(10px, 1.4vw, 22px);
   padding: clamp(24px, 3vw, 44px) var(--gutter) clamp(10px, 1.2vw, 18px);
-  background: var(--bg);
-  color: var(--fg);
   border-bottom: 1px solid var(--rule);
 }
 /* on a short screen the title gives up some size, leaving room for the phases */
@@ -612,7 +571,7 @@
 }
 
 /* title + intro, then checklist + resultado: each a column cell whose
-   content sits in the middle (from the top when it does not fit) */
+   content sits in the middle */
 .phase__main,
 .phase__detail {
   display: flex;
@@ -622,8 +581,7 @@
   min-height: 0;
   padding: clamp(20px, 2.2vw, 36px) var(--gutter);
 }
-/* never squeeze the title, intro, list or box: a short cell cuts (with a
-   fade) instead, and the row's height is measured from their real size */
+/* never squeeze the title, intro, list or box */
 .phase__main > *,
 .phase__detail > * { flex-shrink: 0; }
 .phase__main { grid-area: main; }
@@ -710,141 +668,23 @@
 .phase__media .photo-ejecucion { object-position: 55% 72%; }
 
 /* ------------------------------------------------------------------
-   Second hero: two justified sentences, no photo. It is pinned while you
-   scroll through the push spacer: the second sentence rises from below
-   and pushes the first up until each fills half the screen (push.ts sets
-   each stage's --top). Without JS, both simply share the screen.
+   Second hero: two justified sentences, no photo, one under the other,
+   as tall as its content.
 ------------------------------------------------------------------- */
-.push-track { position: relative; }
-/* scroll spent pushing, then bringing in the phases (only with JS) */
-.push-track__push,
-.push-track__phases,
-.push-track__close { display: none; }
-/* 85svh of pushing, then a 52.5svh rest before the phases (HOLD in push.ts) */
-.push-track.is-pushing .push-track__push { display: block; height: 137.5svh; }
-.push-track.is-staged .push-track__phases { display: block; height: 410svh; } /* TOTAL in phases.ts */
-/* a rest on the finished phases (first 52.5svh), then the closing circle
-   (120svh; CLOSE_REST in phases.ts) */
-.push-track.is-staged .push-track__close { display: block; height: 172.5svh; }
-
-/* "qué incluye", first screen, staged: pinned behind the phases (above the
-   hero), hidden until the phases fill the screen (.is-closing, phases.ts);
-   then the circle closing on the phases leaves it on screen, and it
-   scrolls on with the end of the track. It is one screen tall; if a very
-   short screen (a phone turned sideways) needs more, it grows instead of
-   cutting its text, and starts scrolling a little earlier. */
-.push-track.is-staged .includes {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  margin-top: calc(-1 * var(--screen));
-  visibility: hidden;
-}
-.push-track.is-closing .includes { visibility: visible; }
-.phases.is-staged { transform-origin: 50% 50%; }
-
-/* Classes that only the motion hooks look for (push.ts, phases.ts). A CSS
-   module only knows the class names that appear in its CSS (any other
-   styles.xxx is undefined), so they are listed here, changing nothing. */
-.hero__stage--a,
-.hero__stage--b,
-.push-track__more {}
-
 .hero--two {
-  height: var(--screen);        /* leaves room for the phone's call bar */
+  height: auto;
   display: flex;
   flex-direction: column;
-  justify-content: space-around;
   align-items: center;
+  gap: clamp(32px, 10svh, 120px);
 }
-.hero--two.is-pushing { display: block; }
-.hero--two.is-pushing .hero__stage {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translate(-50%, var(--top, 100svh));
-  will-change: transform;
-}
-
-/* The phases staged over the second hero (phases.ts): one screen, pinned,
-   with every cell placed by JS. Its background starts see-through and turns
-   solid (the hero's dark) while the title cell rises: --e0, 0 to 1, so the
-   hero's words fade out behind the cells. --y: a cell's top on the
-   screen; --h: a phase row's height; --k: 0 = in focus (full size),
-   1 = shrunk: everything greyed out, and what does not fit fades out at
-   the bottom of the row (never squeezed). Once all three are in, a phase
-   can be chosen by hovering (or clicking / tapping) it: .is-choosable. */
-.phases.is-staged {
-  position: sticky;
-  top: 0;
-  height: var(--screen);
-  margin-top: calc(-1 * var(--screen)); /* lie exactly over the pinned hero */
-  overflow: hidden;
-  background: color-mix(in srgb, var(--paper) calc(var(--e0, 0) * 100%), transparent);
-  border-top: 0;
-}
-.phases.is-staged .phases__head,
-.phases.is-staged .phase {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  background: var(--bg, var(--ink));
-  transform: translateY(var(--y, 100svh));
-  will-change: transform;
-}
-.phases.is-staged .phase {
-  height: var(--h, auto);
-  min-height: 0;
-  overflow: hidden;
-  grid-template-rows: minmax(0, 1fr);
-}
-.phases.is-staged .phase__media { min-height: 0; }
-.phases.is-staged .phase.no-media .phase__media { display: none; }
-.phases.is-staged .phase__num,
-.phases.is-staged .phase__media { opacity: calc(1 - .45 * var(--k, 0)); }
-/* the text cells: greyed out when shrunk; what does not fit is cut by a
-   soft fade instead of a hard edge. The fade sits in the cell's bottom
-   padding, so it is invisible when everything fits. */
-.phases.is-staged .phase__main,
-.phases.is-staged .phase__detail {
-  --fade: 16px;
-  gap: calc((1 - var(--k, 0)) * clamp(12px, 1.2vw, 18px));
-  overflow: hidden;
-  opacity: calc(1 - .5 * var(--k, 0));
-  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - var(--fade)), transparent);
-          mask-image: linear-gradient(to bottom, #000 calc(100% - var(--fade)), transparent);
-}
-/* Minimised, a phase keeps only its title and an empty "resultado" box:
-   the intro, the checklist and the result sentence close up (and fade)
-   as --k goes to 1, and open again as it goes back to 0. */
-.phases.is-staged .phase__intro,
-.phases.is-staged .phase__items,
-.phases.is-staged .phase__result p:not(.label) {
-  max-height: calc((1 - var(--k, 0)) * 24em);
-  overflow: hidden;
-  opacity: clamp(0, 1 - 1.6 * var(--k, 0), 1);
-}
-.phases.is-staged .phase__result { gap: calc((1 - var(--k, 0)) * 8px); }
-@media (min-width: 701px) {
-  /* minimised rows also lose half their top and bottom padding */
-  .phases.is-staged .phase__main,
-  .phases.is-staged .phase__detail {
-    padding-block: calc(clamp(20px, 2.2vw, 36px) * (1 - .5 * var(--k, 0)));
-  }
-}
-.phases.is-choosable .phase { cursor: pointer; }
-.phases.is-choosable .phase:focus-visible { outline: 2px solid var(--fg); outline-offset: -4px; }
 
 /* ------------------------------------------------------------------
    Closing call to action, in the heroes' font. The heroes turned
    around: light background, dark letters. The headline is justified
-   by fit.ts; price, button and sign-off below.
+   by fit.ts; price, button and sign-off below. As tall as its content.
 ------------------------------------------------------------------- */
 .cta {
-  position: relative;
-  z-index: 3;
-  min-height: 100svh;
   display: grid;
   place-items: center;
   padding: clamp(72px, 11svh, 120px) var(--gutter);
@@ -912,7 +752,6 @@
   letter-spacing: .16em;
   text-transform: uppercase;
   text-decoration: none;
-  transition: background-color .2s, color .2s;
 }
 .call-btn:hover {
   background: transparent;
@@ -933,8 +772,8 @@
 /* ------------------------------------------------------------------
    After the phases (DECISIONS.md, 23 Nov 2026): "qué incluye", "evidencia
    real" and "preguntas frecuentes". Ruled cells on the light background,
-   everything in Space Grotesk. They scroll normally; only the first screen
-   of "qué incluye" (.includes) is pinned behind the phases (above).
+   everything in Space Grotesk. They scroll normally, as tall as their
+   content.
    Titles: a small label over a big lowercase word, both inside the
    heading (so screen readers hear "qué incluye"), the full stop hidden
    from screen readers.
@@ -943,8 +782,6 @@
 .includes-more,
 .proof,
 .faq {
-  position: relative;
-  z-index: 3;
   background: var(--ink);
   color: var(--accent);
   font-family: var(--font-grotesk);
@@ -986,15 +823,14 @@
   line-height: 1.5;
 }
 
-/* ---- "qué incluye", first screen (pinned): title; lead | three points.
+/* ---- "qué incluye", first part: title; lead | three points.
    Desktop:  head            Phone:  head
              lead | points           lead
                                      points                          ---- */
 .includes {
-  min-height: var(--screen);
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
-  grid-template-rows: minmax(30svh, auto) minmax(0, 1fr);
+  grid-template-rows: auto auto;
   grid-template-areas:
     "head head"
     "lead points";
@@ -1136,7 +972,7 @@
 .proof__photo {
   position: relative;
   margin: 0;
-  min-height: min(40vw, var(--screen) - 48px); /* about 3:2 on the 3fr column */
+  min-height: min(40vw, 100svh - 48px); /* about 3:2 on the 3fr column */
   overflow: hidden;
 }
 .proof__photo img {
@@ -1189,7 +1025,8 @@
 }
 
 /* ---- "preguntas frecuentes": one ruled row per question, the browser's
-   own open/close (<details>); a thin + that turns into a − when open ---- */
+   own open/close (<details>); a thin + that turns into a − when open (at
+   once, no animation) ---- */
 .faq-item { border-bottom: 1px solid var(--rule); }
 .faq-item:last-child { border-bottom: 0; }
 .faq-q {
@@ -1233,10 +1070,7 @@
   margin-top: -.75px;
   background: currentColor;
 }
-.faq-sign::after {
-  transform: rotate(90deg);
-  transition: transform .25s ease;
-}
+.faq-sign::after { transform: rotate(90deg); }
 .faq-item[open] .faq-sign::after { transform: none; }
 .faq-a {
   margin: 0;
@@ -1251,62 +1085,14 @@
 .call-bar { display: none; }
 
 /* ------------------------------------------------------------------
-   Entrance: words rise in, photo opens from its centre
-------------------------------------------------------------------- */
-@media (prefers-reduced-motion: reduce) {
-  .menu-item,
-  .menu-btn__icon,
-  .call-btn,
-  .faq-sign::after,
-  .call-bar,
-  .call-bar.is-shown { transition: none; }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .hero__words .line {
-    animation: rise 1.1s cubic-bezier(.2, .7, .1, 1) both;
-  }
-  .hero__words .line:nth-child(2) { animation-delay: .08s; }
-  .hero__words .line:nth-child(3) { animation-delay: .16s; }
-
-  .hero__media {
-    animation: open 1.3s cubic-bezier(.7, 0, .2, 1) .35s both;
-  }
-  .hero__words--over {
-    animation: fade-in .6s ease .9s both;
-  }
-  /* the arrow appears after the photo has opened, then nudges down gently */
-  .hero__scroll {
-    animation:
-      fade-in .6s ease 1.5s both,
-      nudge 2.4s ease-in-out 2.1s infinite;
-  }
-}
-
-@keyframes rise {
-  from { opacity: 0; transform: translateY(.35em); }
-  to   { opacity: 1; transform: none; }
-}
-@keyframes open {
-  from { clip-path: inset(50% 50% 50% 50%); }
-  to   { clip-path: inset(0 0 0 0); }
-}
-@keyframes fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-@keyframes nudge {
-  0%, 100% { transform: none; }
-  50%      { transform: translateY(8px); }
-}
-
-/* ------------------------------------------------------------------
    Phone
 ------------------------------------------------------------------- */
 @media (max-width: 700px) {
+  /* one screen above the call bar: the title, the text, then the photo in
+     the height that is left (never less than a quarter of the screen) */
   .intro {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto auto minmax(60svh, auto);
+    grid-template-rows: auto auto minmax(25svh, 1fr);
   }
   /* the title cell only as tall as "yo soy tu / ruta." (no empty band above) */
   .intro__head { padding-top: clamp(28px, 5svh, 44px); }
@@ -1326,7 +1112,7 @@
     height: 67.2px;
   }
 
-  /* Mi historia on a phone: a shorter pinned head.
+  /* Mi historia on a phone: a shorter head.
      First layout: bio, photo, then antes.  Second: photo, después. */
   .story { --story-head: clamp(88px, 14svh, 120px); }
   .story__head .display { font-size: clamp(28px, 9vw, 40px); }
@@ -1392,28 +1178,11 @@
     border-top: 1px solid var(--rule);
     aspect-ratio: 16 / 10;
   }
-  /* staged: when the row is short, the checklist gives way first, then the
-     intro (each cut by its fade); the photo takes whatever is left */
-  /* minimised on a phone: title, then the "resultado" box under it, tight */
-  .phases.is-staged .phase__main {
-    flex: 0 1 auto;
-    --fade: 12px;
-    padding-bottom: calc(16px - var(--k, 0) * 6px);
-  }
-  .phases.is-staged .phase__detail {
-    flex: 0 100 auto;
-    --fade: 12px;
-    padding-bottom: calc(20px - var(--k, 0) * 6px);
-  }
-  .phases.is-staged .phase__result {
-    padding: calc(12px - var(--k, 0) * 4px) calc(14px - var(--k, 0) * 2px);
-  }
-  .phases.is-staged .phase__media { flex: 1 1 0; aspect-ratio: auto; opacity: calc(1 - var(--k, 0)); }
   .menu-btn { padding: 8px 12px; }
 
   /* The call bar: 10px + a 48px button + 10px, plus the iPhone's bottom
-     safe area. The pinned screens after the first hero are this much
-     shorter (--screen), so the bar sits under them. */
+     safe area. The screen-sized frames are this much shorter (--screen),
+     so the bar sits under them. */
   .page {
     --bar-h: calc(68px + env(safe-area-inset-bottom, 0px));
     --screen: calc(100svh - var(--bar-h));
@@ -1429,20 +1198,12 @@
     padding: 10px var(--gutter) calc(10px + env(safe-area-inset-bottom, 0px));
     background: var(--ink);
     border-top: 1px solid var(--rule);
-    transform: translateY(100%);
     visibility: hidden;         /* hidden: Tab and screen readers skip it */
-    transition: transform .3s ease, visibility 0s linear .3s;
   }
-  .call-bar.is-shown {
-    transform: none;
-    visibility: visible;
-    transition: transform .3s ease, visibility 0s;
-  }
+  /* shown and hidden at once, no animation */
+  .call-bar.is-shown { visibility: visible; }
   /* hidden while the home menu is open */
-  .page:has(.menu-btn[aria-expanded="true"]) .call-bar {
-    transform: translateY(100%);
-    visibility: hidden;
-  }
+  .page:has(.menu-btn[aria-expanded="true"]) .call-bar { visibility: hidden; }
   .call-bar-btn {
     display: flex;
     width: 100%;
@@ -1451,8 +1212,7 @@
     font-size: 14px;
   }
 
-  /* After the phases, on a phone: every cell stacked. The first screen of
-     "qué incluye" fits a 375 x 667 phone minus the bar. */
+  /* After the phases, on a phone: every cell stacked. */
   .sec-head { padding: 24px var(--gutter) 12px; }
   .sec-title .display { font-size: clamp(36px, 11.5vw, 56px); }
   .point-title { font-size: 19px; }
@@ -1461,7 +1221,7 @@
 
   .includes {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto auto minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
     grid-template-areas:
       "head"
       "lead"
@@ -1509,11 +1269,13 @@
   .testimony .proof__text .quote p { font-size: clamp(24px, 7vw, 30px); line-height: 1.15; }
   .quote-name { font-size: 18px; }
   /* never taller than the screen above the bar (a phone turned sideways) */
-  .proof__photo { min-height: 0; aspect-ratio: 3 / 2; max-height: calc(var(--screen) - 24px); }
+  .proof__photo { min-height: 0; aspect-ratio: 3 / 2; max-height: calc(100svh - var(--bar-h) - 24px); }
 
   .faq-q { min-height: 56px; padding: 16px var(--gutter); font-size: 17px; }
   /* the last section: room at the end for the call bar, so the last
-     question can be scrolled above it */
-  .faq { padding-bottom: var(--bar-h); }
+     question can be scrolled above it; and at least one screen tall, so
+     the closing slide above it can leave the screen and the bar shows
+     again on the FAQ (callBar.ts) */
+  .faq { min-height: 100svh; padding-bottom: var(--bar-h); }
   .faq-a { font-size: 16px; }
 }
