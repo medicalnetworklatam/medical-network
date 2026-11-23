@@ -19,6 +19,8 @@ Last updated: 23 Nov 2026 (late night). This is the source of truth for the proj
 
 Ivan's decision (23 Nov 2026): every animation on the home page goes, and scrolling it should be as easy as possible. This replaces "same text, order and scroll motion" (17 Nov evening) and "the look and the motion style stay" (23 Nov night). Text, order, colours, fonts, photos and the Calendly buttons stay as built in PR #38. The state map keeps its animations (it isn't the home page).
 
+Built in PR #40, waiting for Ivan's check on the preview.
+
 **To build** (details proposed by Claude, to confirm on the preview):
 - **Plain scrolling only.** Nothing is pinned, nothing moves with the scroll, no rests (scroll that changes nothing), no snapping, no smooth-scroll code. Each section is as tall as its content, one after the other, in the same order: hero → "yo soy tu / ruta." → "mi historia." → second hero → "las 3 / fases." → qué incluye → evidencia real → closing slide → preguntas frecuentes.
 - **The first hero** stays one screen tall (photo whole, design rule 1). Its arrow becomes a plain link that jumps straight to "yo soy tu / ruta.".
