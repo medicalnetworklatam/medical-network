@@ -144,7 +144,7 @@
 ------------------------------------------------------------------- */
 .hero-track { position: relative; }
 .hero-track__grow { height: 140svh; } /* scroll spent growing the circle */
-.hero-track__rest { height: 35svh; }  /* then still, fully open, before "mi historia" (50 -> 35svh, 23 Nov 2026) */
+.hero-track__rest { height: 24.5svh; } /* then still, fully open, before "mi historia" (50 -> 35 -> 24.5svh, 23 Nov 2026) */
 
 .hero {
   position: sticky;
@@ -1091,6 +1091,7 @@
   border-bottom: 1px solid var(--rule);
 }
 .bonus:nth-child(odd) { border-right: 1px solid var(--rule); }
+.nowrap { white-space: nowrap; } /* "A1–B1" never splits at its dash */
 /* the same four colours as the first screen's cells (DECISIONS.md, 23 Nov 2026) */
 .bonus:nth-child(1) { background: var(--para-ti); color: var(--on-para-ti); }
 .bonus:nth-child(2) { background: var(--dato); color: var(--on-dato); }
@@ -1484,9 +1485,16 @@
     font-size: 38px;
   }
   .platform p { padding: 18px var(--gutter) 28px; font-size: 17px; }
-  .bonuses { grid-template-columns: minmax(0, 1fr); }
-  .bonus { padding: 22px var(--gutter); }
-  .bonus:nth-child(odd) { border-right: 0; }
+  /* the bonuses stay a 2 x 2 grid on a phone (23 Nov 2026): narrow cells,
+     so long words (Fachsprachprüfung) may break instead of overflowing */
+  .bonus { gap: 6px; padding: 18px 14px; }
+  .bonus .point-title { font-size: 17px; }
+  .bonus .point-title,
+  .bonus p {
+    overflow-wrap: anywhere;
+    -webkit-hyphens: auto;
+            hyphens: auto;
+  }
   .includes__total { padding: 24px var(--gutter); font-size: 24px; }
 
   .proof__row,

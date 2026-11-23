@@ -36,7 +36,9 @@ Ivan's decisions after the home page analysis (project doc `docs/home-page-analy
   - **The Widerruf answer is included as written,** by Ivan's choice (23 Nov 2026). This is an exception to "legal texts come from the law firm" (15 Nov): see "For the law firm". It names the Widerrufsbelehrung, which doesn't exist on the site yet, so it has no link until it does.
 - **Shorter pauses** (30 % less): the "mi historia" rests (`--story-hold`) 50 → 35svh each; the rest before the phases 75 → 52.5svh (push spacer 160 → 137.5svh); the rest on the finished phases before the circle closes 75 → 52.5svh (closing spacer 195 → 172.5svh). The circle's own growth, the hero's rest and the rests between phases stay.
 - **After the first preview** (Ivan, 23 Nov 2026):
-  - The rest on "yo soy tu / ruta." before "mi historia" is 30 % shorter: 50 → 35svh (`.hero-track__rest`).
+  - The rest on "yo soy tu / ruta." before "mi historia" is 30 % shorter, twice: 50 → 35 → 24.5svh (`.hero-track__rest`).
+  - The second hero's second sentence says "Por eso creé / Ruta Approbation" (without "la").
+  - The four bonus cells stay a 2 × 2 grid on phones too.
   - Andrea's WhatsApp screenshot is removed; her name and words stay.
   - The closing slide ("Tu homologación / necesita / una ruta") moves before the FAQ, which becomes the last section. The phone bar hides only while the closing slide is on screen and shows again on the FAQ, which ends with room for it.
   - The four bonus cells use the same colours as the first "qué incluye" screen: Para ti, Dato, Hecho, Para todos.

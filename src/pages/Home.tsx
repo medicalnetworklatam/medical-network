@@ -218,7 +218,7 @@ export default function Home() {
         <div className={styles.pushTrack}>
           <section
             className={`${styles.hero} ${styles.heroTwo}`}
-            aria-label="Yo también empecé confundido. Por eso creé la Ruta Approbation"
+            aria-label="Yo también empecé confundido. Por eso creé Ruta Approbation"
           >
             <div className={`${styles.heroStage} ${styles.heroStageA}`} data-fit-h="0.5">
               <h2 className={styles.heroWords}>
@@ -229,7 +229,7 @@ export default function Home() {
             <div className={`${styles.heroStage} ${styles.heroStageB}`} data-fit-h="0.5">
               <p className={styles.heroWords}>
                 <Line>Por eso creé</Line>
-                <Line>la Ruta <span lang="de">Approbation</span></Line>
+                <Line>Ruta <span lang="de">Approbation</span></Line>
               </p>
             </div>
           </section>
@@ -389,7 +389,7 @@ export default function Home() {
               <p>Tiempos y costos aproximados del proceso.</p>
             </li>
             <li className={styles.bonus}>
-              <h4 className={styles.pointTitle}>Guía de alemán A1–B1</h4>
+              <h4 className={styles.pointTitle}>Guía de alemán <span className={styles.nowrap}>A1–B1</span></h4>
               <p>Ejercicios y prompts de IA.</p>
             </li>
             <li className={styles.bonus}>
