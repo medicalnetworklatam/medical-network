@@ -407,8 +407,8 @@ export default function Home() {
           <p className={styles.includesTotal}>Todo incluido: pago único 3.500&nbsp;€.</p>
         </div>
 
-        {/* Evidencia real: the owner's own process, and Andrea's words (her
-            consent: DECISIONS.md, 23 Nov 2026). The photo sits in a frame
+        {/* Evidencia real: Andrea's words (her consent: DECISIONS.md, 23 Nov
+            2026), then the owner's own process. The photo sits in a frame
             that always fits on the screen. */}
         <section className={styles.proof} aria-labelledby="proof-title">
           <div className={styles.secHead}>
@@ -416,6 +416,22 @@ export default function Home() {
               <span className={styles.label}>evidencia</span>{' '}
               <span className={styles.display}>real<span aria-hidden="true">.</span></span>
             </h2>
+          </div>
+
+          {/* Andrea first: one big quote in a dark cell, only her last
+              sentence, word for word (DECISIONS.md, 23 Nov 2026). */}
+          <div className={`${styles.proofRow} ${styles.testimony}`}>
+            <figure className={styles.proofText}>
+              <blockquote className={styles.quote}>
+                <p>“Le recomendaría la asesoría con Iván a todos los médicos latinos que ya
+                están seguros de querer venir a Alemania, para que no se equivoquen en el
+                camino.”</p>
+              </blockquote>
+              <figcaption className={styles.quoteBy}>
+                <span className={styles.quoteName}>Andrea</span>
+                <span className={styles.label}>Cliente actual</span>
+              </figcaption>
+            </figure>
           </div>
 
           <div className={styles.proofRow}>
@@ -435,24 +451,6 @@ export default function Home() {
             </figure>
           </div>
 
-          <div className={`${styles.proofRow} ${styles.testimony}`}>
-            <figure className={styles.proofText}>
-              <p className={styles.label}>testimonio</p>
-              <blockquote className={styles.quote}>
-                <p>Lo que más me ha ayudado hasta el momento es que puedo resolver mis
-                dudas al momento ya que la comunicación a través de WhatsApp es rápida y
-                eficaz y me siento confiada en qué estoy dando los pasos correctos.</p>
-                <p>He logrado entender que se necesita mucha paciencia en el camino, que
-                la burocracia alemana puede llegar a ser tediosa o frustrante para quienes
-                somos nuevos. Que se puede avanzar solo pero también te puedes
-                equivocar..</p>
-                <p>Le recomendaría la asesoría con Iván a todos los médicos latinos que ya
-                están seguros de querer venir a Alemania, para que no se equivoquen en el
-                camino.</p>
-              </blockquote>
-              <figcaption className={styles.quoteName}>Andrea</figcaption>
-            </figure>
-          </div>
         </section>
 
         {/* Closing call to action, in the heroes' font: light background, dark

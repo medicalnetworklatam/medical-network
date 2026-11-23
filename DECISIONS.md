@@ -43,6 +43,7 @@ Ivan's decisions after the home page analysis (project doc `docs/home-page-analy
   - Phase 02 ("documentación") gets more contrast: its tone goes from 55 % to 75 % cream (black text 4.7:1 → 9.0:1).
   - **Home header: only "Menú"** at the top right, logged in or not. "Entrar", or "Mi área" and "Cerrar sesión", are inside the menu. This replaces the header chips of 17 Nov (evening) and 18 Nov.
   - The photo captions "Mis inicios" and "Hoy, especialista" are on Para todos (orange).
+  - **Andrea's testimonial comes first** in "evidencia real", before the owner's own process, as one big quote in a dark cell: only her last sentence ("Le recomendaría la asesoría con Iván…"), word for word, signed "Andrea" with the label "Cliente actual". Her first two paragraphs are no longer shown.
 - **Not chosen for now** (open): a "who it's for" line on the first screen, collapsed phases showing their result, a still version for reduced motion, a smaller hero photo, and a footer with Impressum and Datenschutz (waits for the law firm).
 
 ## Changes on 22 Nov 2026 (evening): the diagnostic is the owner's sales tool

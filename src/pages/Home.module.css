@@ -1146,8 +1146,17 @@
   height: 100%;
   object-fit: cover;
 }
-.testimony { grid-template-columns: minmax(0, 1fr); }
-.testimony .proof__text { border-right: 0; }
+.testimony {
+  --rule: color-mix(in srgb, var(--ink) 28%, transparent); /* lines on a dark cell */
+  grid-template-columns: minmax(0, 1fr);
+  background: var(--accent);
+  color: var(--ink);
+}
+.testimony .proof__text {
+  gap: clamp(20px, 2.6vw, 40px);
+  padding: clamp(44px, 7vw, 120px) var(--gutter);
+  border-right: 0;
+}
 .quote {
   display: flex;
   flex-direction: column;
@@ -1158,15 +1167,23 @@
   max-width: 46ch;
   font-size: clamp(17px, 1.3vw, 22px);
 }
-/* Andrea's words alone on their row (no screenshot since 23 Nov 2026):
-   set larger and wider, so the row doesn't look half empty */
+/* Andrea's sentence: one big quote, set like "después" (bold, large) */
 .testimony .proof__text .quote p {
-  max-width: 52ch;
-  font-size: clamp(18px, 1.9vw, 30px);
-  line-height: 1.5;
+  max-width: 28ch;
+  font-size: clamp(28px, 3.6vw, 60px);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -.025em;
+  text-wrap: balance;
+}
+/* "Andrea", with "Cliente actual" under it */
+.quote-by {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 .quote-name {
-  font-size: clamp(17px, 1.3vw, 22px);
+  font-size: clamp(18px, 1.6vw, 26px);
   font-weight: 700;
 }
 
@@ -1480,9 +1497,9 @@
     border-bottom: 1px solid var(--rule);
   }
   .proof__text p:not(.label),
-  .proof__text .quote p,
-  .testimony .proof__text .quote p { font-size: 16px; line-height: 1.6; }
-  .quote-name { font-size: 16px; }
+  .proof__text .quote p { font-size: 16px; line-height: 1.6; }
+  .testimony .proof__text .quote p { font-size: clamp(24px, 7vw, 30px); line-height: 1.15; }
+  .quote-name { font-size: 18px; }
   /* never taller than the screen above the bar (a phone turned sideways) */
   .proof__photo { min-height: 0; aspect-ratio: 3 / 2; max-height: calc(var(--screen) - 24px); }
 
