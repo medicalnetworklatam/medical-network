@@ -477,23 +477,17 @@
 @media (min-width: 768px) { .hero { min-height: 65vh; } }
 @media (min-width: 1024px) { .hero { min-height: 70vh; padding-top: 128px; padding-bottom: 0; } }
 
-/* Ivan's dark teal background with its light streak, behind everything at
-   80% over the teal (the spec's value; the image itself is dark, so the
-   cream text keeps at least 4.5:1) */
+/* Ivan's dark grain over the teal, behind everything. It has no light
+   parts, so it only darkens: the cream text keeps its contrast. */
 .hero-bg {
   position: absolute;
   z-index: -1;
-  top: 0;
-  left: -25%;
-  width: 150%;
+  inset: 0;
+  width: 100%;
   max-width: none;
   height: 100%;
   object-fit: cover;
-  object-position: left center;
   opacity: .8;
-}
-@media (min-width: 768px) {
-  .hero-bg { left: 0; width: 100%; }
 }
 .hero::before { z-index: 0; }
 .hero::after { z-index: 0; }
@@ -1010,6 +1004,22 @@
 ------------------------------------------------------------------- */
 .price {
   z-index: 2; /* its photo overlaps the next section */
+}
+/* Ivan's dark teal streak, desktop only (with the photo on the left, its
+   light line runs behind the photo, never behind the text) */
+.price-bg { display: none; }
+@media (min-width: 1024px) {
+  .price-bg {
+    display: block;
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    object-fit: cover;
+    opacity: .8;
+  }
 }
 .price-grid {
   display: flex;

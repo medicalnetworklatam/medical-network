@@ -19,7 +19,7 @@ import lagoon from '../assets/lagoon.jpg'
 import heroHouse from '../assets/hero-house.jpg'
 import ejecucion from '../assets/ejecucion.jpg'
 // Ivan's background images (24 Nov 2026)
-import heroStreak from '../assets/home-hero-streak.webp'
+import streak from '../assets/home-streak.webp'
 import portraitGlow from '../assets/home-portrait-glow.webp'
 import grain from '../assets/home-grain.webp'
 import styles from './Home.module.css'
@@ -88,7 +88,7 @@ export default function Home() {
         {/* 1. Hero: the headline (one h1 in two parts), the button, the
             portrait (a placeholder until the owner's cut-out portrait) */}
         <section className={`${styles.dark} ${styles.hero}`} ref={heroRef} aria-labelledby="hero-title">
-          <img className={styles.heroBg} src={heroStreak} alt="" width={1366} height={768} />
+          <img className={styles.heroBg} src={grain} alt="" width={2000} height={1318} />
           <div className={`${styles.container} ${styles.heroGrid}`}>
             <div className={styles.heroText}>
               <h1 className={styles.heroTitle} id="hero-title">
@@ -224,6 +224,9 @@ export default function Home() {
         {/* 7. Ruta Approbation: the price. The phone's bar hides while it
             is on screen (it has its own button). */}
         <section className={`${styles.dark} ${styles.price}`} id="ruta-approbation" ref={priceRef} aria-labelledby="ruta-approbation-title">
+          {/* the light streak, desktop only: it runs behind the photo on the
+              left, never behind the text on the right */}
+          <img className={styles.priceBg} src={streak} alt="" width={1366} height={768} loading="lazy" />
           <div className={`${styles.container} ${styles.priceGrid}`}>
             <figure className={styles.pricePhoto}>
               <Photo name="ejecucion" alt="" />
