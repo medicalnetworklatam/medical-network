@@ -192,6 +192,15 @@
   opacity: .3;
   pointer-events: none;
 }
+/* a faint mint "X" of light rays behind the content (Ivan's image,
+   mostly see-through: it only lightens, so the text gains contrast) */
+.light::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("../assets/home-light-rays.webp") center / cover no-repeat;
+  pointer-events: none;
+}
 
 /* Highlighted words: cream semibold on dark, the darker muted teal on light */
 .hl { font-weight: 600; color: var(--home-cream); }
@@ -468,8 +477,9 @@
 @media (min-width: 768px) { .hero { min-height: 65vh; } }
 @media (min-width: 1024px) { .hero { min-height: 70vh; padding-top: 128px; padding-bottom: 0; } }
 
-/* A large faded copy of a photo behind everything, blended into the teal
-   (about 20%) so the cream text keeps at least 4.5:1 */
+/* Ivan's dark teal background with its light streak, behind everything at
+   80% over the teal (the spec's value; the image itself is dark, so the
+   cream text keeps at least 4.5:1) */
 .hero-bg {
   position: absolute;
   z-index: -1;
@@ -479,17 +489,11 @@
   max-width: none;
   height: 100%;
   object-fit: cover;
-  opacity: .2;
+  object-position: left center;
+  opacity: .8;
 }
 @media (min-width: 768px) {
-  .hero-bg {
-    left: auto;
-    right: -10%;
-    width: 80%;
-    /* its left edge fades into the teal */
-    -webkit-mask-image: linear-gradient(to right, transparent, black 35%);
-    mask-image: linear-gradient(to right, transparent, black 35%);
-  }
+  .hero-bg { left: 0; width: 100%; }
 }
 .hero::before { z-index: 0; }
 .hero::after { z-index: 0; }
@@ -569,7 +573,18 @@
   max-width: 100%;
   align-self: center;
 }
-.hero-portrait img {
+.hero-glow {
+  position: absolute;
+  z-index: -1;
+  left: 50%;
+  bottom: 0;
+  width: 170%;
+  max-width: none;
+  height: auto;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+.hero-photo {
   width: 100%;
   height: auto;
   border-radius: 24px 24px 0 0;

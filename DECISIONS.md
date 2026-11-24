@@ -51,6 +51,7 @@ For the home page only, this replaces: Flatline and the five colours with a mean
 - On this page the phone layout and the bottom bar start below 768 px (the site's usual limit is 700 px). The header pill is 44 px tall.
 - Headings use sentence capitals; the old lowercase titles and hidden full stops go. One h1; h2 per section.
 - `CLAUDE.md` and `design-reference/README.md` get short notes about the new home page.
+- **Background images** (Ivan's own, 24 Nov 2026, re-saved without hidden data in `src/assets/home-*.webp`): the dark teal streak behind the hero (instead of the faded house photo, at 80 % over the teal); a teal glow behind the hero portrait (seen once the owner's cut-out portrait is in); a faint mint "X" of light rays on the light sections; a dark grain under "¿Ya eres cliente?" (instead of the building photo).
 
 **Waiting for the owner:** photos (a portrait with the background removed for the hero, and one per milestone of mi historia); the strip's wording; his OK on the new sentences about himself. Until then the build uses the photos already in the site.
 

@@ -18,6 +18,10 @@ import edificio from '../assets/edificio.jpg'
 import lagoon from '../assets/lagoon.jpg'
 import heroHouse from '../assets/hero-house.jpg'
 import ejecucion from '../assets/ejecucion.jpg'
+// Ivan's background images (24 Nov 2026)
+import heroStreak from '../assets/home-hero-streak.webp'
+import portraitGlow from '../assets/home-portrait-glow.webp'
+import grain from '../assets/home-grain.webp'
 import styles from './Home.module.css'
 
 /* Home page (/), rebuilt on 24 Nov 2026 from Ivan's own landing design
@@ -84,7 +88,7 @@ export default function Home() {
         {/* 1. Hero: the headline (one h1 in two parts), the button, the
             portrait (a placeholder until the owner's cut-out portrait) */}
         <section className={`${styles.dark} ${styles.hero}`} ref={heroRef} aria-labelledby="hero-title">
-          <img className={styles.heroBg} src={heroHouse} alt="" width={2000} height={1341} />
+          <img className={styles.heroBg} src={heroStreak} alt="" width={1366} height={768} />
           <div className={`${styles.container} ${styles.heroGrid}`}>
             <div className={styles.heroText}>
               <h1 className={styles.heroTitle} id="hero-title">
@@ -97,7 +101,9 @@ export default function Home() {
               </div>
             </div>
             <figure className={styles.heroPortrait}>
-              <Photo name="hoy" alt={hero.portraitAlt} eager />
+              {/* a soft teal glow behind the portrait */}
+              <img className={styles.heroGlow} src={portraitGlow} alt="" width={1366} height={900} />
+              <Photo name="hoy" alt={hero.portraitAlt} eager className={styles.heroPhoto} />
             </figure>
           </div>
         </section>
@@ -262,7 +268,7 @@ export default function Home() {
 
         {/* 9. ¿Ya eres cliente?: the way into the client area */}
         <section className={styles.client} aria-labelledby="cliente-title">
-          <img className={styles.clientBg} src={edificio} alt="" width={1200} height={805} loading="lazy" />
+          <img className={styles.clientBg} src={grain} alt="" width={2000} height={1318} loading="lazy" />
           <div className={`${styles.container} ${styles.clientInner}`} data-fade>
             <span className={styles.clientIcon} aria-hidden="true">
               <svg viewBox="0 0 24 24" width="32" height="32" focusable="false">
