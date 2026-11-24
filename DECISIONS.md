@@ -55,6 +55,8 @@ For the home page only, this replaces: Flatline and the five colours with a mean
 
 **Waiting for the owner:** photos (a portrait with the background removed for the hero, and one per milestone of mi historia); the strip's wording; his OK on the new sentences about himself. Until then the build uses the photos already in the site.
 
+**The owner's photos arrived** (24 Nov 2026, sent by Ivan; re-saved without hidden data in `src/assets/home-*.webp`): his cut-out portrait at a desk (blue scrubs) for the hero and, on desktop, the price section; holding his Approbationsurkunde of 8 June 2017 (name covered) for the 2017 card; in front of the Ärztekammer Westfalen-Lippe with a certificate for "Después"; smiling in a white coat for "Y ahora" (Claude chose the places, to confirm on the preview). Still placeholders: the three phase cards.
+
 ## Changes on 23 Nov 2026 (late night): no animations on the home page
 
 **Replaced on 24 Nov 2026 before it was built** (see above). Kept as a record.

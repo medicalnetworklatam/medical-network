@@ -520,7 +520,7 @@
     padding-bottom: 80px;
   }
   .hero-text .call { align-items: flex-start; }
-  .hero-portrait { grid-column: span 5; justify-self: center; }
+  .hero-portrait { grid-column: span 5; justify-self: center; align-self: end; }
 }
 @media (min-width: 1024px) {
   .hero-grid { min-height: calc(70vh - 128px); }
@@ -584,12 +584,19 @@
   transform: translateX(-50%);
   pointer-events: none;
 }
+/* the owner's cut-out portrait: the desk's straight sides and bottom fade
+   softly into the teal (two fades, kept where both are opaque) */
 .hero-photo {
   width: 100%;
   height: auto;
-  border-radius: 24px 24px 0 0;
-  -webkit-mask-image: linear-gradient(to bottom, black 75%, transparent);
-  mask-image: linear-gradient(to bottom, black 75%, transparent);
+  -webkit-mask-image:
+    linear-gradient(to bottom, black 72%, transparent),
+    linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to bottom, black 72%, transparent),
+    linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  mask-composite: intersect;
 }
 
 /* ------------------------------------------------------------------
@@ -1052,13 +1059,19 @@
     align-self: end;
     margin-bottom: -224px; /* the section's 128px padding + 96px into the next */
   }
+  /* the owner's cut-out portrait again; its desk fades out at the bottom */
   .price-photo img {
     width: 100%;
-    max-height: 640px;
+    max-width: 500px;
     height: auto;
-    object-fit: cover;
-    border-radius: 24px;
-    box-shadow: var(--home-shadow-big);
+    -webkit-mask-image:
+      linear-gradient(to bottom, black 72%, transparent),
+      linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+    -webkit-mask-composite: source-in;
+    mask-image:
+      linear-gradient(to bottom, black 72%, transparent),
+      linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+    mask-composite: intersect;
   }
   .price-text { align-items: flex-end; }
   .price-text .call { align-items: flex-end; }

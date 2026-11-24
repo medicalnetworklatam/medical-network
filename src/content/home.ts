@@ -23,10 +23,13 @@
 
 /** The site's own photos the page may use (mapped to files in Home.tsx) */
 export type HomePhoto =
+  | 'portrait'
+  | 'approbation'
+  | 'aerztekammer'
+  | 'bataBlanca'
   | 'antes'
   | 'hoy'
   | 'quirofano'
-  | 'edificio'
   | 'lagoon'
   | 'heroHouse'
   | 'ejecucion'
@@ -63,9 +66,8 @@ export const home = {
     titleRest:
       'Aquí aprendes a hacerlo con **Ruta *Approbation***, un plan claro que convierte la burocracia alemana en pasos concretos.',
     callNote: 'Dura unos 30 minutos. Sin costo.', // [igual]
-    /** The portrait (a placeholder, hoy.jpg, until the owner's cut-out
-        portrait): the same words as on the old page [igual] */
-    portraitAlt: 'Iván hoy, en quirófano con gorro y mascarilla',
+    /** The owner's cut-out portrait (24 Nov 2026) */
+    portraitAlt: 'Iván Bruckner sentado en su escritorio, con uniforme médico azul',
   },
 
   strip: {
@@ -110,13 +112,13 @@ export const home = {
     subtitle: 'De recién llegado a especialista',
     /** Screen readers: the list of year cards */
     label: 'Mi camino',
-    // [dueño] every card. Photos marked "placeholder" wait for the owner's.
+    // [dueño] every card. The owner's own photos (24 Nov 2026).
     cards: [
       { year: '2015', text: 'Me gradúo de médico y llego a Alemania', photo: 'antes', alt: 'Iván de joven, con una camiseta de rayas verdes' },
-      { year: '2017', text: 'Obtengo la *Approbation*', photo: 'edificio', alt: '' }, // placeholder
-      { year: 'Después', text: 'Hago mi especialidad', photo: 'lagoon', alt: '' }, // placeholder
+      { year: '2017', text: 'Obtengo la *Approbation*', photo: 'approbation', alt: 'Iván con su Approbationsurkunde, fechada el 8 de junio de 2017' },
+      { year: 'Después', text: 'Hago mi especialidad', photo: 'aerztekammer', alt: 'Iván con un certificado frente a la Ärztekammer Westfalen-Lippe' },
       { year: 'Hoy', text: 'Trabajo como especialista en un hospital alemán', photo: 'hoy', alt: 'Iván hoy, en quirófano con gorro y mascarilla' },
-      { year: 'Y ahora', text: 'Creo Ruta *Approbation* para acompañar a otros médicos', photo: 'heroHouse', alt: '' }, // placeholder
+      { year: 'Y ahora', text: 'Creo Ruta *Approbation* para acompañar a otros médicos', photo: 'bataBlanca', alt: 'Iván sonriendo, con bata blanca' },
     ] satisfies { year: string; text: string; photo: HomePhoto; alt: string }[],
     // [dueño]
     paragraph:
