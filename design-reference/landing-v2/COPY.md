@@ -25,7 +25,7 @@ HEADER
 3. HISTORIAS (carousel)
 - h2: Historias de **homologación**
 - Card 1 (no photo: a large quotation mark): “Le recomendaría la asesoría con Iván a todos los médicos latinos que ya están seguros de querer venir a Alemania, para que no se equivoquen en el camino.” / Andrea / Cliente actual [igual]
-- Card 2 (photo prueba-quirofano.webp, alt [igual]): “Yo también empecé confundido. Por eso creé Ruta *Approbation*.” / Iván Bruckner / Mi propio proceso: de mi llegada en 2015 a la *Approbation* en 2017, y después la especialidad.
+- Card 2 (the owner's operating-room selfie): “Yo también empecé confundido. Por eso creé Ruta *Approbation*.” / Iván Bruckner / Mi propio proceso: de mi llegada en 2015 a la *Approbation* en 2017, y después la especialidad.
 - No button under the dots.
 
 4. QUIÉN SOY (year cards)
@@ -34,9 +34,8 @@ HEADER
 - Cards [dueño]:
   - 2015: Me gradúo de médico y llego a Alemania (antes.webp, alt [igual])
   - 2017: Obtengo la *Approbation* (placeholder photo)
-  - Después: Hago mi especialidad (placeholder photo)
+  - 2025: Hago mi especialidad
   - Hoy: Trabajo como especialista en un hospital alemán (hoy.jpg, alt [igual])
-  - Y ahora: Creo Ruta *Approbation* para acompañar a otros médicos (placeholder photo)
 - Paragraph [dueño]: **Soy Iván Bruckner Calahorrano**, médico ecuatoriano. Viví en carne propia **la burocracia alemana**: me gradué en 2015, ese mismo año llegué a Alemania y en 2017 obtuve la *Approbation*. Hoy trabajo como especialista en un hospital alemán y te enseño **la ruta que a mí me faltó al empezar**.
 
 5. CÓMO FUNCIONA (carousel of 3 dark cards)

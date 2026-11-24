@@ -13,15 +13,15 @@ import { usePageTitle } from '../lib/usePageTitle.ts'
 import { home, sections, type HomePhoto } from '../content/home.ts'
 import antes from '../assets/antes.webp'
 import hoy from '../assets/hoy.jpg'
-import quirofano from '../assets/prueba-quirofano.webp'
-import lagoon from '../assets/lagoon.jpg'
-import heroHouse from '../assets/hero-house.jpg'
-import ejecucion from '../assets/ejecucion.jpg'
 // the owner's own photos (24 Nov 2026)
 import portrait from '../assets/home-portrait.webp'
 import approbation from '../assets/home-approbation-2017.webp'
 import aerztekammer from '../assets/home-aerztekammer.webp'
-import bataBlanca from '../assets/home-bata-blanca.webp'
+import orSelfie from '../assets/home-quirofano-selfie.webp'
+// the three phases' pictures (24 Nov 2026)
+import fasePlanificacion from '../assets/home-fase-planificacion.webp'
+import faseDocumentacion from '../assets/home-fase-documentacion.webp'
+import faseEjecucion from '../assets/home-fase-ejecucion.webp'
 // Ivan's background images (24 Nov 2026)
 import streak from '../assets/home-streak.webp'
 import portraitGlow from '../assets/home-portrait-glow.webp'
@@ -48,13 +48,12 @@ const PHOTOS: Record<HomePhoto, { src: string; width: number; height: number; po
   // (position: which part of a photo stays in view when a card crops it)
   approbation: { src: approbation, width: 640, height: 1115, position: '50% 35%' },
   aerztekammer: { src: aerztekammer, width: 700, height: 928, position: '69% 50%' },
-  bataBlanca: { src: bataBlanca, width: 640, height: 412, position: '52% 50%' },
   antes: { src: antes, width: 914, height: 816 },
   hoy: { src: hoy, width: 564, height: 776 },
-  quirofano: { src: quirofano, width: 1440, height: 960 },
-  lagoon: { src: lagoon, width: 1600, height: 1081 },
-  heroHouse: { src: heroHouse, width: 2000, height: 1341 },
-  ejecucion: { src: ejecucion, width: 858, height: 929 },
+  orSelfie: { src: orSelfie, width: 800, height: 1067, position: '50% 30%' },
+  fasePlanificacion: { src: fasePlanificacion, width: 800, height: 427 },
+  faseDocumentacion: { src: faseDocumentacion, width: 700, height: 733 },
+  faseEjecucion: { src: faseEjecucion, width: 700, height: 740 },
 }
 
 function Photo({ name, alt, className, eager }: { name: HomePhoto; alt: string; className?: string; eager?: boolean }) {

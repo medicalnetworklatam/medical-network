@@ -26,13 +26,12 @@ export type HomePhoto =
   | 'portrait'
   | 'approbation'
   | 'aerztekammer'
-  | 'bataBlanca'
   | 'antes'
   | 'hoy'
-  | 'quirofano'
-  | 'lagoon'
-  | 'heroHouse'
-  | 'ejecucion'
+  | 'orSelfie'
+  | 'fasePlanificacion'
+  | 'faseDocumentacion'
+  | 'faseEjecucion'
 
 /** The sections the header and footer link to, in the page's order: the
     id is the address after "#" (medicalnetworklatam.com/#historias) */
@@ -101,8 +100,8 @@ export const home = {
         quote: '“Yo también empecé confundido. Por eso creé Ruta *Approbation*.”',
         name: 'Iván Bruckner',
         role: 'Mi propio proceso: de mi llegada en 2015 a la *Approbation* en 2017, y después la especialidad.',
-        photo: 'quirofano',
-        alt: 'Iván con colegas en un quirófano', // [igual]
+        photo: 'orSelfie',
+        alt: 'Iván en el quirófano, con gorro y uniforme verde',
       },
     ] satisfies { quote: string; name: string; role: string; photo: HomePhoto | null; alt: string }[],
   },
@@ -116,9 +115,8 @@ export const home = {
     cards: [
       { year: '2015', text: 'Me gradúo de médico y llego a Alemania', photo: 'antes', alt: 'Iván de joven, con una camiseta de rayas verdes' },
       { year: '2017', text: 'Obtengo la *Approbation*', photo: 'approbation', alt: 'Iván con su Approbationsurkunde, fechada el 8 de junio de 2017' },
-      { year: 'Después', text: 'Hago mi especialidad', photo: 'aerztekammer', alt: 'Iván con un certificado frente a la Ärztekammer Westfalen-Lippe' },
+      { year: '2025', text: 'Hago mi especialidad', photo: 'aerztekammer', alt: 'Iván con un certificado frente a la Ärztekammer Westfalen-Lippe' },
       { year: 'Hoy', text: 'Trabajo como especialista en un hospital alemán', photo: 'hoy', alt: 'Iván hoy, en quirófano con gorro y mascarilla' },
-      { year: 'Y ahora', text: 'Creo Ruta *Approbation* para acompañar a otros médicos', photo: 'bataBlanca', alt: 'Iván sonriendo, con bata blanca' },
     ] satisfies { year: string; text: string; photo: HomePhoto; alt: string }[],
     // [dueño]
     paragraph:
@@ -138,7 +136,7 @@ export const home = {
           'Empezamos por lo importante: tu objetivo. Defino contigo la ruta exacta que debes seguir y el orden de cada paso, para que dejes de adivinar. Tú decides tus prioridades, incluso cómo vas a aprender alemán.',
         items: [],
         result: 'Sabes exactamente por dónde empezar y cuál es tu siguiente paso.',
-        photo: 'lagoon',
+        photo: 'fasePlanificacion',
       },
       {
         num: '02',
@@ -153,7 +151,7 @@ export const home = {
         ],
         result:
           'Dejamos tu documentación lista y en regla, sin meses de espera innecesarios, y te acompañamos en cada paso de tu llegada.',
-        photo: 'heroHouse',
+        photo: 'faseDocumentacion',
       },
       {
         num: '03',
@@ -167,7 +165,7 @@ export const home = {
           'Valorar un posible *Nebenjob* para cubrir parte de tus gastos, según tu situación',
         ],
         result: 'Das cada paso con un plan claro y yo te acompaño hasta tu homologación.',
-        photo: 'ejecucion',
+        photo: 'faseEjecucion',
       },
     ] satisfies { num: string; title: string; intro: string; items: string[]; result: string; photo: HomePhoto }[],
   },
