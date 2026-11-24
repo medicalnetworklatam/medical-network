@@ -505,7 +505,10 @@
   text-align: center;
 }
 .hero-text { padding-bottom: 40px; }
-@media (min-width: 768px) {
+/* Text and portrait side by side from 1024px; below that (phones and an
+   iPad held upright) the portrait sits under the text, where it can be big
+   without touching any words. */
+@media (min-width: 1024px) {
   .hero-grid {
     display: grid;
     grid-template-columns: repeat(12, minmax(0, 1fr));
@@ -520,18 +523,23 @@
     padding-bottom: 80px;
   }
   .hero-text .call { align-items: flex-start; }
-  /* From 768px: about twice the old size (Ivan, 24 Nov 2026). The portrait
-     leaves the grid and grows from the hero's bottom-right corner, at the
-     screen's right edge. --portrait is its width (the photo is square):
-     at most 960px, 58% of the screen width, and the screen's height minus
-     the header, so his head is never cut off. The hero is at least that
-     tall; the text stays in its 7 columns, in front. */
-  .hero { --portrait: min(960px, 58vw, calc(100svh - 112px)); }
+  /* About twice the old size (Ivan, 24 Nov 2026). The portrait leaves the
+     grid and grows from the hero's bottom-right corner, at the screen's
+     right edge. --portrait is its width (the photo is almost square): at
+     most 960px, half the screen width plus 40px (so it never reaches the
+     text column, whose place depends on the screen width), and the
+     screen's height minus the header (so his head is never cut off). The
+     hero is at least that tall; the text stays in its 7 columns, in front.
+     Measured on 28 screen sizes from 1280×720 to 2560×1440: at least 58px
+     between any line of text and him. */
+  .hero { --portrait: min(960px, calc(50vw + 40px), calc(100svh - 128px)); }
   .hero-grid { min-height: var(--portrait); }
   .hero-text { position: relative; z-index: 2; }
 }
-@media (min-width: 1024px) {
-  .hero { --portrait: min(960px, 58vw, calc(100svh - 128px)); }
+/* 1024–1279px: half the screen, his elbow just past the screen's edge
+   (at least 48px between any line of text and him) */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .hero { --portrait: min(50vw, calc(100svh - 128px)); }
 }
 
 .hero-title {
@@ -574,11 +582,12 @@
 
 /* The portrait, at the bottom of the section (a placeholder photo for now;
    the owner's portrait will have its background removed) */
-/* Phones: the whole screen width (Ivan, 24 Nov 2026: "2x bigger") */
+/* Phones and an upright iPad: under the text, up to the whole screen width
+   (Ivan, 24 Nov 2026: "2x bigger") */
 .hero-portrait {
   position: relative;
   z-index: 1;
-  width: min(100vw, 520px);
+  width: min(100vw, 600px);
   max-width: none;
   align-self: center;
 }
@@ -593,29 +602,26 @@
   transform: translateX(-50%);
   pointer-events: none;
 }
-/* the owner's cut-out portrait: the desk's straight sides and bottom fade
-   softly into the teal (two fades, kept where both are opaque) */
+/* the owner's cut-out portrait (cropped to him: his forearms rest on the
+   section's bottom edge, softened by a short fade) */
 .hero-photo {
   width: 100%;
   height: auto;
-  -webkit-mask-image:
-    linear-gradient(to bottom, black 72%, transparent),
-    linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-  -webkit-mask-composite: source-in;
-  mask-image:
-    linear-gradient(to bottom, black 72%, transparent),
-    linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-  mask-composite: intersect;
+  -webkit-mask-image: linear-gradient(to bottom, black 92%, transparent);
+  mask-image: linear-gradient(to bottom, black 92%, transparent);
 }
 
-/* (after the phone rule above, so these win from 768px) */
-@media (min-width: 768px) {
+/* (after the phone rule above, so these win from 1024px) */
+@media (min-width: 1024px) {
   .hero-portrait {
     position: absolute;
     right: calc(-1 * max(0px, (100vw - 1280px) / 2));
     bottom: 0;
     width: var(--portrait);
   }
+}
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .hero-portrait { right: calc(var(--portrait) * -.1); }
 }
 
 /* ------------------------------------------------------------------
@@ -1078,19 +1084,13 @@
     align-self: end;
     margin-bottom: -224px; /* the section's 128px padding + 96px into the next */
   }
-  /* the owner's cut-out portrait again; its desk fades out at the bottom */
+  /* the owner's cut-out portrait again */
   .price-photo img {
     width: 100%;
-    max-width: 500px;
+    max-width: 560px;
     height: auto;
-    -webkit-mask-image:
-      linear-gradient(to bottom, black 72%, transparent),
-      linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-    -webkit-mask-composite: source-in;
-    mask-image:
-      linear-gradient(to bottom, black 72%, transparent),
-      linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-    mask-composite: intersect;
+    -webkit-mask-image: linear-gradient(to bottom, black 92%, transparent);
+    mask-image: linear-gradient(to bottom, black 92%, transparent);
   }
   .price-text { align-items: flex-end; }
   .price-text .call { align-items: flex-end; }

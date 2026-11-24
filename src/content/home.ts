@@ -67,7 +67,7 @@ export const home = {
       'Aquí aprendes a hacerlo con **Ruta *Approbation***, un plan claro que convierte la burocracia alemana en pasos concretos.',
     callNote: 'Dura unos 30 minutos. Sin costo.', // [igual]
     /** The owner's cut-out portrait (24 Nov 2026) */
-    portraitAlt: 'Iván Bruckner sentado en su escritorio, con uniforme médico azul',
+    portraitAlt: 'Iván Bruckner con uniforme médico azul, los brazos cruzados sobre la mesa',
   },
 
   strip: {

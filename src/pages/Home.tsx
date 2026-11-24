@@ -44,7 +44,7 @@ import styles from './Home.module.css'
 /** The site's photos by name, with their size (so the page doesn't jump
     while they load). Placeholders: see home.ts. */
 const PHOTOS: Record<HomePhoto, { src: string; width: number; height: number; position?: string }> = {
-  portrait: { src: portrait, width: 500, height: 500 },
+  portrait: { src: portrait, width: 781, height: 767 },
   // (position: which part of a photo stays in view when a card crops it)
   approbation: { src: approbation, width: 640, height: 1115, position: '50% 35%' },
   aerztekammer: { src: aerztekammer, width: 700, height: 928, position: '69% 50%' },
