@@ -611,15 +611,34 @@
   mask-image: linear-gradient(to bottom, black 92%, transparent);
 }
 
-/* TEMPORARY: the portrait adjuster's live values (PortraitTuner.tsx, only
-   with "?ajustar"; without it these are 0 and 1, so nothing changes) */
+/* The portrait's size and place, set by Ivan with the adjuster on the
+   preview (24 Nov 2026): a size factor and a shift, growing from the
+   bottom centre. Three ranges, each from the screen he tuned on:
+   below 1024px (440×956), 1024–1279px (1032×1376), 1280px+ (1600×1079).
+   A shift down past the hero's bottom is hidden by the hero's edge.
+   TEMPORARY on top: the adjuster's live values (--tune-…, PortraitTuner.tsx,
+   only with "?ajustar"; without it they are 0 and 1). */
 .hero-portrait {
-  transform: translate(var(--tune-hero-x, 0px), var(--tune-hero-y, 0px)) scale(var(--tune-hero-scale, 1));
+  --hero-scale: 1.03; --hero-x: 0px; --hero-y: 42px;
+  transform:
+    translate(calc(var(--hero-x) + var(--tune-hero-x, 0px)), calc(var(--hero-y) + var(--tune-hero-y, 0px)))
+    scale(calc(var(--hero-scale) * var(--tune-hero-scale, 1)));
   transform-origin: bottom center;
 }
 .price-photo img {
-  transform: translate(var(--tune-price-x, 0px), var(--tune-price-y, 0px)) scale(var(--tune-price-scale, 1));
+  --price-scale: 1; --price-x: 0px; --price-y: 0px;
+  transform:
+    translate(calc(var(--price-x) + var(--tune-price-x, 0px)), calc(var(--price-y) + var(--tune-price-y, 0px)))
+    scale(calc(var(--price-scale) * var(--tune-price-scale, 1)));
   transform-origin: bottom center;
+}
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .hero-portrait { --hero-scale: 1.25; --hero-x: -66px; --hero-y: 156px; }
+  .price-photo img { --price-scale: 1.31; --price-x: 46px; --price-y: -92px; }
+}
+@media (min-width: 1280px) {
+  .hero-portrait { --hero-scale: .89; --hero-x: 0px; --hero-y: 42px; }
+  .price-photo img { --price-scale: 1.2; --price-x: -8px; --price-y: -86px; }
 }
 .tuner {
   position: fixed;

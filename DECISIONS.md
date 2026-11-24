@@ -55,7 +55,7 @@ For the home page only, this replaces: Flatline and the five colours with a mean
 
 **Waiting for the owner:** photos (a portrait with the background removed for the hero, and one per milestone of mi historia); the strip's wording; his OK on the new sentences about himself. Until then the build uses the photos already in the site.
 
-**The owner's photos arrived** (24 Nov 2026, sent by Ivan; re-saved without hidden data in `src/assets/home-*.webp`): his cut-out portrait at a desk (blue scrubs) for the hero and, on desktop, the price section; holding his Approbationsurkunde of 8 June 2017 (name covered) for the 2017 card; in front of the Ärztekammer Westfalen-Lippe with a certificate for "Después"; smiling in a white coat for "Y ahora" (Claude chose the places, to confirm on the preview). Still placeholders: the three phase cards.
+**The owner's photos arrived** (24 Nov 2026, sent by Ivan; re-saved without hidden data in `src/assets/home-*.webp`): his cut-out portrait at a desk (blue scrubs) for the hero and, on desktop, the price section; holding his Approbationsurkunde of 8 June 2017 (name covered) for the 2017 card; in front of the Ärztekammer Westfalen-Lippe with a certificate for "Después"; smiling in a white coat for "Y ahora" (Claude chose the places, to confirm on the preview). Still placeholders: the three phase cards. The cut-out portrait was later replaced by a cleaner one without the desk; its size and place in the hero and the price section were set by Ivan with a temporary adjuster on the preview (`?ajustar`, removed before the merge), for three screen ranges: below 1024 px, 1024–1279 px and 1280 px and wider.
 
 ## Changes on 23 Nov 2026 (late night): no animations on the home page
 
