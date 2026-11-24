@@ -69,16 +69,17 @@
   width: 10px;
   height: 10px;
   border-radius: 999px;
-  background: var(--home-on-light-faint);
+  background: var(--carousel-dot, var(--home-on-light-faint));
   transition: width .3s ease-out, background-color .3s ease-out;
 }
+/* (on a dark section, the section sets --carousel-dot and --carousel-dot-on) */
 .dot[aria-current="true"] .dot-mark {
   width: 32px;
-  background: var(--home-teal);
+  background: var(--carousel-dot-on, var(--home-teal));
 }
-.dot:hover .dot-mark { background: var(--home-teal); }
+.dot:hover .dot-mark { background: var(--carousel-dot-on, var(--home-teal)); }
 .dot:focus-visible {
-  outline: 2px solid var(--home-teal);
+  outline: 2px solid var(--carousel-dot-on, var(--home-teal));
   outline-offset: -4px;
   border-radius: 12px;
 }

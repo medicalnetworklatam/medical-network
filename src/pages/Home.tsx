@@ -112,7 +112,7 @@ export default function Home() {
         <Strip />
 
         {/* 3. Historias: testimonials */}
-        <section className={`${styles.light} ${styles.lightA}`} id="historias" aria-labelledby="historias-title">
+        <section className={styles.rays} id="historias" aria-labelledby="historias-title">
           <div className={styles.container}>
             <h2 className={styles.h2} id="historias-title" data-fade><Rich text={stories.title} className={styles.hl} /></h2>
             <div data-fade>
@@ -168,7 +168,7 @@ export default function Home() {
         </section>
 
         {/* 5. Cómo funciona: the three phases */}
-        <section className={`${styles.light} ${styles.lightA}`} id="como-funciona" aria-labelledby="como-funciona-title">
+        <section className={`${styles.light} ${styles.lightA} ${styles.plain}`} id="como-funciona" aria-labelledby="como-funciona-title">
           <div className={styles.container}>
             <h2 className={styles.h2} id="como-funciona-title" data-fade><Rich text={phases.title} className={styles.hl} /></h2>
             <div data-fade>
@@ -198,7 +198,7 @@ export default function Home() {
         </section>
 
         {/* 6. Qué incluye: what the package includes and the bonuses */}
-        <section className={`${styles.light} ${styles.lightB}`} id="que-incluye" aria-labelledby="que-incluye-title">
+        <section className={`${styles.light} ${styles.lightB} ${styles.plain}`} id="que-incluye" aria-labelledby="que-incluye-title">
           <div className={styles.container}>
             <div className={styles.secHead} data-fade>
               <h2 className={styles.h2} id="que-incluye-title"><Rich text={includes.title} className={styles.hl} /></h2>

@@ -201,6 +201,31 @@
   background: url("../assets/home-light-rays.webp") center / cover no-repeat;
   pointer-events: none;
 }
+/* Cómo funciona and Qué incluye: just the colour (Ivan, 24 Nov 2026) */
+.plain::before,
+.plain::after { display: none; }
+
+/* Historias: just Ivan's rays image, on the teal (Ivan, 24 Nov 2026,
+   option A). A dark section: white heading, cream highlight, light dots.
+   The rays only lighten the teal a little: cream text keeps ≥ 6.8:1. */
+.rays {
+  position: relative;
+  isolation: isolate;
+  padding-block: 80px;
+  background: var(--home-teal);
+  color: var(--home-cream);
+  --carousel-dot: var(--home-cream-30);
+  --carousel-dot-on: var(--home-cream);
+}
+@media (min-width: 1024px) { .rays { padding-block: 128px; } }
+.rays::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("../assets/home-light-rays.webp") center / cover no-repeat;
+  pointer-events: none;
+}
+.rays .h2 { color: var(--home-white); }
 
 /* Highlighted words: cream semibold on dark, the darker muted teal on light */
 .hl { font-weight: 600; color: var(--home-cream); }
