@@ -1,571 +1,313 @@
-import { useLayoutEffect, useRef, type FocusEvent, type ReactNode } from 'react'
-import HomeMenu from './home/HomeMenu.tsx'
+import { useRef } from 'react'
+import { Link } from 'react-router'
+import HomeHeader from './home/HomeHeader.tsx'
 import CallLink from './home/CallLink.tsx'
-import { useFit } from './home/fit.ts'
-import { useReveal } from './home/reveal.ts'
-import { usePush } from './home/push.ts'
-import { usePhases } from './home/phases.ts'
-import { useStory } from './home/story.ts'
-import { useCallBar } from './home/callBar.ts'
+import Carousel from './home/Carousel.tsx'
+import Strip from './home/Strip.tsx'
+import YearRow from './home/YearRow.tsx'
+import { Rich } from './home/Rich.tsx'
+import { useFadeUp } from './home/fadeUp.ts'
+import { useCallBar, usePageChrome } from './home/callBar.ts'
+import { useAuth } from '../lib/auth.ts'
 import { usePageTitle } from '../lib/usePageTitle.ts'
-import heroHouse from '../assets/hero-house.jpg'
-import lagoon from '../assets/lagoon.jpg'
-import ejecucion from '../assets/ejecucion.jpg'
+import { home, sections, type HomePhoto } from '../content/home.ts'
 import antes from '../assets/antes.webp'
 import hoy from '../assets/hoy.jpg'
 import quirofano from '../assets/prueba-quirofano.webp'
+import edificio from '../assets/edificio.jpg'
+import lagoon from '../assets/lagoon.jpg'
+import heroHouse from '../assets/hero-house.jpg'
+import ejecucion from '../assets/ejecucion.jpg'
 import styles from './Home.module.css'
 
-/* Home page (/), from Ivan's prototype in design-hero/ (index.html).
-   Notes in design-hero/HERO-NOTES.md, rules in design-hero/DESIGN-RULES.md.
-   Since 23 Nov 2026 (DECISIONS.md, "the home page sells") it also has the
-   Calendly buttons, the phone's call bar, only "Menú" in the header, and
-   three sections after the phases ("qué incluye", "evidencia real",
-   "preguntas frecuentes"), with the closing slide just before the FAQ.
+/* Home page (/), rebuilt on 24 Nov 2026 from Ivan's own landing design
+   (DECISIONS.md, "Changes on 24 Nov 2026"; measurements in
+   design-reference/landing-v2/SPEC.md, texts in COPY.md there). Every text
+   comes from src/content/home.ts. Only this page uses this look: its
+   colours and fonts are in Home.module.css, put on <body> while it is open.
 
-   The motion hooks (src/pages/home/) are the prototype's scripts. They run
-   only while this page is open, in this order, and remove everything they
-   added when it is left. */
+   Sections: header → hero → strip → Historias → Quién soy → Cómo funciona
+   → Qué incluye → Ruta Approbation (price) → Preguntas → ¿Ya eres
+   cliente? → footer, plus the phone's bottom bar with the Calendly button.
+
+   Many photos are placeholders until the owner sends his own (see
+   PHOTOS below and the pull request of 24 Nov 2026). */
+
+/** The site's photos by name, with their size (so the page doesn't jump
+    while they load). Placeholders: see home.ts. */
+const PHOTOS: Record<HomePhoto, { src: string; width: number; height: number }> = {
+  antes: { src: antes, width: 914, height: 816 },
+  hoy: { src: hoy, width: 564, height: 776 },
+  quirofano: { src: quirofano, width: 1440, height: 960 },
+  edificio: { src: edificio, width: 1200, height: 805 },
+  lagoon: { src: lagoon, width: 1600, height: 1081 },
+  heroHouse: { src: heroHouse, width: 2000, height: 1341 },
+  ejecucion: { src: ejecucion, width: 858, height: 929 },
+}
+
+function Photo({ name, alt, className, eager }: { name: HomePhoto; alt: string; className?: string; eager?: boolean }) {
+  const p = PHOTOS[name]
+  return (
+    <img
+      className={className}
+      src={p.src}
+      alt={alt}
+      width={p.width}
+      height={p.height}
+      loading={eager ? undefined : 'lazy'}
+      decoding="async"
+    />
+  )
+}
+
 export default function Home() {
   usePageTitle('Medical Network')
+  const { session, loading } = useAuth()
 
   const rootRef = useRef<HTMLDivElement>(null)
-  const growRef = useRef<HTMLDivElement>(null)
+  const headerRef = useRef<HTMLElement>(null)
+  const heroRef = useRef<HTMLElement>(null)
+  const priceRef = useRef<HTMLElement>(null)
+  const barRef = useRef<HTMLDivElement>(null)
 
-  // The arrow on the first slide: scroll to the end of the circle's growing
-  // distance, where "yo soy tu / ruta." is fully open (the same place a
-  // scroll by hand reaches). Smooth, or a jump with reduced motion.
-  function goToNextSlide(): void {
-    const grow = growRef.current
-    const track = grow?.parentElement
-    if (!grow || !track) return
-    const top = track.getBoundingClientRect().top + window.scrollY + grow.offsetHeight
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    window.scrollTo({ top, behavior: reduce ? 'auto' : 'smooth' })
-  }
+  usePageChrome(headerRef)
+  useFadeUp(rootRef)
+  const barShown = useCallBar(heroRef, priceRef, barRef)
 
-  // The early button sits in "ruta.", which is see-through until its circle
-  // has opened (reveal.ts sets --o on it). If Tab reaches the button before
-  // that, open the section first, so the focus never lands on something
-  // you can't see.
-  function showIntro(e: FocusEvent<HTMLElement>): void {
-    const intro = e.currentTarget.closest<HTMLElement>('.' + CSS.escape(styles.intro))
-    const o = parseFloat(intro?.style.getPropertyValue('--o') || '1')
-    if (o < 0.99) goToNextSlide()
-  }
-
-  // The page's own background, colour and font on <body>, only while it is open
-  useLayoutEffect(() => {
-    document.body.classList.add(styles.pageBody)
-    return () => document.body.classList.remove(styles.pageBody)
-  }, [])
-
-  useFit(rootRef)
-  useReveal(rootRef)
-  usePush(rootRef)
-  usePhases(rootRef)
-  useStory(rootRef)
-  useCallBar(rootRef)
+  const { hero, stories, about, phases, includes, price, faq, client, footer } = home
 
   return (
-    <div className={styles.page} ref={rootRef}>
-      <HomeHeader />
+    <div className={styles.page} ref={rootRef} id="inicio">
+      <HomeHeader ref={headerRef} />
 
       <main>
-        {/* The track is taller than the screen. While you scroll through it the
-            hero and the next section both stay pinned, and a growing circle
-            reveals the next section on top of the hero (reveal.ts). */}
-        <div className={styles.heroTrack}>
-          <section className={styles.hero} aria-label="Portada">
-            <div className={styles.heroStage}>
-              {/* 1. the words in ink, underneath everything */}
-              <h1 className={styles.heroWords}>
-                <Line>La burocracia</Line>
-                <Line>alemana</Line>
-                <Line>es un laberinto</Line>
+        {/* 1. Hero: the headline (one h1 in two parts), the button, the
+            portrait (a placeholder until the owner's cut-out portrait) */}
+        <section className={`${styles.dark} ${styles.hero}`} ref={heroRef} aria-labelledby="hero-title">
+          <img className={styles.heroBg} src={heroHouse} alt="" width={2000} height={1341} />
+          <div className={`${styles.container} ${styles.heroGrid}`}>
+            <div className={styles.heroText}>
+              <h1 className={styles.heroTitle} id="hero-title">
+                <span className={styles.heroLead}>{hero.titleLead}</span>{' '}
+                <span className={styles.heroRest}><Rich text={hero.titleRest} className={styles.hl} /></span>
               </h1>
-
-              {/* 2. the photo (later: the video) sits on top of the words */}
-              <figure className={styles.heroMedia}>
-                <img src={heroHouse} alt="" width={2000} height={1341} />
-              </figure>
-
-              {/* 3. the same words again, tinted, cut to the photo's box */}
-              <div className={`${styles.heroWords} ${styles.heroWordsOver}`} aria-hidden="true">
-                <Line>La burocracia</Line>
-                <Line>alemana</Line>
-                <Line>es un laberinto</Line>
+              <div className={styles.call}>
+                <CallLink className={`${styles.btn} ${styles.btnPrimary}`} />
+                <p className={styles.callNote}>{hero.callNote}</p>
               </div>
             </div>
-
-            {/* 4. an arrow at the bottom: a button to the next slide */}
-            <button
-              type="button"
-              className={styles.heroScroll}
-              aria-label="Ir a la siguiente sección"
-              onClick={goToNextSlide}
-            >
-              <svg viewBox="0 0 24 56" aria-hidden="true" focusable="false">
-                <path d="M12 1v52M3 44l9 9 9-9" />
-              </svg>
-            </button>
-          </section>
-
-          {/* Revealed through the circle (reveal.ts), then scrolls on normally. */}
-          <section className={styles.intro} aria-labelledby="intro-title">
-            <div className={styles.introHead}>
-              <p className={styles.introEyebrow}>yo soy tu</p>
-              <h2 className={styles.introTitle} id="intro-title">ruta.</h2>
-            </div>
-
-            <div className={styles.introText}>
-              <div className={styles.introCopy}>
-                <p>Un camino claro para médicos hispanohablantes que quieren homologar
-                su título y ejercer medicina en Alemania.</p>
-                <p>Aprende qué hacer, en qué orden y cuáles son tus objetivos durante
-                el proceso, con acompañamiento directo mientras avanzas.</p>
-              </div>
-              {/* the early Calendly button (DECISIONS.md, 23 Nov 2026) */}
-              <div className={styles.call} onFocus={showIntro}>
-                <CallLink className={styles.callBtn} />
-                <p className={styles.callNote}>Dura unos 30 minutos. Sin costo.</p>
-              </div>
-            </div>
-
-            <figure className={styles.introMedia}>
-              <img src={heroHouse} alt="" width={2000} height={1341} loading="lazy" />
+            <figure className={styles.heroPortrait}>
+              <Photo name="hoy" alt={hero.portraitAlt} eager />
             </figure>
-          </section>
+          </div>
+        </section>
 
-          {/* scroll distance spent growing the circle */}
-          <div className={styles.heroTrackGrow} ref={growRef} aria-hidden="true"></div>
-          {/* then a rest with "ruta." fully open, before "mi historia" comes up */}
-          <div className={styles.heroTrackRest} aria-hidden="true"></div>
-        </div>
+        {/* 2. The strip, over the hero's bottom edge */}
+        <Strip />
 
-        {/* Mi historia: one pinned screen. Under the head, the two layouts sit
-            in the same space; as you scroll, "now" (hoy, después) slides up
-            from below and covers "then" (bio, mis inicios, antes), which stays
-            still underneath (story.ts). */}
-        <section className={styles.story} aria-labelledby="story-title">
-          <div className={styles.storyPin}>
-            <div className={styles.storyHead}>
-              <p className={styles.label}>mi</p>
-              <h2 className={styles.display} id="story-title">historia.</h2>
-            </div>
-
-            <div className={styles.storyStack}>
-              <div className={`${styles.storyBody} ${styles.storyBodyThen}`}>
-                <div className={styles.storyBio}>
-                  <p>Soy Iván Bruckner Calahorrano, médico ecuatoriano. Me gradué en 2015
-                  y ese mismo año llegué a Alemania. En 2017 obtuve la <span lang="de">Approbation</span>, hice
-                  mi especialidad y hoy trabajo como especialista en un hospital
-                  alemán.</p>
-                </div>
-
-                <figure className={styles.storyPhoto}>
-                  <div className={styles.storyFrame}>
-                    <img
-                      className={styles.photoAntes}
-                      src={antes}
-                      alt="Iván de joven, con una camiseta de rayas verdes"
-                      width={914}
-                      height={816}
-                      loading="lazy"
-                    />
-                  </div>
-                  <figcaption>Mis inicios</figcaption>
-                </figure>
-
-                <div className={`${styles.storyShift} ${styles.storyShiftThen}`}>
-                  <p className={styles.label}>antes</p>
-                  <p>No tenía idea por dónde empezar ni qué hacer.</p>
-                </div>
-              </div>
-
-              <div className={`${styles.storyBody} ${styles.storyBodyNow}`}>
-                <figure className={styles.storyPhoto}>
-                  <div className={styles.storyFrame}>
-                    <img
-                      src={hoy}
-                      alt="Iván hoy, en quirófano con gorro y mascarilla"
-                      width={564}
-                      height={776}
-                      loading="lazy"
-                    />
-                  </div>
-                  <figcaption>Hoy, especialista</figcaption>
-                </figure>
-
-                <div className={`${styles.storyShift} ${styles.storyShiftNow}`}>
-                  <p className={styles.label}>después</p>
-                  <p>Estructuré un plan claro para enfrentar la burocracia alemana y
-                  completar la homologación.</p>
-                </div>
-              </div>
+        {/* 3. Historias: testimonials */}
+        <section className={`${styles.light} ${styles.lightA}`} id="historias" aria-labelledby="historias-title">
+          <div className={styles.container}>
+            <h2 className={styles.h2} id="historias-title" data-fade><Rich text={stories.title} className={styles.hl} /></h2>
+            <div data-fade>
+              <Carousel label={stories.label}>
+                {stories.cards.map((c) => (
+                  <figure key={c.name} className={styles.story}>
+                    <div className={styles.storyTop}>
+                      {c.photo ? (
+                        <Photo name={c.photo} alt={c.alt} className={styles.storyPhoto} />
+                      ) : (
+                        <span className={styles.storyMark} aria-hidden="true">“</span>
+                      )}
+                    </div>
+                    <div className={styles.storyBody}>
+                      <blockquote className={styles.storyQuote}>
+                        <p><Rich text={c.quote} /></p>
+                      </blockquote>
+                      <figcaption className={styles.storyBy}>
+                        <span className={styles.storyName}>{c.name}</span>
+                        <span className={styles.storyRole}><Rich text={c.role} /></span>
+                      </figcaption>
+                    </div>
+                  </figure>
+                ))}
+              </Carousel>
             </div>
           </div>
         </section>
 
-        {/* Second hero and the phases, pinned while you scroll through the
-            spacers at the end.
-            1. push.ts: the first sentence starts alone in the middle; the second
-               rises from below and pushes it up until they sit together.
-            2. phases.ts: the phases' cells rise from below one at a time and
-               settle in place over the hero: the title cell, then phase 01, 02
-               and 03. Each new phase takes the focus; the earlier ones shrink.
-               At the end a circle closes on them and leaves "qué incluye". */}
-        <div className={styles.pushTrack}>
-          <section
-            className={`${styles.hero} ${styles.heroTwo}`}
-            aria-label="Yo también empecé confundido. Por eso creé Ruta Approbation"
-          >
-            <div className={`${styles.heroStage} ${styles.heroStageA}`} data-fit-h="0.5">
-              <h2 className={styles.heroWords}>
-                <Line>Yo también</Line>
-                <Line>empecé confundido</Line>
-              </h2>
+        {/* 4. Quién soy: the owner's years as cards */}
+        <section className={`${styles.dark} ${styles.about}`} id="quien-soy" aria-labelledby="quien-soy-title">
+          <span className={styles.aboutLine} aria-hidden="true"></span>
+          <div className={styles.container}>
+            <div className={styles.aboutHead} data-fade>
+              <h2 className={styles.aboutTitle} id="quien-soy-title"><Rich text={about.title} className={styles.hl} /></h2>
+              <p className={styles.aboutSub}>{about.subtitle}</p>
             </div>
-            <div className={`${styles.heroStage} ${styles.heroStageB}`} data-fit-h="0.5">
-              <p className={styles.heroWords}>
-                <Line>Por eso creé</Line>
-                <Line>Ruta <span lang="de">Approbation</span></Line>
+            <div data-fade>
+              <YearRow label={about.label}>
+                {about.cards.map((c) => (
+                  <li key={c.year} className={styles.yearCard}>
+                    <Photo name={c.photo} alt={c.alt} className={styles.yearPhoto} />
+                    <div className={styles.yearText}>
+                      <span className={styles.yearNum}>{c.year}</span>
+                      <span className={styles.yearLine}><Rich text={c.text} /></span>
+                    </div>
+                  </li>
+                ))}
+              </YearRow>
+            </div>
+            <p className={styles.aboutText} data-fade><Rich text={about.paragraph} className={styles.hl} /></p>
+          </div>
+        </section>
+
+        {/* 5. Cómo funciona: the three phases */}
+        <section className={`${styles.light} ${styles.lightA}`} id="como-funciona" aria-labelledby="como-funciona-title">
+          <div className={styles.container}>
+            <h2 className={styles.h2} id="como-funciona-title" data-fade><Rich text={phases.title} className={styles.hl} /></h2>
+            <div data-fade>
+              <Carousel label={phases.label}>
+                {phases.cards.map((p) => (
+                  <article key={p.num} className={styles.offer}>
+                    <Photo name={p.photo} alt="" className={styles.offerPhoto} />
+                    <div className={styles.offerBody}>
+                      <p className={styles.offerTag}>{p.num}</p>
+                      <h3 className={styles.offerTitle}>{p.title}</h3>
+                      <p><Rich text={p.intro} /></p>
+                      {p.items.length > 0 && (
+                        <ul className={styles.offerList}>
+                          {p.items.map((item) => <li key={item}><Rich text={item} /></li>)}
+                        </ul>
+                      )}
+                      <div className={styles.offerResult}>
+                        <p className={styles.offerResultLabel}>{phases.resultLabel}</p>
+                        <p><Rich text={p.result} /></p>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </Carousel>
+            </div>
+          </div>
+        </section>
+
+        {/* 6. Qué incluye: what the package includes and the bonuses */}
+        <section className={`${styles.light} ${styles.lightB}`} id="que-incluye" aria-labelledby="que-incluye-title">
+          <div className={styles.container}>
+            <div className={styles.secHead} data-fade>
+              <h2 className={styles.h2} id="que-incluye-title"><Rich text={includes.title} className={styles.hl} /></h2>
+              <p className={styles.secSub}>{includes.subtitle}</p>
+            </div>
+            <div data-fade>
+              <Carousel label={includes.label}>
+                {includes.cards.map((c) => (
+                  <article key={c.title} className={`${styles.offer} ${styles.offerShort}`}>
+                    <div className={styles.offerBody}>
+                      <h3 className={styles.offerTitle}>{c.title}</h3>
+                      <p className={styles.offerTag}>{c.tag}</p>
+                      <p><Rich text={c.text} /></p>
+                    </div>
+                  </article>
+                ))}
+              </Carousel>
+            </div>
+            <p className={styles.total} data-fade><Rich text={includes.total} className={styles.hl} /></p>
+          </div>
+        </section>
+
+        {/* 7. Ruta Approbation: the price. The phone's bar hides while it
+            is on screen (it has its own button). */}
+        <section className={`${styles.dark} ${styles.price}`} id="ruta-approbation" ref={priceRef} aria-labelledby="ruta-approbation-title">
+          <div className={`${styles.container} ${styles.priceGrid}`}>
+            <figure className={styles.pricePhoto}>
+              <Photo name="ejecucion" alt="" />
+            </figure>
+            <div className={styles.priceText} data-fade>
+              <h2 className={styles.priceTitle} id="ruta-approbation-title"><Rich text={price.title} /></h2>
+              <p className={styles.priceSub}>{price.subtitle}</p>
+              <p className={styles.pricePill}>
+                <span className={styles.pricePillSmall}>{price.pillSmall}</span>{' '}
+                <span className={styles.pricePillBig}>{price.pillBig}</span>
               </p>
+              <p className={styles.priceText2}><Rich text={price.paragraph} /></p>
+              <p className={styles.priceLine}>{price.line}</p>
+              <div className={styles.call}>
+                <CallLink className={`${styles.btn} ${styles.btnPrimary}`} />
+                <p className={styles.callNote}>{price.callNote}</p>
+              </div>
+              <p className={styles.signoff}>{price.signoff}</p>
             </div>
-          </section>
-
-          {/* The three phases: one row per phase, cells split by thin lines. */}
-          <section className={styles.phases} aria-labelledby="phases-title">
-            <div className={styles.phasesHead}>
-              <p className={styles.label}>las 3</p>
-              <h2 className={styles.display} id="phases-title">fases.</h2>
-            </div>
-
-            {/* Each phase: number | title + intro | checklist + resultado | photo */}
-            <ol className={styles.phasesList}>
-              <li className={styles.phase}>
-                <span className={styles.phaseNum}>01</span>
-                <div className={styles.phaseMain}>
-                  <h3 className={styles.phaseTitle}>planificación</h3>
-                  <p className={styles.phaseIntro}>Empezamos por lo importante: tu objetivo. Defino
-                  contigo la ruta exacta que debes seguir y el orden de cada paso, para que
-                  dejes de adivinar. Tú decides tus prioridades, incluso cómo vas a
-                  aprender alemán.</p>
-                </div>
-                <div className={styles.phaseDetail}>
-                  <div className={styles.phaseResult}>
-                    <p className={styles.label}>resultado</p>
-                    <p>Sabes exactamente por dónde empezar y cuál es tu siguiente paso.</p>
-                  </div>
-                </div>
-                <figure className={styles.phaseMedia}>
-                  <img src={lagoon} alt="" width={1600} height={1081} loading="lazy" />
-                </figure>
-              </li>
-              <li className={styles.phase}>
-                <span className={styles.phaseNum}>02</span>
-                <div className={styles.phaseMain}>
-                  <h3 className={styles.phaseTitle}>documentación</h3>
-                  <p className={styles.phaseIntro}>Tú reúnes tus documentos, pero no vas a ciegas: yo
-                  te digo exactamente cuáles necesitas y los reviso contigo antes de
-                  seguir. Mientras tanto, trabajamos en paralelo en:</p>
-                </div>
-                <div className={styles.phaseDetail}>
-                  <ul className={styles.phaseItems}>
-                    <li>Aprender alemán</li>
-                    <li>Elegir tu escuela de idiomas, con mi ayuda</li>
-                    <li>Planificar tu estadía en Alemania, con mi ayuda</li>
-                    <li>Preparar juntos los siguientes pasos</li>
-                  </ul>
-                  <div className={styles.phaseResult}>
-                    <p className={styles.label}>resultado</p>
-                    <p>Dejamos tu documentación lista y en regla, sin meses de espera
-                    innecesarios, y te acompañamos en cada paso de tu llegada.</p>
-                  </div>
-                </div>
-                <figure className={styles.phaseMedia}>
-                  <img src={heroHouse} alt="" width={2000} height={1341} loading="lazy" />
-                </figure>
-              </li>
-              <li className={styles.phase}>
-                <span className={styles.phaseNum}>03</span>
-                <div className={styles.phaseMain}>
-                  <h3 className={styles.phaseTitle}>ejecución</h3>
-                  <p className={styles.phaseIntro}>Ya en Alemania, tú ejecutas cada paso y yo estoy a
-                  tu lado para que no te frenes ni te pierdas:</p>
-                </div>
-                <div className={styles.phaseDetail}>
-                  <ul className={styles.phaseItems}>
-                    <li>Hacer un curso intensivo de alemán</li>
-                    <li>Presentar tu solicitud de homologación, con mi guía</li>
-                    <li>Conseguir <span lang="de">Hospitationen</span>, cuando sea posible, con mi ayuda</li>
-                    <li>Valorar un posible <span lang="de">Nebenjob</span> para cubrir parte de tus gastos, según tu situación</li>
-                  </ul>
-                  <div className={styles.phaseResult}>
-                    <p className={styles.label}>resultado</p>
-                    <p>Das cada paso con un plan claro y yo te acompaño hasta tu
-                    homologación.</p>
-                  </div>
-                </div>
-                <figure className={styles.phaseMedia}>
-                  <img
-                    className={styles.photoEjecucion}
-                    src={ejecucion}
-                    alt=""
-                    width={858}
-                    height={929}
-                    loading="lazy"
-                  />
-                </figure>
-              </li>
-            </ol>
-          </section>
-
-          {/* "qué incluye", first screen: pinned behind the phases (hidden until
-              they fill the screen); at the end a circle closes on the phases
-              and leaves it (phases.ts). Then it scrolls on normally, and the
-              rest of the section follows right under it (.includes-more).
-              Exactly one screen, also on a 375 x 667 phone minus the call
-              bar, so "Tu plataforma MNL" (the biggest point) comes first
-              in the part that scrolls. */}
-          <section className={styles.includes} aria-labelledby="includes-title">
-            <div className={styles.secHead}>
-              <h2 className={styles.secTitle} id="includes-title">
-                <span className={styles.label}>qué</span>{' '}
-                <span className={styles.display}>incluye<span aria-hidden="true">.</span></span>
-              </h2>
-            </div>
-            <div className={styles.includesLead}>
-              <p className={styles.leadStrong}>Acompañamiento durante todo tu proceso.</p>
-              <p>No hay una duración fija: cada homologación avanza a su propio ritmo, y el
-              acompañamiento sigue el tuyo.</p>
-            </div>
-            <ul className={styles.points}>
-              <li className={styles.point}>
-                <h3 className={styles.pointTitle}>Agenda de videollamadas conmigo</h3>
-                <p>Para revisar avances, objetivos y próximos pasos.</p>
-              </li>
-              <li className={styles.point}>
-                <h3 className={styles.pointTitle}>WhatsApp directo conmigo</h3>
-                <p>Para dudas y situaciones importantes.</p>
-              </li>
-              <li className={styles.point}>
-                <h3 className={styles.pointTitle}>Acompañamiento en cada etapa</h3>
-                <p>Planificación, documentación y ejecución.</p>
-              </li>
-            </ul>
-          </section>
-
-          {/* scroll distance spent pushing, then bringing in the phases */}
-          <div className={styles.pushTrackPush} aria-hidden="true"></div>
-          <div className={styles.pushTrackPhases} aria-hidden="true"></div>
-          {/* extra scroll when the open phase is taller than the screen (phases.ts) */}
-          <div className={styles.pushTrackMore} aria-hidden="true"></div>
-          {/* scroll spent closing the circle on the phases */}
-          <div className={styles.pushTrackClose} aria-hidden="true"></div>
-        </div>
-
-        {/* The rest of "qué incluye", scrolling normally: the platform (the
-            biggest point), the bonuses and the price. */}
-        <div className={styles.includesMore}>
-          <div className={styles.platform}>
-            <h3 className={styles.platformTitle}>Tu plataforma MNL</h3>
-            <p>Un área privada solo para clientes: tu expediente paso a paso según
-            tu <span lang="de">Bundesland</span> y tu ruta, las novedades de tu estado, la
-            Comunidad MNL, el chat de tu <span lang="de">Bundesland</span>, tus documentos y la
-            herramienta para tu currículum. Incluye acceso gratuito a las nuevas
-            herramientas que se desarrollen.</p>
-          </div>
-
-          <div className={styles.secHead}>
-            <h3 className={styles.secTitle}>
-              <span className={styles.label}>bonos</span>{' '}
-              <span className={styles.display}>incluidos<span aria-hidden="true">.</span></span>
-            </h3>
-          </div>
-          <ul className={styles.bonuses}>
-            <li className={styles.bonus}>
-              <h4 className={styles.pointTitle}>Guía de diagnóstico</h4>
-              <p>Tiempos y costos aproximados del proceso.</p>
-            </li>
-            <li className={styles.bonus}>
-              <h4 className={styles.pointTitle}>Guía de alemán <span className={styles.nowrap}>A1–B1</span></h4>
-              <p>Ejercicios y prompts de IA.</p>
-            </li>
-            <li className={styles.bonus}>
-              <h4 className={styles.pointTitle}>Guía de preparación FSP</h4>
-              <p>Material de apoyo para preparar
-              la <span lang="de">Fachsprachprüfung</span>.</p>
-            </li>
-            <li className={styles.bonus}>
-              <h4 className={styles.pointTitle}>Cooperaciones</h4>
-              <p>Curso de preparación FSP online desde tu país con perfectgerman, con
-              50 % de descuento, y posibilidad de una beca BAMF para un curso de
-              preparación FSP al estar en Alemania.</p>
-            </li>
-          </ul>
-          <p className={styles.includesTotal}>Todo incluido: pago único 3.500&nbsp;€.</p>
-        </div>
-
-        {/* Evidencia real: Andrea's words (her consent: DECISIONS.md, 23 Nov
-            2026), then the owner's own process. The photo sits in a frame
-            that always fits on the screen. */}
-        <section className={styles.proof} aria-labelledby="proof-title">
-          <div className={styles.secHead}>
-            <h2 className={styles.secTitle} id="proof-title">
-              <span className={styles.label}>evidencia</span>{' '}
-              <span className={styles.display}>real<span aria-hidden="true">.</span></span>
-            </h2>
-          </div>
-
-          {/* Andrea first: one big quote in a dark cell, only her last
-              sentence, word for word (DECISIONS.md, 23 Nov 2026). */}
-          <div className={`${styles.proofRow} ${styles.testimony}`}>
-            <figure className={styles.proofText}>
-              <blockquote className={styles.quote}>
-                <p>“Le recomendaría la asesoría con Iván a todos los médicos latinos que ya
-                están seguros de querer venir a Alemania, para que no se equivoquen en el
-                camino.”</p>
-              </blockquote>
-              <figcaption className={styles.quoteBy}>
-                <span className={styles.quoteName}>Andrea</span>
-                <span className={styles.label}>Cliente actual</span>
-              </figcaption>
-            </figure>
-          </div>
-
-          <div className={styles.proofRow}>
-            <div className={styles.proofText}>
-              <h3 className={styles.pointTitle}>Mi propio proceso de homologación</h3>
-              <p>De mi llegada en 2015 a la <span lang="de">Approbation</span> en 2017, y después
-              la especialidad.</p>
-            </div>
-            <figure className={styles.proofPhoto}>
-              <img
-                src={quirofano}
-                alt="Iván con colegas en un quirófano"
-                width={1440}
-                height={960}
-                loading="lazy"
-              />
-            </figure>
-          </div>
-
-        </section>
-
-        {/* Closing call to action, in the heroes' font: light background, dark
-            letters. The headline is justified by fit.ts like the heroes. Just
-            before the FAQ (since 23 Nov 2026 no longer pinned behind the
-            phases); the phone's call bar hides while it is on screen
-            (callBar.ts). */}
-        <section className={styles.cta} aria-labelledby="cta-title">
-          <div className={styles.ctaInner}>
-            <div className={styles.heroStage} data-fit-h="0.55">
-              <h2 className={styles.heroWords} id="cta-title">
-                <Line>Tu homologación</Line>
-                <Line>necesita</Line>
-                <Line>una ruta</Line>
-              </h2>
-            </div>
-            <p className={styles.ctaPrice}>Pago único 3.500 €</p>
-            <div className={styles.call}>
-              <CallLink className={styles.callBtn} />
-              <p className={styles.callNote}>Dura unos 30 minutos. Sin costo.</p>
-            </div>
-            <p className={styles.ctaSign}>Nos vemos en Alemania</p>
           </div>
         </section>
 
-        {/* Preguntas frecuentes: the browser's own open/close rows
+        {/* 8. Preguntas frecuentes: the browser's own open/close rows
             (<details>), closed at first; Tab, Enter and Space work without
-            any script. The owner's texts, word for word. */}
-        <section className={styles.faq} aria-labelledby="faq-title">
-          <div className={styles.secHead}>
-            <h2 className={styles.secTitle} id="faq-title">
-              <span className={styles.label}>preguntas</span>{' '}
-              <span className={styles.display}>frecuentes<span aria-hidden="true">.</span></span>
-            </h2>
-          </div>
-          <div className={styles.faqList}>
-            <Faq q="¿Haces el proceso de homologación por mí?">
-              No. Ruta <span lang="de">Approbation</span> te enseña cómo hacerlo y te acompaña
-              mientras avanzas. Las acciones las ejecutas tú, con un plan claro y criterio
-              para cada decisión.
-            </Faq>
-            <Faq q="¿Cuánto dura el programa?">
-              No tiene una duración fija. El acompañamiento dura lo que dure tu proceso de
-              homologación, que puede variar considerablemente según cada caso.
-            </Faq>
-            <Faq q="¿Me garantizas la homologación o un tiempo determinado?">
-              No. Nadie puede garantizar con honestidad el resultado ni los tiempos: dependen
-              de tu caso, de las autoridades y de tu ejecución. Lo que sí obtienes es un plan
-              claro para reducir errores y evitar tiempos innecesarios.
-            </Faq>
-            <Faq q="¿Cómo es el acompañamiento?">
-              Agenda de videollamadas conmigo y comunicación directa por WhatsApp para dudas
-              y situaciones importantes, durante las diferentes etapas del proceso.
-            </Faq>
-            <Faq q="¿Qué necesito para aplicar?">
-              Ser médico graduado y habilitado para ejercer tu profesión, y estar dispuesto a
-              trabajar por tus objetivos, ejecutar las tareas y participar activamente.
-            </Faq>
-            <Faq q="¿Qué métodos de pago aceptas?">
-              Tarjeta de crédito, PayPal, Apple Pay, Google Pay, Amazon Pay y Klarna. El
-              precio es de 3.500&nbsp;€, pago único.
-            </Faq>
-            {/* Ivan's choice (23 Nov 2026), for the law firm to check. No link:
-                the Widerrufsbelehrung doesn't exist on the site yet. */}
-            <Faq q="¿Tengo derecho de desistimiento?">
-              Tienes un derecho de desistimiento de 14 días según §§ 312g, 355 BGB
-              (<span lang="de">Widerrufsrecht</span>). Los detalles están en
-              la <span lang="de">Widerrufsbelehrung</span>. Esto no es una garantía de
-              resultado.
-            </Faq>
+            any script. */}
+        <section className={`${styles.light} ${styles.lightA} ${styles.faq}`} id="preguntas" aria-labelledby="preguntas-title">
+          <div className={styles.container}>
+            <h2 className={styles.h2} id="preguntas-title" data-fade><Rich text={faq.title} className={styles.hl} /></h2>
+            <div className={styles.faqList} data-fade>
+              {faq.items.map((f) => (
+                <details key={f.q} className={styles.faqItem}>
+                  <summary className={styles.faqQ}>
+                    <span>{f.q}</span>
+                    <span className={styles.faqSign} aria-hidden="true"></span>
+                  </summary>
+                  <p className={styles.faqA}><Rich text={f.a} /></p>
+                </details>
+              ))}
+            </div>
           </div>
         </section>
 
+        {/* 9. ¿Ya eres cliente?: the way into the client area */}
+        <section className={styles.client} aria-labelledby="cliente-title">
+          <img className={styles.clientBg} src={edificio} alt="" width={1200} height={805} loading="lazy" />
+          <div className={`${styles.container} ${styles.clientInner}`} data-fade>
+            <span className={styles.clientIcon} aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="32" height="32" focusable="false">
+                <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm-7 8a7 7 0 0 1 14 0" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              </svg>
+            </span>
+            <h2 className={styles.clientTitle} id="cliente-title"><Rich text={client.title} className={styles.hl} /></h2>
+            <p className={styles.clientText}><Rich text={client.paragraph} className={styles.hl} /></p>
+            {loading ? null : session ? (
+              <Link className={styles.clientBtn} to="/novedades"><EnterIcon />{home.header.myArea}</Link>
+            ) : (
+              <>
+                <Link className={styles.clientBtn} to="/iniciar-sesion"><EnterIcon />{client.login}</Link>
+                <p className={styles.clientNote}>{client.notYet}</p>
+                <CallLink className={`${styles.btn} ${styles.btnSmallOutline}`} />
+              </>
+            )}
+          </div>
+        </section>
       </main>
 
-      {/* Phones only: the call bar at the bottom of the screen. Hidden until
-          callBar.ts shows it (never without the motion script). */}
-      <div className={styles.callBar}>
-        <CallLink className={`${styles.callBtn} ${styles.callBarBtn}`} />
+      <footer className={styles.footer}>
+        <div className={styles.container}>
+          <ul className={styles.footerLinks}>
+            {sections.map((s) => (
+              <li key={s.id}><a href={`#${s.id}`}><span><Rich text={s.label} /></span></a></li>
+            ))}
+          </ul>
+          <p className={styles.copyright}>{footer.copyright}</p>
+        </div>
+      </footer>
+
+      {/* Phones only: the call bar at the bottom of the screen (callBar.ts) */}
+      <div className={`${styles.callBar} ${barShown ? styles.isShown : ''}`} ref={barRef}>
+        <CallLink className={`${styles.btn} ${styles.btnPrimary} ${styles.callBarBtn}`} />
       </div>
     </div>
   )
 }
 
-/** One question of "preguntas frecuentes": a native open/close row. */
-function Faq({ q, children }: { q: string; children: ReactNode }) {
+/** The arrow-into-a-door icon before "Entrar" / "Mi área" */
+function EnterIcon() {
   return (
-    <details className={styles.faqItem}>
-      <summary className={styles.faqQ}>
-        <span>{q}</span>
-        <span className={styles.faqSign} aria-hidden="true"></span>
-      </summary>
-      <p className={styles.faqA}>{children}</p>
-    </details>
-  )
-}
-
-/** One line of a justified headline. fit.ts sizes it and places the inner
-    span on the letters' ink. */
-function Line({ children }: { children: ReactNode }) {
-  return (
-    <span className={styles.line}>
-      <span className={styles.lineInk}>{children}</span>
-    </span>
-  )
-}
-
-/** Fixed header: only "Menú" (HomeMenu.tsx), which holds "Entrar", or
-    "Mi área" and "Cerrar sesión" (DECISIONS.md, 23 Nov 2026). The menu
-    follows the login by itself, so a login change never redraws the page
-    under the motion hooks. */
-function HomeHeader() {
-  return (
-    <header className={styles.siteHeader}>
-      <HomeMenu />
-    </header>
+    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
+      <path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M10 16l4-4-4-4M14 12H4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   )
 }

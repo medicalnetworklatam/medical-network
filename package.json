@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "test": "node tests/adminLogic.test.ts && node tests/safePath.test.ts && node tests/linkify.test.ts && node tests/newsFiles.test.ts && node tests/clientFiles.test.ts && node tests/checklistTemplate.test.ts && node tests/placeholders.test.ts && node tests/expediente.test.ts && node tests/curriculum.test.ts && node tests/initials.test.ts && node tests/diagnostico.test.ts",
+    "test": "node tests/adminLogic.test.ts && node tests/safePath.test.ts && node tests/linkify.test.ts && node tests/newsFiles.test.ts && node tests/clientFiles.test.ts && node tests/checklistTemplate.test.ts && node tests/placeholders.test.ts && node tests/expediente.test.ts && node tests/curriculum.test.ts && node tests/initials.test.ts && node tests/diagnostico.test.ts && node tests/richText.test.ts",
     "preview": "vite preview",
     "checklist-sql": "node scripts/checklist-to-sql.ts"
   },

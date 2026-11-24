@@ -1,0 +1,146 @@
+/* The home page's carousel (Carousel.tsx). Colours come from the home
+   page's own tokens (--home-…, Home.module.css, set on <body> while the
+   page is open). Sizes from design-reference/landing-v2/SPEC.md. */
+
+.carousel {
+  --w: min(320px, calc(100vw - 64px)); /* a card's width */
+  --gap: 16px;
+  position: relative;
+}
+
+/* The row runs from edge to edge of the screen: on phones the next card
+   peeks in; on a desktop the faded cards go off the sides */
+.viewport {
+  margin-inline: calc(50% - 50vw);
+}
+
+.track {
+  display: flex;
+  gap: var(--gap);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  padding-block: 8px 16px; /* room for the cards' shadow */
+}
+/* Spacers before the first and after the last card, so both can sit in the
+   middle */
+.track::before,
+.track::after {
+  content: "";
+  flex: 0 0 max(0px, calc(50% - var(--w) / 2 - var(--gap)));
+}
+.track.single { justify-content: center; overflow-x: visible; }
+.track.single::before,
+.track.single::after { display: none; }
+
+.slide {
+  flex: 0 0 var(--w);
+  display: flex; /* the card inside fills the slide: every card the same height */
+  scroll-snap-align: center;
+}
+.slide > * { flex: 1 1 auto; min-width: 0; }
+
+/* Buttons and dots under the row */
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 24px;
+}
+.arrow { display: none; }
+
+.dots {
+  display: flex;
+  align-items: center;
+}
+.dot {
+  display: grid;
+  place-items: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.dot-mark {
+  display: block;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--home-on-light-faint);
+  transition: width .3s ease-out, background-color .3s ease-out;
+}
+.dot[aria-current="true"] .dot-mark {
+  width: 32px;
+  background: var(--home-teal);
+}
+.dot:hover .dot-mark { background: var(--home-teal); }
+.dot:focus-visible {
+  outline: 2px solid var(--home-teal);
+  outline-offset: -4px;
+  border-radius: 12px;
+}
+
+/* Desktop: the row slides; the current card is in the middle */
+@media (min-width: 1024px) {
+  .carousel { --w: 320px; --gap: 24px; }
+  .viewport {
+    overflow-x: clip;
+    overflow-y: visible;
+  }
+  .track {
+    overflow-x: visible;
+    scroll-snap-type: none;
+    transform: translateX(calc(var(--i, 0) * -1 * (var(--w) + var(--gap))));
+    transition: transform .5s ease-out;
+  }
+  .slide {
+    transform: scale(.8);
+    opacity: .3;
+    cursor: pointer;
+    transition: transform .5s ease-out, opacity .5s ease-out;
+  }
+  .slide.current { transform: none; opacity: 1; cursor: auto; }
+  .track.single .slide { transform: none; opacity: 1; cursor: auto; }
+
+  /* The arrows: 56px circles on both sides of the dots (under the row,
+     so they never cover a card) */
+  .controls { gap: 24px; }
+  .arrow {
+    display: grid;
+    place-items: center;
+    width: 56px;
+    height: 56px;
+    padding: 0;
+    border: 1px solid var(--home-black-10);
+    border-radius: 999px;
+    background: var(--home-white-80);
+    color: var(--home-teal);
+    box-shadow: var(--home-shadow-card);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    cursor: pointer;
+    transition: transform .3s ease-out, background-color .3s ease-out, box-shadow .3s ease-out;
+  }
+  .prev svg { transform: scaleX(-1); }
+  .arrow:hover:not(:disabled) {
+    background: var(--home-white);
+    box-shadow: var(--home-shadow-elegant);
+    transform: scale(1.1);
+  }
+  .arrow:disabled { opacity: .4; cursor: default; }
+  .arrow:focus-visible {
+    outline: 2px solid var(--home-teal);
+    outline-offset: 3px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .track,
+  .slide,
+  .arrow,
+  .dot-mark { transition: none; }
+  .arrow:hover:not(:disabled) { transform: none; }
+}

@@ -2,13 +2,17 @@ import { useEffect, useRef, useState, type FocusEvent, type KeyboardEvent } from
 import { Link } from 'react-router'
 import SessionButton from '../SessionButton.tsx'
 import { useAuth } from '../../lib/auth.ts'
+import { home, sections } from '../../content/home.ts'
+import { Rich } from './Rich.tsx'
 import CallLink from './CallLink.tsx'
 import styles from '../Home.module.css'
 
-/** The home page's "Menú": a button that opens a short list of links under
-    it (DECISIONS.md, 18 Nov 2026; the Calendly label since 23 Nov 2026):
-    - logged out: "Agenda tu llamada gratuita" (Calendly, new tab), "Entrar"
-    - logged in:  "Agenda tu llamada gratuita", "Mi área", "Cerrar sesión"
+/** The home page's "Menú", in the header below 1024px (DECISIONS.md,
+    18 Nov 2026; the header since 24 Nov 2026). A button that opens a
+    panel under the header with everything the wide header shows:
+    - the links to the sections (#historias…)
+    - "Agenda tu llamada gratuita" (Calendly, new tab)
+    - logged out: "Entrar"; logged in: "Mi área" and "Cerrar sesión"
     While it is open, the phone's call bar hides (Home.module.css).
     Keyboard: Enter/Space opens and closes it, Up/Down move between the
     links, Escape closes it and puts the focus back on the button. Clicking
@@ -86,21 +90,25 @@ export default function HomeMenu() {
         aria-controls="home-menu"
         onClick={() => { setAnnouncement(''); setOpen((o) => !o) }}
       >
-        <span>Menú</span>
+        <span>{home.header.menu}</span>
         <span className={styles.menuBtnIcon} aria-hidden="true"></span>
       </button>
 
       <ul className={styles.menuList} id="home-menu" ref={listRef} hidden={!open}>
-        <li>
-          <CallLink className={styles.menuItem} onClick={() => close(false)}>
-            <span>Agenda tu llamada gratuita</span>
-            <span className={styles.menuItemArrow} aria-hidden="true">↗</span>
-          </CallLink>
+        {sections.map((s) => (
+          <li key={s.id}>
+            <a className={styles.menuItem} href={`#${s.id}`} onClick={() => close(false)}>
+              <span><Rich text={s.label} /></span>
+            </a>
+          </li>
+        ))}
+        <li className={styles.menuCall}>
+          <CallLink className={`${styles.btn} ${styles.btnPrimary} ${styles.menuCallBtn}`} onClick={() => close(false)} />
         </li>
         {loading ? null : session ? (
           <>
             <li>
-              <Link className={styles.menuItem} to="/novedades" onClick={() => close(false)}>Mi área</Link>
+              <Link className={styles.menuItem} to="/novedades" onClick={() => close(false)}>{home.header.myArea}</Link>
             </li>
             <li>
               <SessionButton className={styles.menuItem} />
@@ -108,7 +116,7 @@ export default function HomeMenu() {
           </>
         ) : (
           <li>
-            <Link className={styles.menuItem} to="/iniciar-sesion" onClick={() => close(false)}>Entrar</Link>
+            <Link className={styles.menuItem} to="/iniciar-sesion" onClick={() => close(false)}>{home.header.login}</Link>
           </li>
         )}
       </ul>
