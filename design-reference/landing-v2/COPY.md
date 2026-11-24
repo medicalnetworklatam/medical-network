@@ -7,7 +7,7 @@ Bold = the highlighted words (cream semibold on dark, #376260 on light). *Italic
 
 HEADER
 - Name (link to top): Medical Network LATAM
-- Links: Quién soy · Historias · Cómo funciona · Qué incluye · Ruta *Approbation* · Preguntas
+- Links (in the page's order, Ivan 24 Nov 2026): Historias · Quién soy · Cómo funciona · Qué incluye · Ruta *Approbation* · Preguntas
 - Login: Entrar (logged in: Mi área · Cerrar sesión)
 - Pill: Agenda tu llamada gratuita
 - Phones: Menú (holds all of the above)

@@ -31,11 +31,11 @@ export type HomePhoto =
   | 'heroHouse'
   | 'ejecucion'
 
-/** The sections the header and footer link to: the id is the address
-    after "#" (medicalnetworklatam.com/#historias) */
+/** The sections the header and footer link to, in the page's order: the
+    id is the address after "#" (medicalnetworklatam.com/#historias) */
 export const sections = [
-  { id: 'quien-soy', label: 'Quién soy' },
   { id: 'historias', label: 'Historias' },
+  { id: 'quien-soy', label: 'Quién soy' },
   { id: 'como-funciona', label: 'Cómo funciona' },
   { id: 'que-incluye', label: 'Qué incluye' },
   { id: 'ruta-approbation', label: 'Ruta *Approbation*' },
