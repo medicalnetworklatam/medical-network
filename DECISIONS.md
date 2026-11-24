@@ -1,6 +1,6 @@
 # MNL client area: decisions log
 
-Last updated: 23 Nov 2026. This is the source of truth for the project. When a decision changes, update this file in the Claude project knowledge and in the code repository.
+Last updated: 24 Nov 2026. This is the source of truth for the project. When a decision changes, update this file in the Claude project knowledge and in the code repository.
 
 ## Context
 
@@ -14,6 +14,67 @@ Last updated: 23 Nov 2026. This is the source of truth for the project. When a d
   - about 25 accounts in the first 12 months
   - Spanish only, web only
 - **Admins:** Ivan and his cousin.
+
+## Changes on 24 Nov 2026: the home page rebuilt from Ivan's own landing design
+
+Ivan's decision (24 Nov 2026). The owner saw the current home page and didn't like it; he loved a landing page Ivan built earlier for another client (julioiero.com), who didn't use it, so the design is Ivan's to reuse. The home page (`/`) is rebuilt with that page as the complete reference: layout, sections, components, colours and motion. **Only the home page:** every other screen keeps the Flatline look.
+
+For the home page only, this replaces: Flatline and the five colours with a meaning (17–21 Nov); Albert Sans + Space Grotesk as a pair and the ruled cells (17 Nov); "rounded white cards" as a rejected direction (17 Nov); design rules 1 and 2 from `design-hero/DESIGN-RULES.md` (card photos are cropped as in the reference); the scroll motion; and "no animations on the home page" (23 Nov, late night, never built).
+
+**Confirmed by Ivan:**
+- The reference counts in full (everything), for the home page only.
+- Carousels, the scrolling strip and the fade-ins come back.
+- The same colours as the reference: deep teal `#113B40`, darker teal `#0F1F1C`, cream `#F6F0DF`, muted teal `#4A7875`, mint `#33DB95`; light sections on cool grey or pale mint.
+
+**Never taken from the reference:** the other client's texts, photos, testimonials, logos, names, prices, payment links, social accounts or analytics. Only MNL's own content goes on the page.
+
+**Proposed by Claude, to confirm on the preview:**
+- **Fonts:** the reference's fonts are commercial and not licensed for this site (Aeonik, as a trial file; Neutral Sans, sold by Brave Type). The home page uses Albert Sans, already self-hosted, for everything. Buying licences later is a small change.
+- **Built in the site's own CSS,** without Tailwind, shadcn or a carousel library. No outside addresses (no Google Fonts, no analytics), so `_headers` doesn't change. The home page's colours and font live in its own file, not in `redesign.css`, so no other screen changes.
+- **Section order** (as approved for the build, 24 Nov 2026): fixed dark header → hero (dark) → scrolling strip → Historias (light, carousel: Andrea's quote and the owner's own case) → Quién soy (dark, year cards) → Cómo funciona (light, the 3 phases as cards) → Qué incluye (light, 8 dark cards) → Ruta *Approbation* (dark, the price section; the closing slide's role) → Preguntas frecuentes (light) → ¿Ya eres cliente? (photo with overlay) → footer. The header and footer links follow this page order (Historias first).
+- **Preview first, merge only on Ivan's word** (Ivan, 24 Nov 2026): the new home page is worked on only on its preview branch (`claude/brave-hypatia-i1tco6`) and its Cloudflare preview. Changes after a preview are new commits on the same branch. The pull request may be opened, but nobody merges it into `main` until Ivan says so, after Claude has checked the code. Claude Code never merges.
+- **Text (changed later on 24 Nov 2026, Ivan):** the reference's copy is adapted to MNL too, not only its look: its flow, section ideas and phrasing, using only facts already on the site. The texts are in the copy deck `design-reference/landing-v2/COPY.md` (project doc `docs/landing-v2-copy.md`). The phase texts, everything in "qué incluye", Andrea's quote, the prices, "Dura unos 30 minutos. Sin costo.", "Tu homologación necesita una ruta", "Nos vemos en Alemania" and all 7 FAQ answers stay word for word. Every new sentence about the owner (year cards, bio, "con Iván Bruckner") needs his OK on the preview, since the page speaks as him.
+- **Left out of the reference's copy on purpose:** "el único lugar" (an exclusivity claim, which German competition law, the UWG, only allows when provably true), "Hemos ayudado a:" (no list behind it), and the Salón de la Fama, conferences, podcast, social and WhatsApp-community sections (MNL has none yet).
+- **Scrolling strip:** "Te acompaño si eres:" with the four routes (20 Nov), written as "Médico con título de fuera de la UE" etc. The owner confirms he takes all four.
+- **All home page texts live in one file,** `src/content/home.ts`, like `contact.ts` and `diagnostico.ts`, so a text change touches only that file.
+- **The phone's bottom Calendly bar stays** (23 Nov), hidden while the price section is on screen.
+- **Reduce motion:** with it on, the strip stops and nothing fades or slides; carousels still work with their buttons and by swiping.
+- **Footer:** no Impressum/Datenschutz links until the law firm's texts exist; no social section unless the owner asks for one.
+- The old scroll-motion files go; `design-hero/` stays as the reference of the earlier home page. The reference's measurements, without its content, are kept in `design-reference/landing-v2/SPEC.md`.
+
+**Build details** (Claude Code's plan, approved by Ivan on 24 Nov 2026):
+- Five more Albert Sans files (500, 600, 700; 300 and 400 italic) from the official open-licence release, self-hosted; no new npm dependency.
+- Heading words on light sections use a darker muted teal, `#376260` (at least 4.74:1), instead of `#4A7875`, which fails 4.5:1 there.
+- The hero's background photo is blended into the teal (about 20 %) so cream text keeps at least 4.5:1; secondary text is at least white 72 %.
+- The strip has a pause button ("Pausar la cinta" / "Reanudar la cinta") and also pauses on hover and keyboard focus (moving content longer than 5 seconds needs a way to stop it).
+- Cards in a carousel grow to their longest text, all the same height. With one card, a carousel shows no arrows or dots. The year cards' arrows show only when the row is wider than the screen.
+- On this page the phone layout and the bottom bar start below 768 px (the site's usual limit is 700 px). The header pill is 44 px tall.
+- Headings use sentence capitals; the old lowercase titles and hidden full stops go. One h1; h2 per section.
+- `CLAUDE.md` and `design-reference/README.md` get short notes about the new home page.
+- **Background images** (Ivan's own, 24 Nov 2026, re-saved without hidden data in `src/assets/home-*.webp`): the dark grain behind the hero (instead of the faded house photo) and under "¿Ya eres cliente?" (instead of the building photo); a teal glow behind the hero portrait (seen once the owner's cut-out portrait is in); a faint mint "X" of light rays: Historias and Preguntas frecuentes become dark teal sections with only this image on them (the FAQ rows as dark cards), and Cómo funciona and Qué incluye keep just their colour, without the dot grid (Ivan, 24 Nov 2026); the dark teal streak behind the price section, on desktop only, where its light line runs behind the photo and never behind text (Ivan: no white line behind words; Claude chose the places, to confirm on the preview).
+
+**Waiting for the owner:** photos (a portrait with the background removed for the hero, and one per milestone of mi historia); the strip's wording; his OK on the new sentences about himself. Until then the build uses the photos already in the site.
+
+**The owner's photos arrived** (24 Nov 2026, sent by Ivan; re-saved without hidden data in `src/assets/home-*.webp`): his cut-out portrait at a desk (blue scrubs) for the hero and, on desktop, the price section; holding his Approbationsurkunde of 8 June 2017 (name covered) for the 2017 card; in front of the Ärztekammer Westfalen-Lippe with a certificate for "Después"; smiling in a white coat for "Y ahora" (Claude chose the places, to confirm on the preview). Still placeholders: the three phase cards. Later the same day (Ivan): the "Y ahora" card is deleted, "Después" becomes "2025" (the specialty), Historias card 2 uses his operating-room selfie, and the three phase cards get their own pictures (a maze over a map, cropped to leave out a "CapCut AI" mark; a stack of papers; a document stamped "APROBADO"). The cut-out portrait was later replaced by a cleaner one without the desk; its size and place in the hero and the price section were set by Ivan with a temporary adjuster on the preview (`?ajustar`, removed before the merge), for three screen ranges: below 1024 px, 1024–1279 px and 1280 px and wider.
+
+## Changes on 23 Nov 2026 (late night): no animations on the home page
+
+**Replaced on 24 Nov 2026 before it was built** (see above). Kept as a record.
+
+Ivan's decision (23 Nov 2026): every animation on the home page goes, and scrolling it should be as easy as possible. This replaces "same text, order and scroll motion" (17 Nov evening) and "the look and the motion style stay" (23 Nov night). Text, order, colours, fonts, photos and the Calendly buttons stay as built in PR #38. The state map keeps its animations (it isn't the home page).
+
+**To build** (details proposed by Claude, to confirm on the preview):
+- **Plain scrolling only.** Nothing is pinned, nothing moves with the scroll, no rests (scroll that changes nothing), no snapping, no smooth-scroll code. Each section is as tall as its content, one after the other, in the same order: hero → "yo soy tu / ruta." → "mi historia." → second hero → "las 3 / fases." → qué incluye → evidencia real → closing slide → preguntas frecuentes.
+- **The first hero** stays one screen tall (photo whole, design rule 1). Its arrow becomes a plain link that jumps straight to "yo soy tu / ruta.".
+- **"mi historia.":** the "then" layout (bio, mis inicios, antes), then the "now" layout (hoy, después) under it.
+- **The second hero:** both sentences shown together; no push.
+- **"las 3 / fases.":** all three phases open in full, one row each, with their result; no rising, no shrinking, no choosing a phase. This settles "collapsed phases showing their result" (23 Nov night, open).
+- **No circle:** no growing or closing circle anywhere.
+- **No movement at all:** no entrance animations (words rising, the photo opening, the arrow nudging), and no transitions (menu, buttons, the FAQ's +/−, the phone bar). Hover colours change instantly. The page is the same with or without "reduce motion", which settles "a still version for reduced motion" (23 Nov night, open).
+- **The justified headlines stay** (they are sizing, not motion).
+- **The phone bar** works as before (shows once the first hero has scrolled away, hides while the closing slide is on screen), appearing and disappearing instantly.
+- **A visible scrollbar on the home page** (proposed by Claude; Ivan can drop it): an exception to "hidden scrollbars" for this page only, so visitors see how long the page is and where they are, and can drag it with a mouse.
+- The scroll-motion files that are no longer used are deleted; `design-hero/` stays untouched as the reference of the old motion.
 
 ## Changes on 23 Nov 2026 (night): the home page sells
 
