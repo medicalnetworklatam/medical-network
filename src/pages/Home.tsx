@@ -1,11 +1,10 @@
-import { useRef, useState, type CSSProperties } from 'react'
+import { useRef } from 'react'
 import { Link } from 'react-router'
 import HomeHeader from './home/HomeHeader.tsx'
 import CallLink from './home/CallLink.tsx'
 import Carousel from './home/Carousel.tsx'
 import Strip from './home/Strip.tsx'
 import YearRow from './home/YearRow.tsx'
-import PortraitTuner from './home/PortraitTuner.tsx' // TEMPORARY (?ajustar)
 import { Rich } from './home/Rich.tsx'
 import { useFadeUp } from './home/fadeUp.ts'
 import { useCallBar, usePageChrome } from './home/callBar.ts'
@@ -84,10 +83,6 @@ export default function Home() {
   const priceRef = useRef<HTMLElement>(null)
   const barRef = useRef<HTMLDivElement>(null)
 
-  // TEMPORARY: the portrait adjuster, only with "?ajustar" in the address
-  const tuning = new URLSearchParams(window.location.search).has('ajustar')
-  const [tuneVars, setTuneVars] = useState<CSSProperties>({})
-
   usePageChrome(headerRef)
   useFadeUp(rootRef)
   const barShown = useCallBar(heroRef, priceRef, barRef)
@@ -95,8 +90,7 @@ export default function Home() {
   const { hero, stories, about, phases, includes, price, faq, client, footer } = home
 
   return (
-    <div className={styles.page} ref={rootRef} id="inicio" style={tuneVars}>
-      {tuning && <PortraitTuner onChange={setTuneVars} />}
+    <div className={styles.page} ref={rootRef} id="inicio">
       <HomeHeader ref={headerRef} />
 
       <main>
